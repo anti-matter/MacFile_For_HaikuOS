@@ -1,0 +1,8 @@
+objects.*/
+(Objects.*)/
+
+afp_config/compile_commands.json
+afp_config/BeApp
+distribution/install.zip
+MacFile_x86_Release.*
+MacFile_x86_64_Release.*

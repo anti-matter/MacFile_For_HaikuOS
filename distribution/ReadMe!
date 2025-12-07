@@ -1,0 +1,23 @@
+MacFile for Haiku
+Copyright (c) 2002-2024, Michael J. Conrad.
+
+Installation
+
+To install MacFile, just double click the installer.sh script found in the archive you extracted, or run it from Terminal. It will place all the files in their correct locations and guide you through the installation process. A link to the server portion of MacFile (afp_server) will be placed in your home/config/boot/launch folder so it will start automatically when you reboot Haiku (don't worry, this is a background process so you won't even notice it's there).
+
+To Uninstall
+
+Uninstallation is easy, just run the same install.sh script from the step above and it will ask you if you want to uninstall MacFile.
+
+What Next?
+
+Once installed, open the MacFile preferences application to configure your file server for vintage Macintosh computers. Remember that this server only supports AFP2.2 and later, which means MacOS 8.0 throught MacOS X 10.5 clients. You can configure MacOS 7.6 clients to use the file server by copying the AppleShare Client from MacOS 8.x, but your results may vary, especially on devices with a 680x0 processor.
+
+Support
+
+Please visit the URL's below to obtain more detailed instructions or to file an issue.
+
+MacFile Wiki: https://github.com/anti-matter/MacFile_For_HaikuOS/wiki
+License (MIT) can be found at: https://github.com/anti-matter/MacFile_For_HaikuOS/blob/master/LICENSE
+
+Enjoy!
