@@ -18,7 +18,22 @@ static mac_extension_map extMap[] = {  // NOLINT(misc-use-anonymous-namespace)
     {.extension = ".bin",   .type = "BINA", .creator = "SITx"},
     {.extension = ".txt",   .type = "TEXT", .creator = "ttxt"},
     {.extension = ".img",   .type = "dimg", .creator = "ddsk"},
-    {.extension = ".image", .type = "dimg", .creator = "ddsk"}
+    {.extension = ".image", .type = "dimg", .creator = "ddsk"},
+	{.extension = ".p",     .type = "TEXT", .creator = "CWIE"},
+    {.extension = ".cp",    .type = "TEXT", .creator = "CWIE"},
+    {.extension = ".cpp",   .type = "TEXT", .creator = "CWIE"},
+    {.extension = ".c",     .type = "TEXT", .creator = "CWIE"},
+    {.extension = ".h",     .type = "TEXT", .creator = "CWIE"},
+    {.extension = ".hpp",   .type = "TEXT", .creator = "CWIE"},
+    {.extension = ".pch",   .type = "TEXT", .creator = "CWIE"},
+    {.extension = ".pch++", .type = "TEXT", .creator = "CWIE"},
+    {.extension = ".prj",   .type = "MMPr", .creator = "CWIE"}, //CW Professional 1 project file
+    {.extension = ".mcp",   .type = "MMPr", .creator = "CWIE"}, //CW Professional 4+ project file
+    {.extension = ".cwlib", .type = "MPLF", .creator = "CWIE"}, //CW Professional 4+ library file
+    {.extension = ".ppob",  .type = "rsrc", .creator = "MWC2"}, //PowerPlant object file (CW Professional 4+)
+    {.extension = ".err",   .type = "MMCH", .creator = "CWIE"}, //Error list
+    {.extension = ".res",   .type = "rsrc", .creator = "RSED"}, //Resource file
+    {.extension = ".o",     .type = "OBJ ", .creator = "MPS "}  //Library (MPW)
 };
 
 void FinderInfoBasedOnExtension(std::string filename, FINDER_INFO* finfo)
