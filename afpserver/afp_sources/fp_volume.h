@@ -51,7 +51,6 @@ public:
 private:
 		BPath*			mPath;
 		BDirectory*		mDirectory;
-		char			mVolumeName[MAX_VOLNAME_LEN+1];
 		int16			mOpenedRefCount;
 		int16			mVolumeID;
 		int8			mVolumeFlags;

@@ -911,14 +911,15 @@ AFPERROR fp_objects::fp_GetFileParms(
 	{
 		off_t fsize = 0;
 
-		afpEntry->GetSize(&fsize);
+		if (!IsResFile(afpEntry))
+		{
+			afpEntry->GetSize(&fsize);
 
-		//
-		//AFP 2.2 can only handle file sizes of 4GB
-		//
-		if (fsize > ULONG_MAX) {
+			// AFP 2.2 can only handle file sizes of 4GB
+			if (fsize > ULONG_MAX) {
 
-			fsize = ULONG_MAX;
+				fsize = ULONG_MAX;
+			}
 		}
 
 		afpReply->push_num<uint32>(fsize);
@@ -927,30 +928,38 @@ AFPERROR fp_objects::fp_GetFileParms(
 	if (afpFileBitmap & kFPRFLen)
 	{
 		off_t fsize = 0;
-		
+
 		//
-		//Since we always keep the resource fork in memory for perf reasons,
-		//we need to get the real size of the fork if it's open by accessing
-		//the memory I/O buffer directly.
+		//For .res files, the resource fork data lives in the data fork.
+		//Return the data fork size as the "resource fork" size.
 		//
-		if (afpRsrcOpen)
+		if (IsResFile(afpEntry))
 		{
+			afpEntry->GetSize(&fsize);
+		}
+		else if (afpRsrcOpen)
+		{
+			//
+			//Since we always keep the resource fork in memory for perf reasons,
+			//we need to get the real size of the fork if it's open by accessing
+			//the memory I/O buffer directly.
+			//
 			fsize = forkItem->rsrcIO->BufferLength();
 		}
 		else
 		{
 			BNode	node(afpEntry);
-					
+
 			if (node.GetAttrInfo(AFP_RSRC_ATTRIBUTE, &info) == B_OK) {
 				fsize = info.size;
 			}
 		}
-				
+
 		//
 		//AFP 2.2 can only handle file sizes of 4GB.
 		//
 		if (fsize > ULONG_MAX) {
-		
+
 			fsize = ULONG_MAX;
 		}
 
@@ -974,23 +983,31 @@ AFPERROR fp_objects::fp_GetFileParms(
 	if (afpFileBitmap & kFPExtRsrcForkLen)
 	{
 		off_t fsize = 0;
-		
+
 		//
-		//See kFPRFLen for details on why we do this.
+		//For .res files, the resource fork data lives in the data fork.
+		//Return the data fork size as the "resource fork" size.
 		//
-		if (afpRsrcOpen)
+		if (IsResFile(afpEntry))
 		{
+			afpEntry->GetSize(&fsize);
+		}
+		else if (afpRsrcOpen)
+		{
+			//
+			//See kFPRFLen for details on why we do this.
+			//
 			fsize = forkItem->rsrcIO->BufferLength();
 		}
 		else
 		{
 			BNode	node(afpEntry);
-					
+
 			if (node.GetAttrInfo(AFP_RSRC_ATTRIBUTE, &info) == B_OK) {
 				fsize = info.size;
 			}
 		}
-		
+
 		//
 		//I don't know what the client is doing here, but it needs an
 		//extra 4 bytes inserted here to read the resource fork length
@@ -998,7 +1015,7 @@ AFPERROR fp_objects::fp_GetFileParms(
 		//spec isn't clear.
 		//
 		afpReply->push_num<uint32>(0);
-		
+
 		afpReply->push_num(fsize);
 	}
 	

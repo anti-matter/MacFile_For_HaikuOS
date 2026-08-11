@@ -21,7 +21,6 @@ typedef uint32 FILECREATOR;
 #define MAX_APPL_PATHNAME		MAX_AFP_STRING_LEN
 #define MAX_OPEN_DESKTOPS		16
 #define MAX_COMMENT_SIZE		199
-#define DONT_USE_INDEX			0
 
 #define ENTRY_TYPE_EMPTY		0
 #define ENTRY_TYPE_ICON			1
@@ -151,6 +150,22 @@ struct DESKTOP_ENTRY
 
 #define NUM_DESK_ENTRIES_TO_CACHE	64
 #define DESK_ENTRY_CACHE_SIZE		(NUM_DESK_ENTRIES_TO_CACHE * sizeof(DESKTOP_ENTRY))
+
+// Desktop database file format (on-disk):
+//   [DESKTOP_DB_HEADER] 24 bytes — magic + version + per-type counts
+//   [DESKTOP_ENTRY]    N entries, contiguous
+#define DESKTOP_DB_MAGIC	0x61667064u  // "afpd"
+#define DESKTOP_DB_VERSION	1u
+#define DESKTOP_DB_HEADER_SIZE	sizeof(DESKTOP_DB_HEADER)
+
+struct DESKTOP_DB_HEADER
+{
+	uint32	magic;
+	uint32	version;
+	int32	iconCount;
+	int32	applCount;
+	int32	cmntCount;
+};
 
 
 AFPERROR FPOpenDT(
