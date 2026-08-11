@@ -1,6 +1,9 @@
 #ifndef __afp__
 #define __afp__
 
+#include <string>
+#include <filesystem>
+
 #include "afpGlobals.h"
 
 class afp_session;
@@ -594,6 +597,9 @@ enum {
 enum {
 	kSendMessageAsUnicode		= 0x02
 };
+
+const std::string res_file_extension = ".res";
+bool IsResFile(BEntry* entry);
 
 AFPERROR FPUnimplemented(
 	afp_session*	afpSession,

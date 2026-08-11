@@ -26,6 +26,7 @@ typedef struct
 	BLocker*		mutex;
 	BMallocIO*		rsrcIO;		//Cache that holds entire rsrc fork data
 	bool			rsrcDirty;	//Flag as to whether fork is "dirty" and needs to be written to disk
+	bool			isResFile;
 }OPEN_FORK_ITEM;
 
 typedef struct

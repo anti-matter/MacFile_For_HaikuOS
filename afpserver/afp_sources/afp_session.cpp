@@ -4,6 +4,7 @@
 
 #include "debug.h"
 #include "commands.h"
+#include "afp.h"
 #include "afpvolume.h"
 #include "afp_session.h"
 #include "dsi_connection.h"
@@ -328,7 +329,7 @@ AFPERROR afp_session::OpenFile(
 
 			return( afpParmErr );
 		}
-
+		
 		forkitem->refnum 	= mNextFileRef++;
 		forkitem->forkopen	= fork;
 		forkitem->entry		= new BEntry(*fentry);
@@ -338,8 +339,14 @@ AFPERROR afp_session::OpenFile(
 		forkitem->file		= NULL;
 		forkitem->rsrcIO	= NULL;
 		forkitem->rsrcDirty	= false;
-
-		if (fork == kDataFork)
+		forkitem->isResFile = IsResFile(fentry);
+		
+		if (forkitem->isResFile)
+		{
+			DBGWRITE(dbg_level_info, "***Opening special case .res file.\n");
+		}
+		
+		if (fork == kDataFork || forkitem->isResFile)
 		{
 			//
 			//Create the file object for this file. The constructor

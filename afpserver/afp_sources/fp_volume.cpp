@@ -108,7 +108,7 @@ bool fp_volume::IsFileOpen(BEntry* entry, int8 fork, uint16* ref)
 
 	while((forkitem = (OPEN_FORK_ITEM*)mOpenFiles->ItemAt(i++)) != NULL)
 	{
-		if ((*(forkitem->entry) == *entry) && (forkitem->forkopen == fork))
+		if ((*(forkitem->entry) == *entry) && (forkitem->forkopen == fork || (forkitem->forkopen == kDataFork && forkitem->isResFile)))
 		{
 			if (ref != NULL) {
 

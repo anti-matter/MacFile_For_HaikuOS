@@ -120,6 +120,23 @@ AFP_TABLE afpTable[] = {
 	{FPSyncFork,				""}
 };
 
+/*
+ * IsResFile()
+ *
+ * Description:
+ *		Returns TRUE if this is a special-case resource file.
+ *
+ * Returns: None
+ */
+
+bool IsResFile(BEntry* entry)
+{
+	BPath path;
+	entry->GetPath(&path);
+	std::filesystem::path spath = path.Path();
+
+	return spath.extension() == res_file_extension;
+}
 
 /*
  * FPUnimplemented()
@@ -2991,11 +3008,13 @@ AFPERROR FPRead(
 						forkItem->entry
 						))
 		{
-			DBGWRITE(dbg_level_info, "****Range is currently locked!****\n");
-			return( afpLockErr );
+			DBGWRITE(dbg_level_warning, "****Range is currently locked!****\n");
+			//return( afpLockErr );
 		}
 
-		if (forkItem->forkopen == kDataFork)
+		// Special case for files with extension ".res", we read from the data fork, but
+		// tell the client it's the resource fork.
+		if (forkItem->forkopen == kDataFork || forkItem->isResFile)
 		{
 			if (!forkItem->file->IsReadable())
 			{
@@ -3158,7 +3177,9 @@ AFPERROR FPWrite(
 		}
 	}
 
-	if (forkItem->forkopen == kDataFork)
+	// Special case for files with extension ".res". We write to data fork, but client
+	// thinks it's the resource fork.
+	if (forkItem->forkopen == kDataFork || forkItem->isResFile)
 	{
 		if (!forkItem->file->IsWritable())
 		{
@@ -3203,7 +3224,7 @@ AFPERROR FPWrite(
 						))
 		{
 			DBGWRITE(dbg_level_warning, "****Range is currently locked!****\n");
-			return( afpLockErr );
+			//return( afpLockErr );
 		}
 
 		//

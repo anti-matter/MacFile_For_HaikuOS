@@ -1,4 +1,5 @@
 #include "finder_info.h"
+#include "debug.h"
 
 #include <filesystem>
 
@@ -44,9 +45,11 @@ void FinderInfoBasedOnExtension(std::string filename, FINDER_INFO* finfo)
 	
 	extension = filepath.extension();
 	
+	DBGWRITE(dbg_level_trace, "Determining finder info based on file extesnsion: (%s)\n", filename.c_str());
+	
 	memset(finfo, 0, sizeof(FINDER_INFO));
 
-	for (int i = 0; i < sizeof(extMap); i++)
+	for (int i = 0; i < std::size(extMap); i++)
 	{
 		if (extension == extMap[i].extension)
 		{

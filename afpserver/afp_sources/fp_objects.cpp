@@ -907,7 +907,9 @@ AFPERROR fp_objects::fp_GetFileParms(
 		}
 	}
 	
-	if (afpFileBitmap & kFPDFLen)
+	auto isResFile = IsResFile(afpEntry);
+	
+	if (afpFileBitmap & kFPDFLen || isResFile)
 	{
 		off_t fsize = 0;
 				
@@ -924,7 +926,7 @@ AFPERROR fp_objects::fp_GetFileParms(
 		afpReply->push_num<uint32>(fsize);
 	}
 	
-	if (afpFileBitmap & kFPRFLen)
+	if (afpFileBitmap & kFPRFLen && !isResFile)
 	{
 		off_t fsize = 0;
 		
@@ -957,7 +959,7 @@ AFPERROR fp_objects::fp_GetFileParms(
 		afpReply->push_num<uint32>(fsize);
 	}
 	
-	if (afpFileBitmap & kFPExtDataForkLen)
+	if (afpFileBitmap & kFPExtDataForkLen || isResFile)
 	{
 		off_t fsize = 0;
 				
@@ -971,7 +973,7 @@ AFPERROR fp_objects::fp_GetFileParms(
 		afpReply->Advance(sizeof(int16));
 	}
 		
-	if (afpFileBitmap & kFPExtRsrcForkLen)
+	if (afpFileBitmap & kFPExtRsrcForkLen && !isResFile)
 	{
 		off_t fsize = 0;
 		
@@ -1309,23 +1311,20 @@ AFPERROR fp_objects::GetAFPFinderInfo(
 					sizeof(FINDER_INFO)
 					);
 	
-	if ((bytesRead < B_OK) || (bytesRead != sizeof(FINDER_INFO)) || memcmp(afpFInfo->fdType, "????", 4) == 0)
+	if ((bytesRead < B_OK) || (bytesRead == B_ENTRY_NOT_FOUND) || memcmp(afpFInfo->fdType, "????", 4) == 0)
 	{
-		if (bytesRead == B_ENTRY_NOT_FOUND)
-		{
-			FINDER_INFO	finfo;
-			
-			afpEntry->GetName(name);
-			FinderInfoBasedOnExtension(name, &finfo);
-			
-			// There is currently no attribute stream for this
-			// file. Create one.
-			SetAFPFinderInfo(afpEntry, &finfo);
-			
-			// Copy the new info which will basically clear everything
-			// in the return value.
-			memcpy(afpFInfo, &finfo, sizeof(finfo));
-		}
+		FINDER_INFO	finfo;
+		
+		afpEntry->GetName(name);
+		FinderInfoBasedOnExtension(name, &finfo);
+		
+		// There is currently no attribute stream for this
+		// file. Create one.
+		SetAFPFinderInfo(afpEntry, &finfo);
+		
+		// Copy the new info which will basically clear everything
+		// in the return value.
+		memcpy(afpFInfo, &finfo, sizeof(finfo));
 
 		//
 		//We failed to read in the data (doesn't exist).
