@@ -2102,7 +2102,7 @@ AFPERROR FPFlushFork(
 	{
 		forkItem->mutex->Lock();
 
-		if (forkItem->forkopen == kDataFork)
+		if (forkItem->forkopen == kDataFork || forkItem->isResFile)
 		{
 			//
 			//Sync the file using the filesystem API after making sure
@@ -2339,15 +2339,46 @@ AFPERROR FPOpenFork(
 		}
 
 		//
+		//For .res files, the resource fork data lives in the data fork.
+		//Swap the bitmap flags so fp_GetFileParms returns data-fork info
+		//where the client expects resource-fork info.
+		//
+		int16 adjustedBitmap = afpBitmap;
+		if (IsResFile(&afpEntry))
+		{
+			if (adjustedBitmap & kFPRFLen)
+			{
+				adjustedBitmap |= kFPDFLen;
+				adjustedBitmap &= ~kFPRFLen;
+			}
+			else if (adjustedBitmap & kFPDFLen)
+			{
+				adjustedBitmap |= kFPRFLen;
+				adjustedBitmap &= ~kFPDFLen;
+			}
+
+			if (adjustedBitmap & kFPExtRsrcForkLen)
+			{
+				adjustedBitmap |= kFPExtDataForkLen;
+				adjustedBitmap &= ~kFPExtRsrcForkLen;
+			}
+			else if (adjustedBitmap & kFPExtDataForkLen)
+			{
+				adjustedBitmap |= kFPExtRsrcForkLen;
+				adjustedBitmap &= ~kFPExtDataForkLen;
+			}
+		}
+
+		//
 		//Add in the bitmap and new refnum id.
 		//
-		afpReply.AddInt16(afpBitmap);
+		afpReply.AddInt16(adjustedBitmap);
 		afpReply.AddInt16(afpNewRefNum);
 
 		//
 		//Now that we've opened the file, get the requested parameters.
 		//
-		afpError = fp_objects::fp_GetFileParms(afpSession, afpVolume, &afpEntry, afpBitmap, &afpReply);
+		afpError = fp_objects::fp_GetFileParms(afpSession, afpVolume, &afpEntry, adjustedBitmap, &afpReply);
 
 		if (AFP_SUCCESS(afpError))
 		{
@@ -2421,11 +2452,42 @@ AFPERROR FPSetForkParms(
 			return( afpError );
 		}
 
-		if ((afpBitmap & kFPDFLen) || (afpBitmap & kFPExtDataForkLen))
+		//
+		//For .res files, the resource fork data lives in the data fork.
+		//Swap the bitmap flags so the code below operates on the data fork
+		//when the client asks to resize the "resource fork".
+		//
+		int16 adjustedBitmap = afpBitmap;
+		if (forkItem->isResFile)
+		{
+			if (adjustedBitmap & kFPRFLen)
+			{
+				adjustedBitmap |= kFPDFLen;
+				adjustedBitmap &= ~kFPRFLen;
+			}
+			else if (adjustedBitmap & kFPDFLen)
+			{
+				adjustedBitmap |= kFPRFLen;
+				adjustedBitmap &= ~kFPDFLen;
+			}
+
+			if (adjustedBitmap & kFPExtRsrcForkLen)
+			{
+				adjustedBitmap |= kFPExtDataForkLen;
+				adjustedBitmap &= ~kFPExtRsrcForkLen;
+			}
+			else if (adjustedBitmap & kFPExtDataForkLen)
+			{
+				adjustedBitmap |= kFPExtRsrcForkLen;
+				adjustedBitmap &= ~kFPExtDataForkLen;
+			}
+		}
+
+		if ((adjustedBitmap & kFPDFLen) || (adjustedBitmap & kFPExtDataForkLen))
 		{
 			DBGWRITE(dbg_level_trace, "Setting data fork length: %lu\n", afpForkLen);
 
-			if (forkItem->forkopen != kDataFork)
+			if (forkItem->forkopen != kDataFork && !forkItem->isResFile)
 			{
 				DBGWRITE(dbg_level_warning, "Data fork is not open!\n");
 				return( afpBitmapErr );
@@ -2441,13 +2503,13 @@ AFPERROR FPSetForkParms(
 			}
 		}
 
-		if ((afpBitmap & kFPRFLen) || (afpBitmap & kFPExtRsrcForkLen))
+		if ((adjustedBitmap & kFPRFLen) || (adjustedBitmap & kFPExtRsrcForkLen))
 		{
 			BNode	node(forkItem->entry);
 
 			DBGWRITE(dbg_level_trace, "Setting rsrc fork length: %lld\n", afpForkLen);
 
-			if (forkItem->forkopen != kRsrcFork)
+			if (forkItem->forkopen != kRsrcFork && !forkItem->isResFile)
 			{
 				DBGWRITE(dbg_level_warning, "Resource fork is not open!\n");
 				return( afpBitmapErr );
@@ -2543,11 +2605,43 @@ AFPERROR FPGetForkParms(
 		}
 
 		//
-		//Make sure the caller is asking for the length of the fork
-		//that is actually opened.
+		//For .res files, the resource fork data lives in the data fork.
+		//Swap the bitmap flags so the validation below and fp_GetFileParms
+		//work with the actual (data) fork that was opened.
 		//
-		if (((afpBitmap & kFPDFLen) && (forkItem->forkopen == kRsrcFork))	||
-			((afpBitmap & kFPRFLen) && (forkItem->forkopen == kDataFork))	)
+		int16 adjustedBitmap = afpBitmap;
+		if (forkItem->isResFile)
+		{
+			if (adjustedBitmap & kFPRFLen)
+			{
+				adjustedBitmap |= kFPDFLen;
+				adjustedBitmap &= ~kFPRFLen;
+			}
+			else if (adjustedBitmap & kFPDFLen)
+			{
+				adjustedBitmap |= kFPRFLen;
+				adjustedBitmap &= ~kFPDFLen;
+			}
+
+			if (adjustedBitmap & kFPExtRsrcForkLen)
+			{
+				adjustedBitmap |= kFPExtDataForkLen;
+				adjustedBitmap &= ~kFPExtRsrcForkLen;
+			}
+			else if (adjustedBitmap & kFPExtDataForkLen)
+			{
+				adjustedBitmap |= kFPExtRsrcForkLen;
+				adjustedBitmap &= ~kFPExtDataForkLen;
+			}
+		}
+
+		//
+		//Make sure the caller is asking for the length of the fork
+		//that is actually opened. (Skip for .res files as bitmap has been adjusted.)
+		//
+		if (!forkItem->isResFile &&
+			(((adjustedBitmap & kFPDFLen) && (forkItem->forkopen == kRsrcFork))	||
+			((adjustedBitmap & kFPRFLen) && (forkItem->forkopen == kDataFork))	))
 		{
 			DBGWRITE(dbg_level_warning, "Attempt to get length of wrong fork!\n");
 			return( afpBitmapErr );
@@ -2556,7 +2650,7 @@ AFPERROR FPGetForkParms(
 		//
 		//Add in the bitmap
 		//
-		afpReply.AddInt16(afpBitmap);
+		afpReply.AddInt16(adjustedBitmap);
 
 		//
 		//Now that we've opened the file, get the requested parameters.
@@ -2565,7 +2659,7 @@ AFPERROR FPGetForkParms(
 									afpSession,
 									forkItem->volume,
 									forkItem->entry,
-									afpBitmap,
+									adjustedBitmap,
 									&afpReply
 									);
 
@@ -4116,7 +4210,7 @@ AFPERROR FPByteRangeLock(
 
 	if (AFP_SUCCESS(afpError))
 	{
-		if (forkItem->forkopen == kDataFork) {
+		if (forkItem->forkopen == kDataFork || forkItem->isResFile) {
 
 			forkItem->entry->GetSize(&afpFileSize);
 		}

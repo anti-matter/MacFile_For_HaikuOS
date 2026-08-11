@@ -907,26 +907,24 @@ AFPERROR fp_objects::fp_GetFileParms(
 		}
 	}
 	
-	auto isResFile = IsResFile(afpEntry);
-	
-	if (afpFileBitmap & kFPDFLen || isResFile)
+	if (afpFileBitmap & kFPDFLen)
 	{
 		off_t fsize = 0;
-				
+
 		afpEntry->GetSize(&fsize);
-		
+
 		//
 		//AFP 2.2 can only handle file sizes of 4GB
 		//
 		if (fsize > ULONG_MAX) {
-		
+
 			fsize = ULONG_MAX;
 		}
-		
+
 		afpReply->push_num<uint32>(fsize);
 	}
-	
-	if (afpFileBitmap & kFPRFLen && !isResFile)
+
+	if (afpFileBitmap & kFPRFLen)
 	{
 		off_t fsize = 0;
 		
@@ -959,21 +957,21 @@ AFPERROR fp_objects::fp_GetFileParms(
 		afpReply->push_num<uint32>(fsize);
 	}
 	
-	if (afpFileBitmap & kFPExtDataForkLen || isResFile)
+	if (afpFileBitmap & kFPExtDataForkLen)
 	{
 		off_t fsize = 0;
-				
+
 		afpEntry->GetSize(&fsize);
 		afpReply->push_num(fsize);
 	}
-		
+
 	if (afpFileBitmap & kFPUnicodeName)
 	{
 		uniNameOffset = (int16*)afpReply->GetCurrentPosPtr();
 		afpReply->Advance(sizeof(int16));
 	}
-		
-	if (afpFileBitmap & kFPExtRsrcForkLen && !isResFile)
+
+	if (afpFileBitmap & kFPExtRsrcForkLen)
 	{
 		off_t fsize = 0;
 		
