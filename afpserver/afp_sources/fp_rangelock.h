@@ -8,32 +8,36 @@
 class fp_rangelock
 {
 public:
-						fp_rangelock(OPEN_FORK_ITEM* forkItem);
+							fp_rangelock(afp_session* session, OPEN_FORK_ITEM* forkItem);
 	virtual				~fp_rangelock();
-	
+
 	static bool			RangeLocked(
-							off_t 		rangeStart,
-							off_t 		rangeEnd,
-							BEntry* 	entry
-							);
-	
+								off_t 				rangeStart,
+								off_t 				rangeEnd,
+								afp_session* 		session,
+								BEntry* 			entry
+								);
+
 	static fp_rangelock*	SessionRangeLocked(
-							off_t 				rangeStart,
-							off_t 				rangeLength,
-							OPEN_FORK_ITEM* 	forkItem
-							);
-	
+								off_t 				rangeStart,
+								off_t 				rangeLength,
+								afp_session* 		session,
+								OPEN_FORK_ITEM* 	forkItem
+								);
+
 	virtual AFPERROR	Lock(off_t offset, off_t len);
 	virtual void		GetLockRange(off_t* start, off_t* end);
 	virtual uint16		GetForkRef()		{ return mForkRef->refnum; }
-	virtual BEntry*		GetLockEntry()		{ return mEntry;  }
-	
+	virtual afp_session*	GetSession()		{ return mSession; }
+
 private:
 
-	BEntry*			mEntry;
-	off_t			mStart;
-	off_t			mEnd;
-	OPEN_FORK_ITEM*	mForkRef;
+	node_ref			mNodeRef;
+	off_t				mStart;
+	off_t				mEnd;
+	bool				mIsValid;
+	OPEN_FORK_ITEM*		mForkRef;
+	afp_session*		mSession;
 };
 
 #endif //__fp_rangelock__

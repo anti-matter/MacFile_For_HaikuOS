@@ -2100,32 +2100,56 @@ AFPERROR FPFlushFork(
 
 	if (AFP_SUCCESS(afpError))
 	{
-		forkItem->mutex->Lock();
-
+		// Check if any other session holds a lock on this fork. A flush
+		// affects the entire fork, so we reject it if another session
+		// has locked any portion of it.
 		if (forkItem->forkopen == kDataFork || forkItem->isResFile)
 		{
-			//
-			//Sync the file using the filesystem API after making sure
-			//the file is valid and exists.
-			//
-			if ((forkItem->file != NULL) 				&&
-				(forkItem->file->InitCheck() == B_OK)	&&
-				(forkItem->file->IsWritable())			)
+			off_t	afpFileSize = 0;
+
+			forkItem->entry->GetSize(&afpFileSize);
+
+			if (fp_rangelock::RangeLocked(
+								0,
+								afpFileSize,
+								afpSession,
+								forkItem->entry
+								))
 			{
-				forkItem->file->Sync();
+				DBGWRITE(dbg_level_warning, "****Cannot flush: range is locked by another session!****\n");
+				afpError = afpLockErr;
 			}
 		}
-		else
-		{
-			//
-			//We call the resource fork closing method, but we tell it not
-			//to actually delete the memory block which causes just the
-			//file on disk to be updated.
-			//
-			afpSession->CloseAndWriteOutResourceFork(forkItem, false);
-		}
 
-		forkItem->mutex->Unlock();
+		if (AFP_SUCCESS(afpError))
+		{
+			forkItem->mutex->Lock();
+
+			if (forkItem->forkopen == kDataFork || forkItem->isResFile)
+			{
+				//
+				//Sync the file using the filesystem API after making sure
+				//the file is valid and exists.
+				//
+				if ((forkItem->file != NULL) 				&&
+					(forkItem->file->InitCheck() == B_OK)	&&
+					(forkItem->file->IsWritable())			)
+				{
+					forkItem->file->Sync();
+				}
+			}
+			else
+			{
+				//
+				//We call the resource fork closing method, but we tell it not
+				//to actually delete the memory block which causes just the
+				//file on disk to be updated.
+				//
+				afpSession->CloseAndWriteOutResourceFork(forkItem, false);
+			}
+
+			forkItem->mutex->Unlock();
+		}
 	}
 
 	return( afpError );
@@ -2339,46 +2363,15 @@ AFPERROR FPOpenFork(
 		}
 
 		//
-		//For .res files, the resource fork data lives in the data fork.
-		//Swap the bitmap flags so fp_GetFileParms returns data-fork info
-		//where the client expects resource-fork info.
-		//
-		int16 adjustedBitmap = afpBitmap;
-		if (IsResFile(&afpEntry))
-		{
-			if (adjustedBitmap & kFPRFLen)
-			{
-				adjustedBitmap |= kFPDFLen;
-				adjustedBitmap &= ~kFPRFLen;
-			}
-			else if (adjustedBitmap & kFPDFLen)
-			{
-				adjustedBitmap |= kFPRFLen;
-				adjustedBitmap &= ~kFPDFLen;
-			}
-
-			if (adjustedBitmap & kFPExtRsrcForkLen)
-			{
-				adjustedBitmap |= kFPExtDataForkLen;
-				adjustedBitmap &= ~kFPExtRsrcForkLen;
-			}
-			else if (adjustedBitmap & kFPExtDataForkLen)
-			{
-				adjustedBitmap |= kFPExtRsrcForkLen;
-				adjustedBitmap &= ~kFPExtDataForkLen;
-			}
-		}
-
-		//
 		//Add in the bitmap and new refnum id.
 		//
-		afpReply.AddInt16(adjustedBitmap);
+		afpReply.AddInt16(afpBitmap);
 		afpReply.AddInt16(afpNewRefNum);
 
 		//
 		//Now that we've opened the file, get the requested parameters.
 		//
-		afpError = fp_objects::fp_GetFileParms(afpSession, afpVolume, &afpEntry, adjustedBitmap, &afpReply);
+		afpError = fp_objects::fp_GetFileParms(afpSession, afpVolume, &afpEntry, afpBitmap, &afpReply);
 
 		if (AFP_SUCCESS(afpError))
 		{
@@ -2505,41 +2498,45 @@ AFPERROR FPSetForkParms(
 
 		if ((adjustedBitmap & kFPRFLen) || (adjustedBitmap & kFPExtRsrcForkLen))
 		{
-			BNode	node(forkItem->entry);
-
-			DBGWRITE(dbg_level_trace, "Setting rsrc fork length: %lld\n", afpForkLen);
-
-			if (forkItem->forkopen != kRsrcFork && !forkItem->isResFile)
+			// For .res files, the data fork SetSize above already handled it.
+			if (!forkItem->isResFile)
 			{
-				DBGWRITE(dbg_level_warning, "Resource fork is not open!\n");
-				return( afpBitmapErr );
-			}
+				BNode	node(forkItem->entry);
 
-			forkItem->rsrcIO->SetSize(afpForkLen);
+				DBGWRITE(dbg_level_trace, "Setting rsrc fork length: %lld\n", afpForkLen);
 
-			//
-			//If we set the size of the fork, we need to write out the entire
-			//fork to disk so that subsequent GetFileParms calls will return
-			//the proper RF length.
-			//
-			node.RemoveAttr(AFP_RSRC_ATTRIBUTE);
+				if (forkItem->forkopen != kRsrcFork)
+				{
+					DBGWRITE(dbg_level_warning, "Resource fork is not open!\n");
+					return( afpBitmapErr );
+				}
 
-			//
-			//06.02.09: Fixed bug where older mac clients appear to attempt to write
-			//zero bytes to the file if there is no resource fork. This, of course,
-			//returns an error that the older clients can't deal with, so they fail.
-			//
-			if (afpForkLen > 0)
-			{
+				forkItem->rsrcIO->SetSize(afpForkLen);
+
 				//
-				//Now write the data back to the resource stream of the file.
+				//If we set the size of the fork, we need to write out the entire
+				//fork to disk so that subsequent GetFileParms calls will return
+				//the proper RF length.
 				//
-				afpError = (node.WriteAttr(
-								AFP_RSRC_ATTRIBUTE,
-								B_RAW_TYPE,
-								0,
-								forkItem->rsrcIO->Buffer(),
-								forkItem->rsrcIO->BufferLength() ) < B_OK) ? afpParmErr : AFP_OK;
+				node.RemoveAttr(AFP_RSRC_ATTRIBUTE);
+
+				//
+				//06.02.09: Fixed bug where older mac clients appear to attempt to write
+				//zero bytes to the file if there is no resource fork. This, of course,
+				//returns an error that the older clients can't deal with, so they fail.
+				//
+				if (afpForkLen > 0)
+				{
+					//
+					//Now write the data back to the resource stream of the file.
+					//
+					afpError = (node.WriteAttr(
+									AFP_RSRC_ATTRIBUTE,
+									B_RAW_TYPE,
+									0,
+									forkItem->rsrcIO->Buffer(),
+									forkItem->rsrcIO->BufferLength() ) < B_OK) ? afpParmErr : AFP_OK;
+				}
 			}
 		}
 	}
@@ -2605,43 +2602,12 @@ AFPERROR FPGetForkParms(
 		}
 
 		//
-		//For .res files, the resource fork data lives in the data fork.
-		//Swap the bitmap flags so the validation below and fp_GetFileParms
-		//work with the actual (data) fork that was opened.
-		//
-		int16 adjustedBitmap = afpBitmap;
-		if (forkItem->isResFile)
-		{
-			if (adjustedBitmap & kFPRFLen)
-			{
-				adjustedBitmap |= kFPDFLen;
-				adjustedBitmap &= ~kFPRFLen;
-			}
-			else if (adjustedBitmap & kFPDFLen)
-			{
-				adjustedBitmap |= kFPRFLen;
-				adjustedBitmap &= ~kFPDFLen;
-			}
-
-			if (adjustedBitmap & kFPExtRsrcForkLen)
-			{
-				adjustedBitmap |= kFPExtDataForkLen;
-				adjustedBitmap &= ~kFPExtRsrcForkLen;
-			}
-			else if (adjustedBitmap & kFPExtDataForkLen)
-			{
-				adjustedBitmap |= kFPExtRsrcForkLen;
-				adjustedBitmap &= ~kFPExtDataForkLen;
-			}
-		}
-
-		//
 		//Make sure the caller is asking for the length of the fork
-		//that is actually opened. (Skip for .res files as bitmap has been adjusted.)
+		//that is actually opened. (Skip for .res files — bitmap is passed through.)
 		//
 		if (!forkItem->isResFile &&
-			(((adjustedBitmap & kFPDFLen) && (forkItem->forkopen == kRsrcFork))	||
-			((adjustedBitmap & kFPRFLen) && (forkItem->forkopen == kDataFork))	))
+			(((afpBitmap & kFPDFLen) && (forkItem->forkopen == kRsrcFork))	||
+			((afpBitmap & kFPRFLen) && (forkItem->forkopen == kDataFork))	))
 		{
 			DBGWRITE(dbg_level_warning, "Attempt to get length of wrong fork!\n");
 			return( afpBitmapErr );
@@ -2650,7 +2616,7 @@ AFPERROR FPGetForkParms(
 		//
 		//Add in the bitmap
 		//
-		afpReply.AddInt16(adjustedBitmap);
+		afpReply.AddInt16(afpBitmap);
 
 		//
 		//Now that we've opened the file, get the requested parameters.
@@ -2659,7 +2625,7 @@ AFPERROR FPGetForkParms(
 									afpSession,
 									forkItem->volume,
 									forkItem->entry,
-									adjustedBitmap,
+									afpBitmap,
 									&afpReply
 									);
 
@@ -3099,11 +3065,12 @@ AFPERROR FPRead(
 		if (fp_rangelock::RangeLocked(
 						seekResult,
 						seekResult + afpReqCount,
+						afpSession,
 						forkItem->entry
 						))
 		{
 			DBGWRITE(dbg_level_warning, "****Range is currently locked!****\n");
-			//return( afpLockErr );
+			return( afpLockErr );
 		}
 
 		// Special case for files with extension ".res", we read from the data fork, but
@@ -3314,11 +3281,12 @@ AFPERROR FPWrite(
 		if (fp_rangelock::RangeLocked(
 						seekResult,
 						seekResult + afpReqCount,
+						afpSession,
 						forkItem->entry
 						))
 		{
 			DBGWRITE(dbg_level_warning, "****Range is currently locked!****\n");
-			//return( afpLockErr );
+			return( afpLockErr );
 		}
 
 		//
@@ -3379,6 +3347,7 @@ AFPERROR FPWrite(
 		if (fp_rangelock::RangeLocked(
 						afpOffset,
 						afpOffset + afpReqCount,
+						afpSession,
 						forkItem->entry
 						))
 		{
@@ -4233,7 +4202,7 @@ AFPERROR FPByteRangeLock(
 		{
 			fp_rangelock*	afpLock = NULL;
 
-			afpLock  = fp_rangelock::SessionRangeLocked(afpOffset, afpLength, forkItem);
+			afpLock  = fp_rangelock::SessionRangeLocked(afpOffset, afpLength, afpSession, forkItem);
 			afpError = (afpLock == NULL) ? afpRangeNotLocked : AFP_OK;
 
 			if (AFP_SUCCESS(afpError))
@@ -4293,7 +4262,7 @@ AFPERROR FPByteRangeLock(
 				}
 			}//from beginning
 
-			fp_rangelock*	afpLock = new fp_rangelock(forkItem);
+			fp_rangelock*	afpLock = new fp_rangelock(afpSession, forkItem);
 
 			if (afpLock != NULL)
 			{

@@ -7,20 +7,31 @@
 #include "afp.h"
 #include "fp_volume.h"
 
-int16 gNextVolumeID = 1;
+uint16 gNextVolumeID = 1;
 
 /*
  * fp_volume()
  *
  * Description:
+ *		Constructor. Initializes a new shared AFP volume with the given
+ *		path and server flags. Assigns a unique volume ID, creates the
+ *		root BDirectory, initializes the open-files list, and resolves
+ *		the root directory's node ID and its parent's node ID for later
+ *		file-ID lookups.
  *
- * Returns:
+ * Returns: N/A (constructor)
  */
 
 fp_volume::fp_volume(BPath* path, uint32 srvrVolFlags)
 {
 	BDirectory		dir;
 
+	if (path == nullptr) {
+		DBGWRITE(dbg_level_error, "Null path passed to fp_volume constructor\n");
+		return;
+	}
+
+	mOpenedRefCount = 0;
 	mVolumeID 		= gNextVolumeID++;
 	mVolumeFlags	= srvrVolFlags;
 	mPath			= path;
@@ -61,8 +72,10 @@ fp_volume::fp_volume(BPath* path, uint32 srvrVolFlags)
  * ~fp_volume()
  *
  * Description:
+ *		Destructor. Releases the dynamically allocated mPath, mDirectory,
+ *		and mOpenFiles objects owned by this volume instance.
  *
- * Returns:
+ * Returns: N/A (destructor)
  */
 
 fp_volume::~fp_volume()
@@ -77,8 +90,12 @@ fp_volume::~fp_volume()
  * AddOpenFile()
  *
  * Description:
+ *		Adds an OPEN_FORK_ITEM to this volume's list of open file forks.
+ *		The list is used to track which files are currently open so that
+ *		file attribute bits (data fork / resource fork open flags) can be
+ *		set correctly in AFP responses. Protected by mLock for thread safety.
  *
- * Returns:
+ * Returns: N/A
  */
 
 void fp_volume::AddOpenFile(OPEN_FORK_ITEM* forkitem)
@@ -95,8 +112,13 @@ void fp_volume::AddOpenFile(OPEN_FORK_ITEM* forkitem)
  * IsFileOpen()
  *
  * Description:
+ *		Searches this volume's open-files list for a fork item whose BEntry
+ *		matches the given entry and whose fork type matches (or is a data
+ *		fork alias of a resource-open file). If found and ref is non-NULL,
+ *		the file's reference number is written through to *ref. Thread-safe
+ *		via mLock.
  *
- * Returns:
+ * Returns: true if the file/fork is currently open on this volume, false otherwise.
  */
 
 bool fp_volume::IsFileOpen(BEntry* entry, int8 fork, uint16* ref)
@@ -130,8 +152,11 @@ bool fp_volume::IsFileOpen(BEntry* entry, int8 fork, uint16* ref)
  * RemoveOpenFile()
  *
  * Description:
+ *		Removes an OPEN_FORK_ITEM from this volume's open-files list,
+ *		corresponding to a file fork that has been closed. Thread-safe
+ *		via mLock.
  *
- * Returns:
+ * Returns: N/A
  */
 
 void fp_volume::RemoveOpenFile(OPEN_FORK_ITEM* forkitem)
@@ -145,13 +170,19 @@ void fp_volume::RemoveOpenFile(OPEN_FORK_ITEM* forkitem)
 
 
 /*
- * GetVolumeParameters()
+ * fp_GetVolParms()
  *
  * Description:
- *		Get the volume parameters as returned in FPOpenVol and
- *		FPGetVolParms.
+ *		Gathers volume parameters for the AFP FPOpenVol and FPGetVolParms
+ *		responses. Based on the volBitmap requested fields, it writes to
+ *		afpBuffer: volume attributes (read-only, Unicode support, ACLs,
+ *		etc.), signature (fixed directory ID), creation/modification dates,
+ *		volume ID, free/total bytes (32-bit and 64-bit variants), block
+ *		size, and the volume name as a pascal string. Handles AFP 2.x
+ *		4GB size limits by clamping to UINT32_MAX where needed.
  *
- * Returns: AFPERROR
+ * Returns: AFP_OK on success, afpParmErr (-5019) if entry ref or BVolume
+ *		initialization fails.
  */
 
 AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer)
@@ -243,27 +274,31 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer)
 		//For AFP 2.1 and older clients, we cannot report volume
 		//sizes larger than 4GB.
 		//
+		off_t freeBytesClamped = freeBytes;
 
 		if (freeBytes >= UINT32_MAX)
 		{
-			freeBytes = UINT32_MAX;
+			freeBytesClamped = UINT32_MAX;
 		}
 
-		DBGWRITE(dbg_level_info, "Disk bytes free: %llu\n", freeBytes);
+		DBGWRITE(dbg_level_info, "Disk bytes free: %llu\n", freeBytesClamped);
 
-		afpBuffer.push_num<uint32>(freeBytes);
+		afpBuffer.push_num<uint32>(freeBytesClamped);
 	}
 
 	if (volBitmap & kFPVolBytesTotalBit)
 	{
 		//
 		//The total number of bytes (free + used) on the AFP volume as a uint32.
+		//Algebraically: freeBytes + (capacity - freeBytes) == capacity.
+		//Use unclamped freeBytes so the formula is correct for disks >4GB.
+		//Guard against negative freeBytes from filesystem errors.
 		//
-		off_t bytesTotal = freeBytes + (capacity - freeBytes);
+		off_t bytesTotal = capacity;
 
-		if (bytesTotal > UINT32_MAX)
+		if (bytesTotal < 0 || bytesTotal > UINT32_MAX)
 		{
-			bytesTotal = UINT32_MAX;
+			bytesTotal = (bytesTotal < 0) ? 0 : UINT32_MAX;
 		}
 
 		DBGWRITE(dbg_level_info, "Disk bytes total: %llu\n", bytesTotal);
@@ -319,10 +354,12 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer)
  * fp_OpenVolume()
  *
  * Description:
- *		This implements the FPOpenVolume call for this volume for
- *		AFP access.
+ *		Implements the FPOpenVol AFP command for this volume. Registers
+ *		this volume as opened in the given session via session->VolumeOpened(),
+ *		and increments mOpenedRefCount on success. Used by a Mac client to
+ *		switch its active volume context.
  *
- * Returns: AFPERROR
+ * Returns: AFP_OK on success, or an AFP error code if registration fails.
  */
 
 AFPERROR fp_volume::fp_OpenVolume(afp_session* session)
@@ -344,10 +381,12 @@ AFPERROR fp_volume::fp_OpenVolume(afp_session* session)
  * fp_CloseVolume()
  *
  * Description:
- *		This implements the FPCloseVolume call and closes this
- *		volume for access to this session.
+ *		Implements the FPCloseVol AFP command for this volume. Unregisters
+ *		this volume from the given session via session->VolumeClosed(), and
+ *		decrements mOpenedRefCount on success. Used by a Mac client to
+ *		switch away from this volume.
  *
- * Returns: AFPERROR
+ * Returns: AFP_OK on success, or an AFP error code if unregistration fails.
  */
 
 AFPERROR fp_volume::fp_CloseVolume(afp_session* session)

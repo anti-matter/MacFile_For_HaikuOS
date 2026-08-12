@@ -81,7 +81,7 @@ AFPERROR FPOpenDT(
 	//
 	//Build the full path to the desktop database.
 	//
-	sprintf(afpDeskPath, "%s/%s", afpVolume->GetPath()->Path(), DESKTOP_FILE_NAME);
+	snprintf(afpDeskPath, sizeof(afpDeskPath), "%s/%s", afpVolume->GetPath()->Path(), DESKTOP_FILE_NAME);
 
 	root = afpVolume->GetDirectory();
 	
@@ -102,6 +102,20 @@ AFPERROR FPOpenDT(
 			//
 			DBGWRITE(dbg_level_warning, "Failed to create desktop file\n");
 			return( afpParmErr );
+		}
+		// Initialize the new desktop file with a header.
+		{
+			BFile newFile(afpDeskPath, B_WRITE_ONLY);
+			if (newFile.InitCheck() == B_OK)
+			{
+				DESKTOP_DB_HEADER header;
+				header.magic = DESKTOP_DB_MAGIC;
+				header.version = DESKTOP_DB_VERSION;
+				header.iconCount = 0;
+				header.applCount = 0;
+				header.cmntCount = 0;
+				newFile.Write(&header, sizeof(header));
+			}
 		}
 		
 		//
@@ -346,7 +360,7 @@ AFPERROR FPGetIcon(
 	dtEntry.entryType = ENTRY_TYPE_ICON;
 	dtEntry.fileCreator = afpRequest.pull_num<uint32>();
 	dtEntry.fileType = afpRequest.pull_num<uint32>();	
-	dtEntry.iconType = afpRequest.pull_num<int8>();
+	dtEntry.iconType = afpRequest.pull_num<uint8>();
 
 	afpRequest.Advance(sizeof(int8));
 	
@@ -440,7 +454,7 @@ AFPERROR FPGetIconInfo(
 	{
 		afpReply.push_num<uint32>(iconEntry.tag);
 		afpReply.push_num<uint32>(iconEntry.fileType);
-		afpReply.push_num(iconEntry.iconType);
+		afpReply.push_num<uint8>(iconEntry.iconType);
 		afpReply.push_num<int8>(0);
 		afpReply.push_num<uint16>(iconEntry.dataSize);
 		
@@ -701,7 +715,6 @@ AFPERROR FPGetComment(
 		//
 		afpError = afpItemNotFound;
 		
-		node.Lock();
 		
 		if (node.GetAttrInfo(AFP_CMNT_ATTRIBUTE, &info) == B_OK)
 		{
@@ -729,7 +742,6 @@ AFPERROR FPGetComment(
 			}
 		}
 				
-		node.Unlock();
 	}
 	else
 	{
@@ -849,11 +861,9 @@ AFPERROR FPRemoveComment(
 	{
 		BNode	node(&afpEntry);
 		
-		node.Lock();
 		
-		afpError = (node.RemoveAttr(AFP_CMNT_ATTRIBUTE) == B_OK) ? afpParmErr : AFP_OK;
+		afpError = (node.RemoveAttr(AFP_CMNT_ATTRIBUTE) == B_OK) ? AFP_OK : afpParmErr;
 		
-		node.Unlock();
 	}
 	
 	return( afpError );
@@ -1111,26 +1121,33 @@ std::unique_ptr<DESKTOP_ENTRY[]> afp_GetDesktopEntries(
 		DBGWRITE(dbg_level_error, "Error getting desktop file size!\n");
 		return nullptr;
 	}
-	
-	if (desk_file_size < sizeof(DESKTOP_ENTRY))
+
+	if (desk_file_size < DESKTOP_DB_HEADER_SIZE + sizeof(DESKTOP_ENTRY))
 	{
 		// No entries in the db yet.
 		return nullptr;
 	}
-	
-	int32 num_entries = desk_file_size / sizeof(DESKTOP_ENTRY);
-	
+
+	int32 num_entries = (desk_file_size - DESKTOP_DB_HEADER_SIZE) / sizeof(DESKTOP_ENTRY);
+	if (num_entries <= 0)
+	{
+		return nullptr;
+	}
+
 	DBGWRITE(dbg_level_info, "Desktop file size: %lu\n", desk_file_size);
 	DBGWRITE(dbg_level_info, "Desktop entries: %lu\n", num_entries);
-	
-	// Read in the entire db for performance reasons.
-	
+
 	desktop_file->Seek(0, SEEK_SET);
 	auto entries = std::make_unique<DESKTOP_ENTRY[]>(num_entries);
-	auto bytesRead = desktop_file->Read(entries.get(), desk_file_size);
+	off_t bytesRead = 0;
+	char header_buf[DESKTOP_DB_HEADER_SIZE];
+	if (desktop_file->Read(header_buf, DESKTOP_DB_HEADER_SIZE) == DESKTOP_DB_HEADER_SIZE)
+	{
+		bytesRead = desktop_file->Read(entries.get(), num_entries * sizeof(DESKTOP_ENTRY));
+	}
 
 	*entry_count = num_entries;
-	
+
 	return std::move(entries);
 }
 
@@ -1139,38 +1156,46 @@ std::unique_ptr<DESKTOP_ENTRY[]> afp_GetDesktopEntries(
  * afp_CountDesktopItems()
  *
  * Description:
- *		Counts the entries for a particular type in a desktop database.
+ *		Returns per-type counts from the desktop database header.
  *
  * Returns: int32
  */
 
-std::unique_ptr<DESKTOP_ENTRY[]> afp_CountDesktopItems(
+void afp_CountDesktopItems(
 	OPEN_DESK_ITEM* deskitem,
-	int8 entryType,
-	int32* entry_count,
-	int32* item_count
+	int32* icon_count,
+	int32* appl_count,
+	int32* cmnt_count
 	)
-{	
-	auto entries = afp_GetDesktopEntries(deskitem->file, entry_count);
-		
-	*item_count = 0;
-	int32 count = 0;
-	
-	for (int i = 0; i < *entry_count; i++)
+{
+	if (icon_count != nullptr) *icon_count = 0;
+	if (appl_count != nullptr) *appl_count = 0;
+	if (cmnt_count != nullptr) *cmnt_count = 0;
+
+	off_t desk_file_size;
+	if (deskitem->file->GetSize(&desk_file_size) != B_OK || desk_file_size < DESKTOP_DB_HEADER_SIZE)
 	{
-		if (entries[i].entryType != entryType)
-		{
-			continue;
-		}
-		
-		count++;
+		return;
 	}
+
+	char header_buf[DESKTOP_DB_HEADER_SIZE];
+	deskitem->file->Seek(0, SEEK_SET);
+	if (deskitem->file->Read(header_buf, DESKTOP_DB_HEADER_SIZE) < DESKTOP_DB_HEADER_SIZE)
+	{
+		return;
+	}
+
+	const DESKTOP_DB_HEADER* header = reinterpret_cast<const DESKTOP_DB_HEADER*>(header_buf);
+	if (header->magic != DESKTOP_DB_MAGIC || header->version != DESKTOP_DB_VERSION)
+	{
+		DBGWRITE(dbg_level_warning, "Desktop DB header magic/version mismatch!\n");
+		return;
+	}
+
+	if (icon_count != nullptr) *icon_count = header->iconCount;
+	if (appl_count != nullptr) *appl_count = header->applCount;
+	if (cmnt_count != nullptr) *cmnt_count = header->cmntCount;
 	
-	*item_count = count;
-	
-	DBGWRITE(dbg_level_info, "Item count (%d) count in db: %lu\n", entryType, count);
-	
-	return std::move(entries);
 }
 
 
@@ -1192,12 +1217,10 @@ AFPERROR afp_FindDTEntry(
 	int32*			foundPosition
 	)
 {
-	DESKTOP_ENTRY*		deskEntry	= NULL;
-	OPEN_DESK_ITEM*		deskitem	= NULL;
-	AFPERROR			afpError	= AFP_OK;
-	ssize_t				position	= 0;
 	
-	deskitem = afpSession->GetDeskItem(refnum);
+	std::lock_guard lock(desk_mutex);
+
+	OPEN_DESK_ITEM* deskitem = afpSession->GetDeskItem(refnum);
 	
 	if (deskitem == NULL)
 	{
@@ -1207,36 +1230,33 @@ AFPERROR afp_FindDTEntry(
 		return( afpParmErr );
 	}
 	
+	int32 iconCount = 0;
+	int32 applCount = 0;
+	afp_CountDesktopItems(deskitem, &iconCount, &applCount, nullptr);
+
 	int32 entryCount = 0;
 	std::unique_ptr<DESKTOP_ENTRY[]> entries;
-	
-	int32 iconCount = 0;
+
 	if (searchCriteria->entryType == ENTRY_TYPE_ICON)
 	{
-		entries = afp_CountDesktopItems(deskitem, ENTRY_TYPE_ICON, &entryCount, &iconCount);
-		if (entries == nullptr || searchIndex > iconCount)
+		if (searchIndex > iconCount)
 		{
 			DBGWRITE(dbg_level_warning, "Icon search index out of range (%lu vs %lu)\n", searchIndex, iconCount);
 			return afpItemNotFound;
 		}
 	}
-	
-	int32 applCount = 0;
+
 	if (searchCriteria->entryType == ENTRY_TYPE_APPL)
 	{
-		entries = afp_CountDesktopItems(deskitem, ENTRY_TYPE_APPL, &entryCount, &applCount);
-		if (entries == nullptr || searchIndex > applCount)
+		if (searchIndex > applCount)
 		{
 			DBGWRITE(dbg_level_warning, "APPL search index out of range (%lu vs %lu)\n", searchIndex, applCount);
 			return afpItemNotFound;
 		}
 	}
-	
-	if (entries == nullptr)
-	{
-		entries = afp_GetDesktopEntries(deskitem->file, &entryCount);
-	}
-	
+
+	entries = afp_GetDesktopEntries(deskitem->file, &entryCount);
+
 	if (entries == nullptr)
 	{
 		DBGWRITE(dbg_level_warning, "No entries in database!!\n");
@@ -1378,27 +1398,89 @@ AFPERROR afp_AddEntry(
 		{
 			DBGWRITE(dbg_level_info, "Replacing entry of type %d in database!\n", dtEntry->entryType);
 
-			std::lock_guard lock(desk_mutex);
-			
 			int32 entry_count = 0;
 			auto entries = afp_GetDesktopEntries(deskitem->file, &entry_count);
 			if (entries == nullptr)
 			{
 				return afpParmErr;
 			}
-			
+
 			memcpy(&entries[foundPosition], dtEntry, sizeof(DESKTOP_ENTRY));
 
-			deskitem->file->Seek(0, SEEK_SET);			
-			auto bytesWritten = deskitem->file->Write(dtEntry, sizeof(DESKTOP_ENTRY));
+			DESKTOP_DB_HEADER header;
+			header.magic = DESKTOP_DB_MAGIC;
+			header.version = DESKTOP_DB_VERSION;
+			header.iconCount = 0;
+			header.applCount = 0;
+			header.cmntCount = 0;
+			for (int32 k = 0; k < entry_count; k++)
+			{
+				switch (entries[k].entryType)
+				{
+					case ENTRY_TYPE_ICON:	header.iconCount++;	break;
+					case ENTRY_TYPE_APPL:	header.applCount++;	break;
+					case ENTRY_TYPE_CMNT:	header.cmntCount++;	break;
+					default:	break;
+				}
+			}
+
+			deskitem->file->Seek(0, SEEK_SET);
+			char write_buf[DESKTOP_DB_HEADER_SIZE];
+			memcpy(write_buf, &header, DESKTOP_DB_HEADER_SIZE);
+			deskitem->file->Write(write_buf, DESKTOP_DB_HEADER_SIZE);
+			auto bytesWritten = deskitem->file->Write(entries.get(), sizeof(DESKTOP_ENTRY) * entry_count);
+			if (bytesWritten < B_OK)
+			{
+				DBGWRITE(dbg_level_error, "Replacing entry of type %d FAILED!\n", dtEntry->entryType);
+				afpError = afpParmErr;
+			}
 		}
 	}
+
 	else if (afpError == afpItemNotFound)
 	{
-		std::lock_guard lock(desk_mutex);
+		int32 entry_count = 0;
+		auto entries = afp_GetDesktopEntries(deskitem->file, &entry_count);
+		if (entries == nullptr)
+		{
+			entry_count = 0;
+			entries = std::make_unique<DESKTOP_ENTRY[]>(1);
+		}
+		else
+		{
+			auto new_entries = std::make_unique<DESKTOP_ENTRY[]>(entry_count + 1);
+			for (int32 k = 0; k < entry_count; k++)
+			{
+				new_entries[k] = entries[k];
+			}
+			entries = std::move(new_entries);
+		}
 
-		deskitem->file->Seek(0, SEEK_END);
-		auto bytesWritten = deskitem->file->Write(dtEntry, sizeof(DESKTOP_ENTRY));
+		entries[entry_count] = *dtEntry;
+		entry_count++;
+
+		DESKTOP_DB_HEADER header;
+		header.magic = DESKTOP_DB_MAGIC;
+		header.version = DESKTOP_DB_VERSION;
+		header.iconCount = 0;
+		header.applCount = 0;
+		header.cmntCount = 0;
+		for (int32 k = 0; k < entry_count; k++)
+		{
+			switch (entries[k].entryType)
+			{
+				case ENTRY_TYPE_ICON:	header.iconCount++;	break;
+				case ENTRY_TYPE_APPL:	header.applCount++;	break;
+				case ENTRY_TYPE_CMNT:	header.cmntCount++;	break;
+				default:	break;
+			}
+		}
+
+		deskitem->file->Seek(0, SEEK_SET);
+		char write_buf[DESKTOP_DB_HEADER_SIZE];
+		memcpy(write_buf, &header, DESKTOP_DB_HEADER_SIZE);
+		deskitem->file->Write(write_buf, DESKTOP_DB_HEADER_SIZE);
+		auto bytesWritten = deskitem->file->Write(entries.get(), sizeof(DESKTOP_ENTRY) * entry_count);
 		
 		if (bytesWritten < B_OK)
 		{
@@ -1462,8 +1544,6 @@ AFPERROR afp_RemoveEntry(
 	
 	if (AFP_SUCCESS(afpError))
 	{
-		std::lock_guard lock(desk_mutex);
-
 		int32 entry_count = 0;
 		auto entries = afp_GetDesktopEntries(deskitem->file, &entry_count);
 		if (entries == nullptr)
@@ -1477,9 +1557,31 @@ AFPERROR afp_RemoveEntry(
 			memcpy(&entries[foundPosition], &entries[nextPosition], sizeof(DESKTOP_ENTRY) * (entry_count - nextPosition));
 		}
 		
+		int32 new_count = entry_count - 1;
+		
+		DESKTOP_DB_HEADER header;
+		header.magic = DESKTOP_DB_MAGIC;
+		header.version = DESKTOP_DB_VERSION;
+		header.iconCount = 0;
+		header.applCount = 0;
+		header.cmntCount = 0;
+		for (int32 k = 0; k < new_count; k++)
+		{
+			switch (entries[k].entryType)
+			{
+				case ENTRY_TYPE_ICON:	header.iconCount++;	break;
+				case ENTRY_TYPE_APPL:	header.applCount++;	break;
+				case ENTRY_TYPE_CMNT:	header.cmntCount++;	break;
+				default:	break;
+			}
+		}
+
 		deskitem->file->Seek(0, SEEK_SET);
-		auto bytesWritten = deskitem->file->Write(entries.get(), sizeof(DESKTOP_ENTRY) * (entry_count - 1));
-		deskitem->file->SetSize((entry_count - 1) * sizeof(DESKTOP_ENTRY));
+		char write_buf[DESKTOP_DB_HEADER_SIZE];
+		memcpy(write_buf, &header, DESKTOP_DB_HEADER_SIZE);
+		deskitem->file->Write(write_buf, DESKTOP_DB_HEADER_SIZE);
+		auto bytesWritten = deskitem->file->Write(entries.get(), sizeof(DESKTOP_ENTRY) * new_count);
+		deskitem->file->SetSize(DESKTOP_DB_HEADER_SIZE + new_count * sizeof(DESKTOP_ENTRY));
 		
 		if (bytesWritten < B_OK)
 		{
