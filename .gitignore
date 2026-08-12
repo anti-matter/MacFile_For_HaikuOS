@@ -7,3 +7,5 @@ distribution/install.zip
 MacFile_x86_Release.*
 MacFile_x86_64_Release.*
 CLAUDE.md
+
+os/

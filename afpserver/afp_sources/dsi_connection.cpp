@@ -126,7 +126,16 @@ void dsi_connection::Send(
 			}
 		}
 
-		if (bytesSent < (uint32)bufferSize)
+		if (bytesSent == 0)
+		{
+			//
+			//Remote side closed the connection gracefully.
+			//
+			DBGWRITE(dbg_level_warning, "send() returned 0 — remote close\n");
+			break;
+		}
+
+		if ((uint32)bytesSent < (uint32)bufferSize)
 		{
 			offset += bytesSent;
 			bufferSize -= bytesSent;
@@ -220,32 +229,25 @@ void dsi_connection::Receive()
 		tv.tv_usec = 0;
 		tv.tv_sec = SESSION_DEAD_INTERVAL + 10;
 
+		DBGWRITE(dbg_level_trace, "select() timeout: %ld seconds\n", tv.tv_sec);
+
 		auto select_val = select(mSocket + 1, &fd, NULL, NULL, &tv);
-		switch (select_val)
+		if (select_val < 0)
 		{
-			case 0:
-			{
-				DBGWRITE(dbg_level_error, "Timeout in select()\n");
+			DBGWRITE(dbg_level_error, "Error in select(): %d (%s)\n", errno, GET_BERR_STR(errno));
 
-				mContinueRecv = false;
-				close(mSocket);
+			mContinueRecv = false;
+			close(mSocket);
+			return;
+		}
 
-				return;
-			}
+		if (select_val == 0)
+		{
+			DBGWRITE(dbg_level_error, "Timeout in select()\n");
 
-			case -1:
-			{
-				DBGWRITE(dbg_level_error, "Error in select(): %d (%s)\n", errno, GET_BERR_STR(errno));
-
-				mContinueRecv = false;
-				close(mSocket);
-
-				return;
-			}
-
-			default:
-				//Fall through.
-				break;
+			mContinueRecv = false;
+			close(mSocket);
+			return;
 		}
 
 		bytesReceived = recv(
@@ -305,6 +307,19 @@ void dsi_connection::Receive()
 		}
 
 		afpDataLen 	= ntohl(*(int32*)&mReceiveBuffer[DSI_OFFSET_DATALEN]);
+
+		//
+		//Validate the advertised payload length before using it in arithmetic.
+		//Reject packets that would overflow the receive buffer or indicate a
+		//malformed client.
+		//
+		if ((uint32)afpDataLen > RECV_BUFFER_SIZE || (uint32)afpDataLen > 0x7FFFFFFF)
+		{
+			DBGWRITE(dbg_level_error, "Invalid afpDataLen: %d\n", afpDataLen);
+			mContinueRecv = false;
+			close(mSocket);
+			return;
+		}
 
 		if (bytesReceiveInBuffer < (size_t)(DSI_HEADER_SIZE + afpDataLen))
 		{
@@ -440,6 +455,8 @@ void dsi_connection::ProcessReceivedBytes()
 							rci->replySize - DSI_HEADER_SIZE,
 							true
 							);
+
+					return;
 				}
 			}
 
@@ -782,11 +799,14 @@ void dsi_connection::KillSession()
 	if (mContinueRecv)
 	{
 		//
-		//Signal the connection thread to shutdown
+		//Signal the connection thread to shutdown.
+		//shutdown() closes both directions of the socket; close() is
+		//avoided here to prevent a double-close race with the destructor
+		//(~dsi_connection calls shutdown again, and Receive() may call
+		//close() on its own error paths).
 		//
 		mContinueRecv = false;
 
-		close(mSocket);
 		shutdown(mSocket, SHUT_RDWR);
 	}
 }
@@ -875,6 +895,16 @@ AFPERROR dsi_connection::dsi_OpenSession(
 
 	option		= mReceiveBuffer[DSI_OFFSET_DATASTART];
 	option_size	= mReceiveBuffer[DSI_OFFSET_DATASTART+sizeof(int8)];
+
+	//
+	//Validate we have enough data before reading option payload.
+	//The minimum valid option header is type + size (2 bytes);
+	//if option_size claims 4 bytes we need at least 6 bytes total.
+	//
+	if ((uint32)(DSI_OFFSET_DATASTART + sizeof(int16) + sizeof(int32)) > mBytesInReceiveBuffer) {
+		DBGWRITE(dbg_level_error, "dsi_OpenSession: truncated option data\n");
+		return afpParmErr;
+	}
 
 	//
 	//We expect these options to have the size of a long.
