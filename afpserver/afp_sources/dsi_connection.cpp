@@ -924,15 +924,21 @@ AFPERROR dsi_connection::dsi_OpenSession(
 		}
 	}
 
-	// Include the server request quanta option
-	afpReply.AddInt8(kServerRequestQuanta);
-	afpReply.AddInt8(sizeof(int32));
-	afpReply.AddInt32(SRVR_REQUEST_QUANTUM_SIZE);
+	// Only include server-side options for AFP 3.2+ clients.
+	// AppleShare Client 3.7.x (AFP 2.2) crashes when these options are present.
+	int8 afpVers = mSession->GetAFPVersion();
+	if (afpVers >= 0x32)
+	{
+		// Include the server request quanta option
+		afpReply.AddInt8(kServerRequestQuanta);
+		afpReply.AddInt8(sizeof(int32));
+		afpReply.AddInt32(SRVR_REQUEST_QUANTUM_SIZE);
 
-	// Include the replay cache size option
-	afpReply.AddInt8(kServerReplayCacheSize);
-	afpReply.AddInt8(sizeof(int32));
-	afpReply.AddInt32(AFP_REPLAY_CACHE_SIZE);
+		// Include the replay cache size option
+		afpReply.AddInt8(kServerReplayCacheSize);
+		afpReply.AddInt8(sizeof(int32));
+		afpReply.AddInt32(AFP_REPLAY_CACHE_SIZE);
+	}
 
 	*afpDataSize = afpReply.GetDataLength();
 
