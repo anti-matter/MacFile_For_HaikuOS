@@ -1118,7 +1118,7 @@ AFPERROR FPGetFileDirParms(
 
 	DBGWRITE(dbg_level_info, "FPGetFileDirParms: volID=0x%04X dirID=0x%08X fileBM=0x%04X dirBM=0x%04X pathType=%d\n",
 		afpVolumeID, afpDirID, afpFileBitmap, afpDirBitmap, afpPathType);
-	DBGWRITE(dbg_level_dump, "FPGetFileDirParms req raw: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
+	DBGWRITE(dbg_level_trace, "FPGetFileDirParms req raw: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
 		afpReqBuffer[0], afpReqBuffer[1], afpReqBuffer[2], afpReqBuffer[3], afpReqBuffer[4],
 		afpReqBuffer[5], afpReqBuffer[6], afpReqBuffer[7], afpReqBuffer[8], afpReqBuffer[9],
 		afpReqBuffer[10], afpReqBuffer[11], afpReqBuffer[12], afpReqBuffer[13]);
