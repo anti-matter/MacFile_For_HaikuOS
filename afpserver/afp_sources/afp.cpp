@@ -800,7 +800,7 @@ AFPERROR FPOpenVol(
 				//
 				*afpDataSize = afpReply.GetDataLength();
 				DBGWRITE(dbg_level_trace, "FPOpenVol resp raw volParmData: %02X %02X\n",
-					afpReplyBuffer[16], afpReplyBuffer[17]);
+					afpReplyBuffer[0], afpReplyBuffer[1]);
 			}
 		}
 	}
