@@ -772,6 +772,7 @@ AFPERROR FPOpenVol(
 	if (afpVolume != NULL)
 	{
 		DBGWRITE(dbg_level_trace, "Opening volume %s\n", szVolumeName);
+		DBGWRITE(dbg_level_info, "FPOpenVol: assigned volID=%d, AFP version=%d\n", afpVolume->GetVolumeID(), afpSession->GetAFPVersion());
 
 		// FPOpenVol does NOT echo the volBitmap — only FPGetVolParms does.
 		afpError = afpVolume->fp_GetVolParms(volBitmap, afpReply,
@@ -779,6 +780,8 @@ AFPERROR FPOpenVol(
 
 		if (AFP_SUCCESS(afpError))
 		{
+			DBGWRITE(dbg_level_info, "FPOpenVol: volParmData size=%d bytes\n", afpReply.GetDataLength());
+
 			//
 			//Now call the volume routine to actually flag the vol as open.
 			//This call could fail if the user currently has too many volumes
@@ -1106,6 +1109,9 @@ AFPERROR FPGetFileDirParms(
 	afpFileBitmap	= afpRequest.GetInt16();
 	afpDirBitmap	= afpRequest.GetInt16();
 	afpPathType		= afpRequest.GetInt8();
+
+	DBGWRITE(dbg_level_info, "FPGetFileDirParms: volID=0x%04X dirID=0x%08X fileBM=0x%04X dirBM=0x%04X pathType=%d\n",
+		afpVolumeID, afpDirID, afpFileBitmap, afpDirBitmap, afpPathType);
 
 	//
 	//Get a pointer to the volume object we'll be working with
