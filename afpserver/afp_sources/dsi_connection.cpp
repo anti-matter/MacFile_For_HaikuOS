@@ -584,6 +584,8 @@ void dsi_connection::ProcessReceivedBytes()
 						break;
 				}
 				break;
+			}
+			break;
 
 			case DSI_CMD_GetStatus:
 				DBGWRITE(dbg_level_trace, "DSIGetStatus command received\n");
