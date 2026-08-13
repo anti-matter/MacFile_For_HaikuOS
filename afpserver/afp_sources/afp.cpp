@@ -741,6 +741,10 @@ AFPERROR FPOpenVol(
 	volBitmap = afpRequest.GetInt16();
 
 	DBGWRITE(dbg_level_info, "FPOpenVol: volBitmap=0x%04X AFPVersion=%d\n", volBitmap, afpSession->GetAFPVersion());
+	DBGWRITE(dbg_level_dump, "FPOpenVol req raw: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
+		afpReqBuffer[0], afpReqBuffer[1], afpReqBuffer[2], afpReqBuffer[3], afpReqBuffer[4],
+		afpReqBuffer[5], afpReqBuffer[6], afpReqBuffer[7], afpReqBuffer[8], afpReqBuffer[9],
+		afpReqBuffer[10], afpReqBuffer[11], afpReqBuffer[12]);
 
 	//
 	//Extract the volume name the client wants to open.
@@ -795,6 +799,8 @@ AFPERROR FPOpenVol(
 				//Get the size of the volume parameter data.
 				//
 				*afpDataSize = afpReply.GetDataLength();
+				DBGWRITE(dbg_level_dump, "FPOpenVol resp raw volParmData: %02X %02X\n",
+					afpReplyBuffer[16], afpReplyBuffer[17]);
 			}
 		}
 	}
@@ -1112,6 +1118,10 @@ AFPERROR FPGetFileDirParms(
 
 	DBGWRITE(dbg_level_info, "FPGetFileDirParms: volID=0x%04X dirID=0x%08X fileBM=0x%04X dirBM=0x%04X pathType=%d\n",
 		afpVolumeID, afpDirID, afpFileBitmap, afpDirBitmap, afpPathType);
+	DBGWRITE(dbg_level_dump, "FPGetFileDirParms req raw: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
+		afpReqBuffer[0], afpReqBuffer[1], afpReqBuffer[2], afpReqBuffer[3], afpReqBuffer[4],
+		afpReqBuffer[5], afpReqBuffer[6], afpReqBuffer[7], afpReqBuffer[8], afpReqBuffer[9],
+		afpReqBuffer[10], afpReqBuffer[11], afpReqBuffer[12], afpReqBuffer[13]);
 
 	//
 	//Get a pointer to the volume object we'll be working with

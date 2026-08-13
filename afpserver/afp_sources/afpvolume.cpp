@@ -162,9 +162,10 @@ status_t GetVolumeData(const char* volPath, VolumeStorageData* outData)
 	}
 	
 	DPRINT(("[afpVolume::StartSharingVolume]Now sharing: %s\n", bpath->Leaf()));
-	
+
 	newVol = new fp_volume(bpath, volData->flags);
-	
+	DBGWRITE(dbg_level_info, "Registered volume '%s' with ID=%d\n", bpath->Leaf(), newVol->GetVolumeID());
+
 	std::lock_guard lock(volume_blist_mutex);
 	volume_blist->AddItem(newVol);
 	
