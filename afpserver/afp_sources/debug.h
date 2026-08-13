@@ -16,7 +16,7 @@ enum
 	dbg_level_dump_out  // outgoing data
 };
 
-const dbg_level current_debug_level = dbg_level_info;
+const dbg_level current_debug_level = dbg_level_trace;
 
 #define DBGWRITE(level, message, ...) afp_debug_write(level, __func__, message, ##__VA_ARGS__)
 void afp_debug_write(const dbg_level debug_level, const std::string& function, const char* format, ...);
