@@ -896,19 +896,17 @@ AFPERROR dsi_connection::dsi_OpenSession(
 	option		= mReceiveBuffer[DSI_OFFSET_DATASTART];
 	option_size	= mReceiveBuffer[DSI_OFFSET_DATASTART+sizeof(int8)];
 
-	//
-	//Validate we have enough data before reading option payload.
-	//The minimum valid option header is type + size (2 bytes);
-	//if option_size claims 4 bytes we need at least 6 bytes total.
-	//
+	DBGWRITE(dbg_level_info, "dsi_OpenSession: option=%d option_size=%d mBytesInReceiveBuffer=%u\n", option, option_size, mBytesInReceiveBuffer);
+
+	// Validate we have enough data before reading option payload.
+	// The minimum valid option header is type + size (2 bytes);
+	// if option_size claims 4 bytes we need at least 6 bytes total.
 	if ((uint32)(DSI_OFFSET_DATASTART + sizeof(int16) + sizeof(int32)) > mBytesInReceiveBuffer) {
 		DBGWRITE(dbg_level_error, "dsi_OpenSession: truncated option data\n");
-		return afpParmErr;
+		//return afpParmErr;
 	}
 
-	//
-	//We expect these options to have the size of a long.
-	//
+	// We expect these options to have the size of a long.
 	if (option_size == sizeof(int32))
 	{
 		switch(option)
@@ -924,12 +922,12 @@ AFPERROR dsi_connection::dsi_OpenSession(
 		}
 	}
 
-	//Include the server request quanta option
+	// Include the server request quanta option
 	afpReply.AddInt8(kServerRequestQuanta);
 	afpReply.AddInt8(sizeof(int32));
 	afpReply.AddInt32(SRVR_REQUEST_QUANTUM_SIZE);
 
-	//Include the replay cache size option
+	// Include the replay cache size option
 	afpReply.AddInt8(kServerReplayCacheSize);
 	afpReply.AddInt8(sizeof(int32));
 	afpReply.AddInt32(AFP_REPLAY_CACHE_SIZE);
