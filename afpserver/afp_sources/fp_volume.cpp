@@ -231,6 +231,7 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 
 	//
 	//First in the buffer goes the volume bitmap we were passed.
 	//
+	DBGWRITE(dbg_level_info, "Echoed volBitmap: 0x%04X (client sent 0x%04X)\n", respVolBitmap, volBitmap);
 	afpBuffer.push_num(respVolBitmap);
 
 	//
@@ -254,9 +255,14 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 
 	if (volBitmap & kFPVolAttributeBit)
 	{
 		uint16	volAttributes = (	kFPVolSupportsFileIDs		|
-									kFPVolSupportsUnicodeNames	|
-									kFPVolNoNetworkUserIDs
+									kFPVolSupportsUnicodeNames
 				);
+
+		// kFPVolNoNetworkUserIDs was introduced in AFP 3.0 — don't set it for AFP 2.x clients.
+		if (afpVersion >= afpVersion30)
+		{
+			volAttributes |= kFPVolNoNetworkUserIDs;
+		}
 
 		// AFP 3.2+ flags — only advertise to clients that understand them.
 		if (afpVersion >= afpVersion32)
@@ -274,6 +280,8 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 
 
 			volAttributes |= kFPVolReadOnly;
 		}
+
+		DBGWRITE(dbg_level_info, "Volume attributes: 0x%04X\n", volAttributes);
 
 		afpBuffer.push_num(volAttributes);
 	}
