@@ -179,8 +179,9 @@ void fp_volume::RemoveOpenFile(OPEN_FORK_ITEM* forkitem)
  *		etc.), signature (fixed directory ID), creation/modification dates,
  *		volume ID, free/total bytes (32-bit and 64-bit variants), block
  *		size, and the volume name as a pascal string. Handles AFP 2.x
- *		4GB size limits by clamping to UINT32_MAX where needed.
+ *		4GB size limits by clamping to 0x7FFFFFFF where needed (avoids
  *
+ *		crashing older AFP clients that interpret UINT32_MAX as -1).
  * Returns: AFP_OK on success, afpParmErr (-5019) if entry ref or BVolume
  *		initialization fails.
  */
@@ -271,14 +272,15 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer)
 	if (volBitmap & kFPVolBytesFreeBit)
 	{
 		//
-		//For AFP 2.1 and older clients, we cannot report volume
-		//sizes larger than 4GB.
+		//For AFP 2.x clients, we cannot report volume sizes larger than 4GB.
+		//Use 0x7FFFFFFF instead of UINT32_MAX — older AFP clients (e.g.
+		//AppleShare Client 3.7.x) interpret 0xFFFFFFFF as -1 and crash.
 		//
 		off_t freeBytesClamped = freeBytes;
 
-		if (freeBytes >= UINT32_MAX)
+		if (freeBytes >= 0x7FFFFFFF)
 		{
-			freeBytesClamped = UINT32_MAX;
+			freeBytesClamped = 0x7FFFFFFF;
 		}
 
 		DBGWRITE(dbg_level_info, "Disk bytes free: %llu\n", freeBytesClamped);
@@ -293,12 +295,14 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer)
 		//Algebraically: freeBytes + (capacity - freeBytes) == capacity.
 		//Use unclamped freeBytes so the formula is correct for disks >4GB.
 		//Guard against negative freeBytes from filesystem errors.
+		//Use 0x7FFFFFFF instead of UINT32_MAX — older AFP clients (e.g.
+		//AppleShare Client 3.7.x) interpret 0xFFFFFFFF as -1 and crash.
 		//
 		off_t bytesTotal = capacity;
 
-		if (bytesTotal < 0 || bytesTotal > UINT32_MAX)
+		if (bytesTotal < 0 || bytesTotal > 0x7FFFFFFF)
 		{
-			bytesTotal = (bytesTotal < 0) ? 0 : UINT32_MAX;
+			bytesTotal = (bytesTotal < 0) ? 0 : 0x7FFFFFFF;
 		}
 
 		DBGWRITE(dbg_level_info, "Disk bytes total: %llu\n", bytesTotal);
