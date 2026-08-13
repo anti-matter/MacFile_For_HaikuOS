@@ -44,7 +44,7 @@ public:
 	virtual void		MakeDirty()			{ mLock.Lock(); mIsDirty = true; mLock.Unlock();}
 	virtual void		MakeClean()			{ mLock.Lock(); mIsDirty = false; mLock.Unlock();}
 	
-	virtual AFPERROR	fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 afpVersion = 0);
+	virtual AFPERROR	fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 afpVersion = 0, bool echoBitmap = true);
 	virtual AFPERROR 	fp_OpenVolume(afp_session* session);
 	virtual AFPERROR	fp_CloseVolume(afp_session* session);
 	

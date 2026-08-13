@@ -186,7 +186,7 @@ void fp_volume::RemoveOpenFile(OPEN_FORK_ITEM* forkitem)
  *		initialization fails.
  */
 
-AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 afpVersion)
+AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 afpVersion, bool echoBitmap)
 {
 	BEntry		entry(mPath->Path());
 	entry_ref	afpVolumeRef;
@@ -198,7 +198,7 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 
 
 	// Log which fields will be included
 	int32 responseSize = 0;
-	responseSize += sizeof(int16); // echoed bitmap
+	responseSize += sizeof(int16); // echoed bitmap (only for FPGetVolParms)
 	if (volBitmap & kFPVolAttributeBit) responseSize += sizeof(uint16);
 	if (volBitmap & kFPVolSignatureBit) responseSize += sizeof(uint16);
 	if (volBitmap & kFPVolCreateDateBit) responseSize += sizeof(uint32);
@@ -230,9 +230,13 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 
 
 	//
 	//First in the buffer goes the volume bitmap we were passed.
+	//FPOpenVol does NOT echo the bitmap; FPGetVolParms does.
 	//
-	DBGWRITE(dbg_level_info, "Echoed volBitmap: 0x%04X (client sent 0x%04X)\n", respVolBitmap, volBitmap);
-	afpBuffer.push_num(respVolBitmap);
+	if (echoBitmap)
+	{
+		DBGWRITE(dbg_level_info, "Echoed volBitmap: 0x%04X (client sent 0x%04X)\n", respVolBitmap, volBitmap);
+		afpBuffer.push_num(respVolBitmap);
+	}
 
 	//
 	//Obtain the entry_ref for the Be Volume we're sitting on
@@ -282,6 +286,7 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 
 		}
 
 		DBGWRITE(dbg_level_info, "Volume attributes: 0x%04X\n", volAttributes);
+		DBGWRITE(dbg_level_info, "Response size before name: %d\n", afpBuffer.GetDataLength());
 
 		afpBuffer.push_num(volAttributes);
 	}

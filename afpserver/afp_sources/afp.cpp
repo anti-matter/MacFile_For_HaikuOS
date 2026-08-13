@@ -764,8 +764,9 @@ AFPERROR FPOpenVol(
 	{
 		DBGWRITE(dbg_level_trace, "Opening volume %s\n", szVolumeName);
 
+		// FPOpenVol does NOT echo the volBitmap — only FPGetVolParms does.
 		afpError = afpVolume->fp_GetVolParms(volBitmap, afpReply,
-							afpSession->GetAFPVersion());
+							afpSession->GetAFPVersion(), false);
 
 		if (AFP_SUCCESS(afpError))
 		{

@@ -929,17 +929,20 @@ AFPERROR dsi_connection::dsi_OpenSession(
 		}
 	}
 
-	// Only include server-side options for AFP 3.2+ clients.
-	// AppleShare Client 3.7.x (AFP 2.2) crashes when these options are present.
+	// DSI OpenSession response: server request quanta is mandatory for all clients.
+	// Replay cache size is only for AFP 3.2+ clients.
 	int8 afpVers = mSession->GetAFPVersion();
+
+	// Server request quantum (mandatory per DSI spec — always send)
+	afpReply.AddInt8(kServerRequestQuanta);
+	afpReply.AddInt8(sizeof(int32));
+	afpReply.AddInt32(SRVR_REQUEST_QUANTUM_SIZE);
+
+	DBGWRITE(dbg_level_info, "DSI OpenSession: sent server request quanta %d\n", SRVR_REQUEST_QUANTUM_SIZE);
+
 	if (afpVers >= afpVersion32)
 	{
-		DBGWRITE(dbg_level_info, "Including server-side options for AFP version 0x%02x\n", afpVers);
-
-		// Include the server request quanta option
-		afpReply.AddInt8(kServerRequestQuanta);
-		afpReply.AddInt8(sizeof(int32));
-		afpReply.AddInt32(SRVR_REQUEST_QUANTUM_SIZE);
+		DBGWRITE(dbg_level_info, "Including replay cache size for AFP version %d\n", afpVers);
 
 		// Include the replay cache size option
 		afpReply.AddInt8(kServerReplayCacheSize);
