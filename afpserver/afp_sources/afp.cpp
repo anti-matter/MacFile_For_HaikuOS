@@ -685,6 +685,15 @@ AFPERROR FPGetSrvrParms(
 		if ((afpVolume = (fp_volume*)volume_blist->ItemAt(i)) != NULL)
 		{
 			volumeFlags = 0;
+
+			// Bit 7 = "can be mounted" — must be set for the volume to appear in Chooser.
+			volumeFlags |= 0x80;
+
+			// If the server has marked this volume read-only, set that bit too.
+			if (afpVolume->GetVolumeFlags() & kAFPReadOnly) {
+				volumeFlags |= kFPVolReadOnly;
+			}
+
 			strcpy(volumeName, afpVolume->GetVolumeName());
 
 			DBGWRITE(dbg_level_trace, "Adding volume %s\n", volumeName);
