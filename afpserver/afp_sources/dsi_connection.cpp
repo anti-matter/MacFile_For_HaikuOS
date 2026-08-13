@@ -296,6 +296,7 @@ void dsi_connection::Receive()
 		gAFPStats.Net_UpdateBytesReceived(bytesReceived);
 
 		bytesReceiveInBuffer += bytesReceived;
+		mBytesInReceiveBuffer = bytesReceiveInBuffer;
 
 		if (bytesReceiveInBuffer < DSI_HEADER_SIZE)
 		{
@@ -344,6 +345,7 @@ void dsi_connection::Receive()
 			if (bytesReceiveInBuffer > (size_t)(DSI_HEADER_SIZE + afpDataLen))
 			{
 				bytesReceiveInBuffer -= (DSI_HEADER_SIZE + afpDataLen);
+				mBytesInReceiveBuffer = bytesReceiveInBuffer;
 
 				DBGWRITE(dbg_level_trace, "Processing overflow bytes!!! (%d)\n", bytesReceiveInBuffer);
 
@@ -903,7 +905,7 @@ AFPERROR dsi_connection::dsi_OpenSession(
 	// if option_size claims 4 bytes we need at least 6 bytes total.
 	if ((uint32)(DSI_OFFSET_DATASTART + sizeof(int16) + sizeof(int32)) > mBytesInReceiveBuffer) {
 		DBGWRITE(dbg_level_error, "dsi_OpenSession: truncated option data\n");
-		//return afpParmErr;
+		return afpParmErr;
 	}
 
 	// We expect these options to have the size of a long.
