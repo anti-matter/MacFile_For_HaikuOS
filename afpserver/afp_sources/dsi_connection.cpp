@@ -927,8 +927,10 @@ AFPERROR dsi_connection::dsi_OpenSession(
 	// Only include server-side options for AFP 3.2+ clients.
 	// AppleShare Client 3.7.x (AFP 2.2) crashes when these options are present.
 	int8 afpVers = mSession->GetAFPVersion();
-	if (afpVers >= 0x32)
+	if (afpVers > 0x22)
 	{
+		DBGWRITE(dbg_level_info, "Including server-side options for AFP version 0x%02x\n", afpVers);
+
 		// Include the server request quanta option
 		afpReply.AddInt8(kServerRequestQuanta);
 		afpReply.AddInt8(sizeof(int32));
