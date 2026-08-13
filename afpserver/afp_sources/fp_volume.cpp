@@ -259,7 +259,8 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 
 	if (volBitmap & kFPVolAttributeBit)
 	{
 		uint16	volAttributes = (	kFPVolSupportsFileIDs		|
-									kFPVolSupportsUnicodeNames
+									kFPVolSupportsUnicodeNames	|
+									kFPVolSupportsBlankAccessPrivileges
 				);
 
 		// kFPVolNoNetworkUserIDs was introduced in AFP 3.0 — don't set it for AFP 2.x clients.
@@ -274,8 +275,7 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 
 			volAttributes |= (	kDefaultPrivsFromParent	|
 							kNoExchangeFiles 		|
 							kSupportsExtAttrs		|
-							kSupportsTMLockSteal	|
-							kFPVolSupportsBlankAccessPrivileges
+							kSupportsTMLockSteal
 						);
 		}
 		DBGWRITE(dbg_level_trace, "Getting vol kFPVolAttributeBit\n");
