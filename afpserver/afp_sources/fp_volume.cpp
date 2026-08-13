@@ -194,11 +194,44 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 
 	int8*		volNamePtr	= NULL;
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
+	DBGWRITE(dbg_level_info, "volBitmap=0x%04X afpVersion=%d\n", volBitmap, afpVersion);
+
+	// Log which fields will be included
+	int32 responseSize = 0;
+	responseSize += sizeof(int16); // echoed bitmap
+	if (volBitmap & kFPVolAttributeBit) responseSize += sizeof(uint16);
+	if (volBitmap & kFPVolSignatureBit) responseSize += sizeof(uint16);
+	if (volBitmap & kFPVolCreateDateBit) responseSize += sizeof(uint32);
+	if (volBitmap & kFPVolModDateBit) responseSize += sizeof(uint32);
+	if (volBitmap & kFPVolBackupDateBit) responseSize += sizeof(uint32);
+	if (volBitmap & kFPVolIDBit) responseSize += sizeof(int16);
+	if (volBitmap & kFPVolBytesFreeBit) responseSize += sizeof(uint32);
+	if (volBitmap & kFPVolBytesTotalBit) responseSize += sizeof(uint32);
+	DBGWRITE(dbg_level_info, "Response fields: bitmap=0x%04X attrs=%d sig=%d cdate=%d mdate=%d bdate=%d vid=%d fbytes=%d tbytes=%d\n",
+		volBitmap,
+		!!(volBitmap & kFPVolAttributeBit),
+		!!(volBitmap & kFPVolSignatureBit),
+		!!(volBitmap & kFPVolCreateDateBit),
+		!!(volBitmap & kFPVolModDateBit),
+		!!(volBitmap & kFPVolBackupDateBit),
+		!!(volBitmap & kFPVolIDBit),
+		!!(volBitmap & kFPVolBytesFreeBit),
+		!!(volBitmap & kFPVolBytesTotalBit));
+
+	//
+	//For AFP 2.x clients, mask out extended bitmap bits we won't include.
+	//The echoed bitmap tells the client which fields are present in the response.
+	//
+	int16 respVolBitmap = volBitmap;
+	if (afpVersion < afpVersion30)
+	{
+		respVolBitmap &= ~(kFPVolExtBytesFree | kFPVolExtBytesTotal | kFPVolBlockSize);
+	}
 
 	//
 	//First in the buffer goes the volume bitmap we were passed.
 	//
-	afpBuffer.push_num(volBitmap);
+	afpBuffer.push_num(respVolBitmap);
 
 	//
 	//Obtain the entry_ref for the Be Volume we're sitting on
@@ -331,19 +364,26 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 
 	//is using AFP 2.2 or later.
 	//
 
-	if (volBitmap & kFPVolExtBytesFree)
+	// Extended bitmap fields and block size are AFP 3.0+ only.
+	// Even if the volBitmap includes these bits, don't include them for AFP 2.x clients.
+	if (afpVersion >= afpVersion30)
 	{
-		afpBuffer.push_num<int64>(freeBytes);
-	}
+		if (volBitmap & kFPVolExtBytesFree)
+		{
+			DBGWRITE(dbg_level_info, "EXT: freeBytes=%lld (int64)\n", freeBytes);
+			afpBuffer.push_num<int64>(freeBytes);
+		}
 
-	if (volBitmap & kFPVolExtBytesTotal)
-	{
-		afpBuffer.push_num<int64>(capacity);
-	}
+		if (volBitmap & kFPVolExtBytesTotal)
+		{
+			DBGWRITE(dbg_level_info, "EXT: capacity=%lld (int64)\n", capacity);
+			afpBuffer.push_num<int64>(capacity);
+		}
 
-	if (volBitmap & kFPVolBlockSize)
-	{
-		afpBuffer.push_num<uint32>(1024);
+		if (volBitmap & kFPVolBlockSize)
+		{
+			afpBuffer.push_num<uint32>(1024);
+		}
 	}
 
 	if (volBitmap & kFPVolNameBit)
@@ -352,7 +392,9 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 
 
 		strcpy(name, mPath->Leaf());
 
-		*((int16*)volNamePtr) = htons(afpBuffer.GetDataLength()-sizeof(int16));
+			int32 nameLen = afpBuffer.GetDataLength()-sizeof(int16);
+			DBGWRITE(dbg_level_info, "Volume name: '%s' len=%d\n", name, nameLen);
+			*((int16*)volNamePtr) = htons(nameLen);
 		afpBuffer.AddCStringAsPascal(name);
 	}
 

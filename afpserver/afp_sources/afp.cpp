@@ -731,6 +731,8 @@ AFPERROR FPOpenVol(
 	//
 	volBitmap = afpRequest.GetInt16();
 
+	DBGWRITE(dbg_level_info, "FPOpenVol: volBitmap=0x%04X AFPVersion=%d\n", volBitmap, afpSession->GetAFPVersion());
+
 	//
 	//Extract the volume name the client wants to open.
 	//
