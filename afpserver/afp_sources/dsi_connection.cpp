@@ -542,8 +542,11 @@ void dsi_connection::ProcessReceivedBytes()
 				break;
 
 			case DSI_CMD_Command:
+			{
+				uint8 afpCmd = (uint8)mReceiveBuffer[DSI_OFFSET_DATASTART];
+				DBGWRITE(dbg_level_info, "DSI Command received: AFP cmd=%d (0x%02X) requestID=%d dataLen=%d\n", afpCmd, afpCmd, dsiRequestID, dsiDataLength);
 
-				switch((uint8)mReceiveBuffer[DSI_OFFSET_DATASTART])
+				switch(afpCmd)
 				{
 					//
 					//For performance reasons, we handle read calls from here
@@ -735,7 +738,7 @@ void dsi_connection::FormatAndSendReply(
 				);
 	}
 
-	//DBG_DUMP_BUFFER((char*)replyBuffer, DSI_HEADER_SIZE+afpDataSize, dbg_level_trace);
+	DBGWRITE(dbg_level_info, "Sending DSI reply: cmd=%d error=%d dataLen=%d total=%d\n", dsiCommand, afpError, afpDataSize, DSI_HEADER_SIZE+afpDataSize);
 
 	Send(replyBuffer, DSI_HEADER_SIZE+afpDataSize);
 }
@@ -927,7 +930,7 @@ AFPERROR dsi_connection::dsi_OpenSession(
 	// Only include server-side options for AFP 3.2+ clients.
 	// AppleShare Client 3.7.x (AFP 2.2) crashes when these options are present.
 	int8 afpVers = mSession->GetAFPVersion();
-	if (afpVers > 0x22)
+	if (afpVers >= afpVersion32)
 	{
 		DBGWRITE(dbg_level_info, "Including server-side options for AFP version 0x%02x\n", afpVers);
 

@@ -259,7 +259,7 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 
 				);
 
 		// AFP 3.2+ flags — only advertise to clients that understand them.
-		if (afpVersion >= 0x32)
+		if (afpVersion >= afpVersion32)
 		{
 			volAttributes |= (	kDefaultPrivsFromParent	|
 							kNoExchangeFiles 		|
