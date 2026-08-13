@@ -232,7 +232,7 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 
 	//First in the buffer goes the volume bitmap we were passed.
 	//FPOpenVol does NOT echo the bitmap; FPGetVolParms does.
 	//
-	if (echoBitmap)
+	//if (echoBitmap)
 	{
 		DBGWRITE(dbg_level_info, "Echoed volBitmap: 0x%04X (client sent 0x%04X)\n", respVolBitmap, volBitmap);
 		afpBuffer.push_num(respVolBitmap);
