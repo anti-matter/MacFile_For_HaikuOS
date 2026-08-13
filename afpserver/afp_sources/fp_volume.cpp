@@ -186,7 +186,7 @@ void fp_volume::RemoveOpenFile(OPEN_FORK_ITEM* forkitem)
  *		initialization fails.
  */
 
-AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer)
+AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer, int8 afpVersion)
 {
 	BEntry		entry(mPath->Path());
 	entry_ref	afpVolumeRef;
@@ -222,13 +222,19 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer)
 	{
 		uint16	volAttributes = (	kFPVolSupportsFileIDs		|
 									kFPVolSupportsUnicodeNames	|
-									kDefaultPrivsFromParent		|
-									kNoExchangeFiles 			|
-									kSupportsExtAttrs			|
-									kSupportsTMLockSteal		|
-									kFPVolSupportsBlankAccessPrivileges
-								);
+									kFPVolNoNetworkUserIDs
+				);
 
+		// AFP 3.2+ flags — only advertise to clients that understand them.
+		if (afpVersion >= 0x32)
+		{
+			volAttributes |= (	kDefaultPrivsFromParent	|
+							kNoExchangeFiles 		|
+							kSupportsExtAttrs		|
+							kSupportsTMLockSteal	|
+							kFPVolSupportsBlankAccessPrivileges
+						);
+		}
 		DBGWRITE(dbg_level_trace, "Getting vol kFPVolAttributeBit\n");
 
 		if ((volume.IsReadOnly()) || (mVolumeFlags & kAFPReadOnly)) {

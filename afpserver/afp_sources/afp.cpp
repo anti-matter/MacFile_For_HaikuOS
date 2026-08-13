@@ -762,7 +762,8 @@ AFPERROR FPOpenVol(
 	{
 		DBGWRITE(dbg_level_trace, "Opening volume %s\n", szVolumeName);
 
-		afpError = afpVolume->fp_GetVolParms(volBitmap, afpReply);
+		afpError = afpVolume->fp_GetVolParms(volBitmap, afpReply,
+							afpSession->GetAFPVersion());
 
 		if (AFP_SUCCESS(afpError))
 		{
@@ -903,7 +904,8 @@ AFPERROR FPGetVolParms(
 		//
 		//Now call on the volume object to get the information requested.
 		//
-		afpError = afpVolume->fp_GetVolParms(afpVolBitmap, afpReply);
+		afpError = afpVolume->fp_GetVolParms(afpVolBitmap, afpReply,
+							afpSession->GetAFPVersion());
 
 		//
 		//Lastly, if we succeed, get the afp data length.
