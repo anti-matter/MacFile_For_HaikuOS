@@ -340,7 +340,7 @@ void afp_buffer::GetRawData(void* buffer, int16 amount)
  * Returns: AFPERROR
  */
 
-AFPERROR afp_buffer::AddCStringAsPascal(char* string)
+AFPERROR afp_buffer::AddCStringAsPascal(const char* string)
 {
 	if (string != NULL)
 	{

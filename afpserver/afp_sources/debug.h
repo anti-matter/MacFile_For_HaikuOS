@@ -16,7 +16,7 @@ enum
 	dbg_level_dump_out  // outgoing data
 };
 
-const dbg_level current_debug_level = dbg_level_info;
+const dbg_level current_debug_level = dbg_level_trace;
 
 #define DBGWRITE(level, message, ...) afp_debug_write(level, __func__, message, ##__VA_ARGS__)
 void afp_debug_write(const dbg_level debug_level, const std::string& function, const char* format, ...);
@@ -24,10 +24,12 @@ void afp_debug_write(const dbg_level debug_level, const std::string& function, c
 void dump_bitmap(int32_t bitmap, const dbg_level level);
 #define DBG_DUMP_BITMAP(bm, level) dump_bitmap(bm, level);
 
-#ifndef __HAIKU_ARCH_X86
-void hex_dump(const char* buffer, const size_t length, const dbg_level level);
+void hex_dump(
+    const void* data,
+    std::size_t length,
+    dbg_level level);
+
 #define DBG_DUMP_BUFFER(buffer, cb_buffer, level) hex_dump(buffer, cb_buffer, level)
-#endif //__HAIKU_ARCH_X86
 
 #else //DEBUG
 

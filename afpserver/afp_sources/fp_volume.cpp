@@ -179,13 +179,13 @@ void fp_volume::RemoveOpenFile(OPEN_FORK_ITEM* forkitem)
  *		etc.), signature (fixed directory ID), creation/modification dates,
  *		volume ID, free/total bytes (32-bit and 64-bit variants), block
  *		size, and the volume name as a pascal string. Handles AFP 2.x
- *		4GB size limits by clamping to UINT32_MAX where needed.
+ *		INT32_MAX size limits by clamping to INT32_MAX where needed.
  *
  * Returns: AFP_OK on success, afpParmErr (-5019) if entry ref or BVolume
  *		initialization fails.
  */
 
-AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer)
+AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, int8 afpVersion, afp_buffer& afpBuffer)
 {
 	BEntry		entry(mPath->Path());
 	entry_ref	afpVolumeRef;
@@ -219,20 +219,30 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer)
 
 	if (volBitmap & kFPVolAttributeBit)
 	{
-		uint16	volAttributes = (	kFPVolSupportsFileIDs		|
-									kFPVolSupportsUnicodeNames	|
-									kDefaultPrivsFromParent		|
-									kNoExchangeFiles 			|
-									kSupportsExtAttrs			|
-									kSupportsTMLockSteal		|
-									kFPVolSupportsBlankAccessPrivileges
-								);
+		// Match netatalk: start with 0, only set flags the client supports.
+		uint16	volAttributes = kFPVolSupportsFileIDs | kSupportsExtAttrs;
+;
 
 		DBGWRITE(dbg_level_trace, "Getting vol kFPVolAttributeBit\n");
 
 		if ((volume.IsReadOnly()) || (mVolumeFlags & kAFPReadOnly)) {
-
 			volAttributes |= kFPVolReadOnly;
+		}
+
+		//
+		//Only advertise AFP 3.x features to clients that support them.
+		//AppleShare Client 3.7.4 (AFP 2.2) crashes when it sees unknown
+		//volume attribute flags, so we must not set them for older clients.
+		//
+		if (afpVersion >= afpVersion30)
+		{
+			DBGWRITE(dbg_level_trace, "Setting AFP 3.x volume attributes for AFP version %d\n", afpVersion);
+
+			volAttributes |= (	kFPVolSupportsUnicodeNames			|
+								kDefaultPrivsFromParent				|
+								kNoExchangeFiles 					|
+								kSupportsTMLockSteal
+							);
 		}
 
 		afpBuffer.push_num(volAttributes);
@@ -246,12 +256,24 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer)
 	if (volBitmap & kFPVolCreateDateBit)
 	{
 		entry.GetCreationTime(&ctime);
+		DBGWRITE(
+			dbg_level_trace,
+			"Volume creation Unix=%lld AFP(host)=%#010x\n",
+			static_cast<long long>(ctime),
+			static_cast<unsigned>(TO_AFP_TIME(ctime)));
+
 		afpBuffer.push_num<uint32>(TO_AFP_TIME(ctime));
 	}
 
 	if (volBitmap & kFPVolModDateBit)
 	{
 		entry.GetModificationTime(&ctime);
+		DBGWRITE(
+			dbg_level_trace,
+			"Volume creation Unix=%lld AFP(host)=%#010x\n",
+			static_cast<long long>(ctime),
+			static_cast<unsigned>(TO_AFP_TIME(ctime)));
+			
 		afpBuffer.push_num<uint32>(TO_AFP_TIME(ctime));
 	}
 
@@ -272,16 +294,16 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer)
 	{
 		//
 		//For AFP 2.1 and older clients, we cannot report volume
-		//sizes larger than 4GB.
+		//sizes larger than INT32_MAX.
 		//
 		off_t freeBytesClamped = freeBytes;
 
-		if (freeBytes >= UINT32_MAX)
+		if (freeBytes >= INT32_MAX)
 		{
-			freeBytesClamped = UINT32_MAX;
+			freeBytesClamped = INT32_MAX;
 		}
 
-		DBGWRITE(dbg_level_info, "Disk bytes free: %llu\n", freeBytesClamped);
+		DBGWRITE(dbg_level_trace, "kFPVolBytesFreeBit: %llu\n", freeBytesClamped);
 
 		afpBuffer.push_num<uint32>(freeBytesClamped);
 	}
@@ -289,19 +311,19 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer)
 	if (volBitmap & kFPVolBytesTotalBit)
 	{
 		//
-		//The total number of bytes (free + used) on the AFP volume as a uint32.
+		//The total number of bytes (free + used) on the AFP volume as an int32 (AFP 2.x clamped to INT32_MAX).
 		//Algebraically: freeBytes + (capacity - freeBytes) == capacity.
-		//Use unclamped freeBytes so the formula is correct for disks >4GB.
+		//Use unclamped freeBytes so the formula is correct for disks >INT32_MAX.
 		//Guard against negative freeBytes from filesystem errors.
 		//
 		off_t bytesTotal = capacity;
 
-		if (bytesTotal < 0 || bytesTotal > UINT32_MAX)
+		if (bytesTotal < 0 || bytesTotal > INT32_MAX)
 		{
-			bytesTotal = (bytesTotal < 0) ? 0 : UINT32_MAX;
+			bytesTotal = (bytesTotal < 0) ? 0 : INT32_MAX;
 		}
 
-		DBGWRITE(dbg_level_info, "Disk bytes total: %llu\n", bytesTotal);
+		DBGWRITE(dbg_level_trace, "kFPVolBytesTotalBit: %llu\n", bytesTotal);
 
 		afpBuffer.push_num<uint32>(bytesTotal);
 	}
@@ -323,27 +345,30 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, afp_buffer& afpBuffer)
 
 	if (volBitmap & kFPVolExtBytesFree)
 	{
+		DBGWRITE(dbg_level_trace, "kFPVolExtBytesFree: %llu\n", freeBytes);
 		afpBuffer.push_num<int64>(freeBytes);
 	}
 
 	if (volBitmap & kFPVolExtBytesTotal)
 	{
+		DBGWRITE(dbg_level_trace, "kFPVolExtBytesTotal: %llu\n", capacity);
 		afpBuffer.push_num<int64>(capacity);
 	}
 
 	if (volBitmap & kFPVolBlockSize)
 	{
+		DBGWRITE(dbg_level_trace, "kFPVolBlockSize: 1024\n");
 		afpBuffer.push_num<uint32>(1024);
 	}
 
 	if (volBitmap & kFPVolNameBit)
 	{
-		char name[MAX_AFP_NAME];
+		auto offset = afpBuffer.GetDataLength()-sizeof(int16);
 
-		strcpy(name, mPath->Leaf());
+		*((int16*)volNamePtr) = htons(offset);
+		afpBuffer.AddCStringAsPascal(mPath->Leaf());
 
-		*((int16*)volNamePtr) = htons(afpBuffer.GetDataLength()-sizeof(int16));
-		afpBuffer.AddCStringAsPascal(name);
+		DBGWRITE(dbg_level_trace, "kFPVolNameBit: offset=%d, name=%s\n", offset, mPath->Leaf());
 	}
 
 	return( AFP_OK );

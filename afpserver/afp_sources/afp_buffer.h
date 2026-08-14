@@ -34,7 +34,7 @@ public:
 	//
 	//These methods paste in data into an AFP buffer for sending
 	//
-	AFPERROR AddCStringAsPascal(char* string);
+	AFPERROR AddCStringAsPascal(const char* string);
 	AFPERROR AddUniString(char* string, bool isPath=false, bool isAFPName=true);
 	AFPERROR GetUniString(char* string, uint16 cbstring, uint16* stringLen);
 
