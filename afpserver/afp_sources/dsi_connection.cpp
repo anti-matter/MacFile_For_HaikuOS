@@ -296,6 +296,7 @@ void dsi_connection::Receive()
 		gAFPStats.Net_UpdateBytesReceived(bytesReceived);
 
 		bytesReceiveInBuffer += bytesReceived;
+		mBytesInReceiveBuffer = bytesReceiveInBuffer;
 
 		if (bytesReceiveInBuffer < DSI_HEADER_SIZE)
 		{
@@ -344,6 +345,7 @@ void dsi_connection::Receive()
 			if (bytesReceiveInBuffer > (size_t)(DSI_HEADER_SIZE + afpDataLen))
 			{
 				bytesReceiveInBuffer -= (DSI_HEADER_SIZE + afpDataLen);
+				mBytesInReceiveBuffer = bytesReceiveInBuffer;
 
 				DBGWRITE(dbg_level_trace, "Processing overflow bytes!!! (%d)\n", bytesReceiveInBuffer);
 
@@ -540,8 +542,11 @@ void dsi_connection::ProcessReceivedBytes()
 				break;
 
 			case DSI_CMD_Command:
+			{
+				uint8 afpCmd = (uint8)mReceiveBuffer[DSI_OFFSET_DATASTART];
+				DBGWRITE(dbg_level_info, "DSI Command received: AFP cmd=%d (0x%02X) requestID=%d dataLen=%d\n", afpCmd, afpCmd, dsiRequestID, dsiDataLength);
 
-				switch((uint8)mReceiveBuffer[DSI_OFFSET_DATASTART])
+				switch(afpCmd)
 				{
 					//
 					//For performance reasons, we handle read calls from here
@@ -579,6 +584,8 @@ void dsi_connection::ProcessReceivedBytes()
 						break;
 				}
 				break;
+			}
+			break;
 
 			case DSI_CMD_GetStatus:
 				DBGWRITE(dbg_level_trace, "DSIGetStatus command received\n");
@@ -733,7 +740,7 @@ void dsi_connection::FormatAndSendReply(
 				);
 	}
 
-	//DBG_DUMP_BUFFER((char*)replyBuffer, DSI_HEADER_SIZE+afpDataSize, dbg_level_trace);
+	DBGWRITE(dbg_level_info, "Sending DSI reply: cmd=%d error=%d dataLen=%d total=%d\n", dsiCommand, afpError, afpDataSize, DSI_HEADER_SIZE+afpDataSize);
 
 	Send(replyBuffer, DSI_HEADER_SIZE+afpDataSize);
 }
@@ -896,19 +903,17 @@ AFPERROR dsi_connection::dsi_OpenSession(
 	option		= mReceiveBuffer[DSI_OFFSET_DATASTART];
 	option_size	= mReceiveBuffer[DSI_OFFSET_DATASTART+sizeof(int8)];
 
-	//
-	//Validate we have enough data before reading option payload.
-	//The minimum valid option header is type + size (2 bytes);
-	//if option_size claims 4 bytes we need at least 6 bytes total.
-	//
+	DBGWRITE(dbg_level_info, "dsi_OpenSession: option=%d option_size=%d mBytesInReceiveBuffer=%u\n", option, option_size, mBytesInReceiveBuffer);
+
+	// Validate we have enough data before reading option payload.
+	// The minimum valid option header is type + size (2 bytes);
+	// if option_size claims 4 bytes we need at least 6 bytes total.
 	if ((uint32)(DSI_OFFSET_DATASTART + sizeof(int16) + sizeof(int32)) > mBytesInReceiveBuffer) {
 		DBGWRITE(dbg_level_error, "dsi_OpenSession: truncated option data\n");
 		return afpParmErr;
 	}
 
-	//
-	//We expect these options to have the size of a long.
-	//
+	// We expect these options to have the size of a long.
 	if (option_size == sizeof(int32))
 	{
 		switch(option)
@@ -924,15 +929,26 @@ AFPERROR dsi_connection::dsi_OpenSession(
 		}
 	}
 
-	//Include the server request quanta option
+	// DSI OpenSession response: server request quanta is mandatory for all clients.
+	// Replay cache size is only for AFP 3.2+ clients.
+	int8 afpVers = mSession->GetAFPVersion();
+
+	// Server request quantum (mandatory per DSI spec — always send)
 	afpReply.AddInt8(kServerRequestQuanta);
 	afpReply.AddInt8(sizeof(int32));
 	afpReply.AddInt32(SRVR_REQUEST_QUANTUM_SIZE);
 
-	//Include the replay cache size option
-	afpReply.AddInt8(kServerReplayCacheSize);
-	afpReply.AddInt8(sizeof(int32));
-	afpReply.AddInt32(AFP_REPLAY_CACHE_SIZE);
+	DBGWRITE(dbg_level_info, "DSI OpenSession: sent server request quanta %d\n", SRVR_REQUEST_QUANTUM_SIZE);
+
+	if (afpVers >= afpVersion32)
+	{
+		DBGWRITE(dbg_level_info, "Including replay cache size for AFP version %d\n", afpVers);
+
+		// Include the replay cache size option
+		afpReply.AddInt8(kServerReplayCacheSize);
+		afpReply.AddInt8(sizeof(int32));
+		afpReply.AddInt32(AFP_REPLAY_CACHE_SIZE);
+	}
 
 	*afpDataSize = afpReply.GetDataLength();
 
@@ -940,6 +956,3 @@ AFPERROR dsi_connection::dsi_OpenSession(
 
 	return( AFP_OK );
 }
-
-
-
