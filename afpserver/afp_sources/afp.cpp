@@ -120,6 +120,26 @@ AFP_TABLE afpTable[] = {
 	{FPSyncFork,				""}
 };
 
+// AFP timestamps count seconds from 1904-01-01.
+// Unix timestamps count seconds from 1970-01-01.
+constexpr int64_t kAFPToUnixEpochOffset = 2082844800LL;
+
+uint32 ToAFPTime(time_t unixTime)
+{
+    const int64 afpTime =
+        static_cast<int64>(unixTime) + kAFPToUnixEpochOffset;
+
+    return static_cast<uint32>(afpTime);
+}
+
+time_t FromAFPTime(uint32_t afpTime)
+{
+    const int64_t unixTime =
+        static_cast<int64_t>(afpTime) - kAFPToUnixEpochOffset;
+
+    return static_cast<time_t>(unixTime);
+}
+
 /*
  * IsResFile()
  *
@@ -696,6 +716,11 @@ AFPERROR FPGetSrvrParms(
 
 	*afpDataSize = afpReply.GetDataLength();
 
+	DBGWRITE(dbg_level_info, "FPGetSrvrParms reply hex (%d bytes): ", *afpDataSize);
+	for (int32 _k = 0; _k < *afpDataSize; _k++)
+		DBGWRITE(dbg_level_info, "%02X ", afpReply.GetBuffer()[_k]);
+	DBGWRITE(dbg_level_info, "\n");
+
 	return( AFP_OK );
 }
 
@@ -740,15 +765,14 @@ AFPERROR FPOpenVol(
 	//A null byte may be added to make the next parm start
 	//on an even boundary.
 	//
-	if ((afpRequest.GetCurrentPosPtr() - afpReqBuffer) % 2) {
-
-		afpRequest.Advance(sizeof(int8));
-	}
+	afpRequest.AdvanceIfOdd();
 
 	//
 	//Extract the volume password, its okay if there isn't one there.
 	//
 	afpRequest.GetRawData(szPassword, sizeof(szPassword));
+
+	DBGWRITE(dbg_level_info, "FPOpenVol volBitmap=0x%04X name=%s\n", volBitmap, szVolumeName);
 
 	//
 	//Now search for the volume object associated with the volume name.
@@ -762,7 +786,7 @@ AFPERROR FPOpenVol(
 	{
 		DBGWRITE(dbg_level_trace, "Opening volume %s\n", szVolumeName);
 
-		afpError = afpVolume->fp_GetVolParms(volBitmap, afpReply);
+		afpError = afpVolume->fp_GetVolParms(volBitmap, afpSession->GetAFPVersion(), afpReply);
 
 		if (AFP_SUCCESS(afpError))
 		{
@@ -779,6 +803,8 @@ AFPERROR FPOpenVol(
 				//Get the size of the volume parameter data.
 				//
 				*afpDataSize = afpReply.GetDataLength();
+				DBGWRITE(dbg_level_trace, "FPOpenVol reply hex (%d bytes): \n", *afpDataSize);
+				DBG_DUMP_BUFFER((const char*)afpReply.GetBuffer(), *afpDataSize, dbg_level_trace);
 			}
 		}
 	}
@@ -903,7 +929,7 @@ AFPERROR FPGetVolParms(
 		//
 		//Now call on the volume object to get the information requested.
 		//
-		afpError = afpVolume->fp_GetVolParms(afpVolBitmap, afpReply);
+		afpError = afpVolume->fp_GetVolParms(afpVolBitmap, afpSession->GetAFPVersion(), afpReply);
 
 		//
 		//Lastly, if we succeed, get the afp data length.
@@ -1125,6 +1151,8 @@ AFPERROR FPGetFileDirParms(
 	//
 	afpError = afpRequest.GetString(afpPathname, sizeof(afpPathname), true, afpPathType);
 
+	DBGWRITE(dbg_level_info, "FPGetFileDirParms volID=%d dirID=%lu fileBitmap=0x%04X dirBitmap=0x%04X pathType=%d\n",
+				afpVolumeID, afpDirID, afpFileBitmap, afpDirBitmap, afpPathType);
 	if (!AFP_SUCCESS(afpError))
 	{
 		return( afpError );
@@ -1167,6 +1195,9 @@ AFPERROR FPGetFileDirParms(
 	{
 		if (afpDirBitmap & kFPProDos)	afpDirBitmap  &= ~kFPProDos;
 		if (afpFileBitmap & kFPProDos)	afpFileBitmap &= ~kFPProDos;
+
+		// AFP 3.x-only file bits
+		afpFileBitmap &= ~(kFPExtDataForkLen | kFPLaunchLimit | kFPExtRsrcForkLen | kFPUnixPrivs);
 	}
 
 	if (afpDirBitmap & kFPDirShortName)		afpDirBitmap  &= ~kFPDirShortName;
@@ -1180,9 +1211,11 @@ AFPERROR FPGetFileDirParms(
 	afpReply.AddInt16(afpDirBitmap);
 	afpReply.AddInt8(afpAttributes);
 
+	DBGWRITE(dbg_level_info, "FPGetFileDirParms reply: fileBitmap_out=0x%04X dirBitmap_out=0x%04X attrs=0x%02X\n",
+				afpFileBitmap, afpDirBitmap, afpAttributes);
 	//
 	//If both bitmaps are null, then we are to just return
-	//the bitmaps and the attributes.
+	//the bitmaps and the attributes (no padding per AFP spec).
 	//
 	if ((afpFileBitmap == kFPFileNone) && (afpDirBitmap == kFPDirNone))
 	{
@@ -1191,7 +1224,10 @@ AFPERROR FPGetFileDirParms(
 	}
 
 	//
-	//Add a padding byte if we're giving more.
+	//Add a padding byte before the FDP data. Per AFP spec, this padding
+	//is only present when file or directory parameter data follows.
+	//AppleShare Client 3.7.4 crashes if it finds unexpected padding
+	//bytes when both bitmaps are zero.
 	//
 	afpReply.AddInt8(0);
 
@@ -1219,6 +1255,9 @@ AFPERROR FPGetFileDirParms(
 	if (AFP_SUCCESS(afpError)) {
 
 		*afpDataSize = afpReply.GetDataLength();
+
+		DBGWRITE(dbg_level_trace, "FPGetFileDirParms reply hex (%d bytes): \n", *afpDataSize);
+		DBG_DUMP_BUFFER((const char*)afpReply.GetBuffer(), *afpDataSize, dbg_level_trace);
 	}
 	else {
 

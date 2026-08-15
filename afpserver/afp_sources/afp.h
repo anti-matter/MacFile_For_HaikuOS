@@ -111,9 +111,11 @@ enum {
 #define AFP_MAX_INT16			0x7FFF
 
 // Be (Unix) to AFP time conversion
-#define AFP_TIME_DELTA			946684800
-#define TO_AFP_TIME(t)			(t - AFP_TIME_DELTA)
-#define FROM_AFP_TIME(t)		(t + AFP_TIME_DELTA)
+uint32 ToAFPTime(time_t unixTime);
+time_t FromAFPTime(uint32_t afpTime);
+
+#define TO_AFP_TIME(t)			ToAFPTime(t)
+#define FROM_AFP_TIME(t)		FromAFPTime(t)
 
 //AFP version constants
 enum {
@@ -403,7 +405,7 @@ enum {
 	kFPProDos			= 0x2000,
 	
 	//AFP3.0
-	kFPExtDataForkLen	= 0x800,
+	kFPExtDataForkLen	= 0x0800,
 	kFPLaunchLimit		= 0x1000,
 	kFPUnicodeName		= 0x2000,
 	kFPExtRsrcForkLen	= 0x4000,

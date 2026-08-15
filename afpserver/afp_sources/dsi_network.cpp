@@ -131,8 +131,6 @@ status_t afpSrvrConnectThread(void* data)
 		{
 			thread_id		newID = 0;
 
-			DBGWRITE(dbg_level_trace, "Waiting for a new connection...\n");
-
 			//
 			//Use select() with a short timeout so we can periodically check
 			//gServerRunning. This allows the server to shut down cleanly even
