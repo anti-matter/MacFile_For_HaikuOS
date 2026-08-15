@@ -33,11 +33,12 @@ AFPERROR DHXLogin(
 	BIGNUM				*pbn		= NULL;
 	DH					*dh			= NULL;
 	AFPERROR			afpError	= afpParmErr;
-	uint16				sessid;
+	uint16				sessid	= dhxhash(afpSession);
 	uint8				randbuf[DHX_RANDBUFSIZE];
 	unsigned char encrypt_buffer[DHX_CRYPTBUFLEN] = {};
 	int					i;
-	
+	unsigned char*		keyDst		= NULL;
+
 	if (dhxInfo == NULL)
 	{
 		DPRINT(("[afp:DHXLogin]dhxInfo invalid\n"));
@@ -80,6 +81,12 @@ AFPERROR DHXLogin(
 		goto exit;
 	}
 
+	//
+	//dh now owns pbn and gbn; clear our references so we don't double-free them.
+	//
+	pbn = NULL;
+	gbn = NULL;
+
 	// Generate the key
 	if (!DH_generate_key(dh))
 	{
@@ -88,19 +95,34 @@ AFPERROR DHXLogin(
 	}
 	
 	const BIGNUM* pub_key;
+	int32			pubKeyLen;
+
 	DH_get0_key(dh, &pub_key, NULL);
-	if (BN_num_bytes(pub_key) > DHX_KEYSIZE)
+	pubKeyLen = BN_num_bytes(pub_key);
+	if (pubKeyLen > DHX_KEYSIZE)
 	{
-		ASSERT(0);
+		DPRINT(("[afp:DHXLogin]Server public key too large\n"));
+		goto exit;
 	}
 
 	CAST_KEY cast_key;
-    i = DH_compute_key((unsigned char*)afpReply.GetCurrentPosPtr(), client_pub_key, dh);
- 	CAST_set_key(&cast_key, i, (unsigned char*)afpReply.GetCurrentPosPtr());
+	i = DH_compute_key((unsigned char*)afpReply.GetCurrentPosPtr(), client_pub_key, dh);
+	if (i <= 0)
+	{
+		DPRINT(("[afp:DHXLogin]DH_compute_key() failed\n"));
+		goto exit;
+	}
+
+	CAST_set_key(&cast_key, i, (unsigned char*)afpReply.GetCurrentPosPtr());
 
 	afpReply.AddInt16(sessid);
 
-	BN_bn2bin(pub_key, (unsigned char*)afpReply.GetCurrentPosPtr());
+	//
+	//Write our public key, left-padded with zeros to DHX_KEYSIZE bytes.
+	//
+	keyDst = (unsigned char*)afpReply.GetCurrentPosPtr();
+	memset(keyDst, 0, DHX_KEYSIZE);
+	BN_bn2bin(pub_key, keyDst + (DHX_KEYSIZE - pubKeyLen));
 	afpReply.Advance(DHX_KEYSIZE);
 
  	afpGetRandomNumber(afpSession, (char*)randbuf, sizeof(randbuf));
@@ -133,6 +155,16 @@ exit:
 	if (client_pub_key)
     {
         BN_free(client_pub_key);
+    }
+
+	if (pbn)
+    {
+        BN_free(pbn);
+    }
+
+	if (gbn)
+    {
+        BN_free(gbn);
     }
 
 	if (dh)
@@ -206,7 +238,7 @@ AFPERROR DHXLoginContinue(
 	afpReplyBuffer += DHX_RANDBUFSIZE;
 	afpReplyBuffer[DHX_PASSWDLEN] = '\0';
 	
-	if (DHX_PASSWDLEN > afpPasswordLen)
+	if ((DHX_PASSWDLEN + 1) > afpPasswordLen)
 	{
 		DPRINT(("[afpuser:DHXLoginContinue]Password buffer too small\n"));
 				
@@ -215,6 +247,7 @@ AFPERROR DHXLoginContinue(
 	}
 	
 	memcpy(afpPassword, afpReplyBuffer, DHX_PASSWDLEN);
+	afpPassword[DHX_PASSWDLEN] = '\0';
 		
 	DPRINT(("[afpuser:DHXLoginContinue]Successful continued login for DHCAST128\n"));
 	afpError = AFP_OK;

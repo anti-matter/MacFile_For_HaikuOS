@@ -2,6 +2,7 @@
 #define __dsi_scavenger__
 
 #include <mutex>
+#include <vector>
 
 #include "afpGlobals.h"
 #include "afp.h"
@@ -41,7 +42,11 @@ public:
 	virtual afp_session*	FindSessionByID(int32 idSize, int8* id);
 	virtual afp_session*	FindSessionByToken(int32 token);
 	
-	virtual int32			NumOpenSessions() { return mOpenConnections->CountItems(); }
+	virtual int32			NumOpenSessions()
+	{
+		std::lock_guard<std::mutex> guard(mMutex);
+		return (int32)mOpenConnections.size();
+	}
 	
 private:
 	
@@ -49,7 +54,7 @@ private:
 	
 	//Guard the list that keeps track of open connections.
 	std::mutex			mMutex;
-	BList*				mOpenConnections;
+	std::vector<dsi_connection*> mOpenConnections;
 };
 
 #endif //__dsi_scavenger__

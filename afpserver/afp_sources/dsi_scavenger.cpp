@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <vector>
+
 #include "afpvolume.h"
 #include "debug.h"
 #include "dsi_scavenger.h"
@@ -20,7 +23,7 @@ dsi_scavenger::dsi_scavenger()
 {
 	thread_id	newID;
 	
-	mOpenConnections = new BList();
+	mOpenConnections.reserve(16);
 	
 	newID = spawn_thread(
 				dsi_scavenger::ScavengerThread,
@@ -44,10 +47,11 @@ dsi_scavenger::dsi_scavenger()
 
 dsi_scavenger::~dsi_scavenger()
 {
-	if (mOpenConnections != NULL) {
-	
-		delete mOpenConnections;
-	}
+	//
+	//Nothing to do: mOpenConnections is a std::vector of raw pointers
+	//and cleans itself up automatically. The dsi_connection objects
+	//they point at are owned by the per-client threads.
+	//
 }
 
 
@@ -66,7 +70,7 @@ void dsi_scavenger::TrackConnection(dsi_connection* connection)
 	
 	if (connection != NULL) {
 	
-		mOpenConnections->AddItem(connection);
+		mOpenConnections.push_back(connection);
 	}
 }
 
@@ -86,7 +90,12 @@ void dsi_scavenger::StopTracking(dsi_connection* connection)
 	
 	if (connection != NULL) {
 	
-		mOpenConnections->RemoveItem(connection);
+		auto it = std::find(mOpenConnections.begin(), mOpenConnections.end(), connection);
+		
+		if (it != mOpenConnections.end()) {
+		
+			mOpenConnections.erase(it);
+		}
 	}
 }
 
@@ -109,10 +118,9 @@ int32 dsi_scavenger::ScavengerThread(void* data)
 	dsi_connection*		connection		= NULL;
 	afp_session*		session			= NULL;
 	fp_volume*			volume			= NULL;
-	int32				recvInterval	= 0;
-	int32				sentInterval	= 0;
-	int32				now				= 0;
-	int32				i, j;
+	uint32				recvInterval	= 0;
+	uint32				sentInterval	= 0;
+	uint32				now				= 0;
 	
 	while(true)
 	{
@@ -121,10 +129,17 @@ int32 dsi_scavenger::ScavengerThread(void* data)
 		std::lock_guard<std::mutex> guard(manager->mMutex);
 		
 		now = real_time_clock();
-		i	= 0;
+		uint32 i = 0;
 		
-		while((connection = (dsi_connection*)manager->mOpenConnections->ItemAt(i++)) != NULL)
+		//
+		//Iterate by index against the current vector size so an entry
+		//removed via StopTracking() is simply skipped, not walked off
+		//the end of the list.
+		//
+		while (i < manager->mOpenConnections.size())
 		{
+			connection = manager->mOpenConnections.at(i++);
+
 			session = connection->GetAFPSessionObject();
 			
 			if (session != NULL)
@@ -174,7 +189,7 @@ int32 dsi_scavenger::ScavengerThread(void* data)
 				}
 				else
 				{
-					j = 0;
+					uint32 j = 0;
 					
 					//
 					//If we're still alive, see if there are dirty volumes that
@@ -227,9 +242,10 @@ void dsi_scavenger::SendGlobalAttention(uint16 attentionMsg)
 	//Loop through the connection objects and send them
 	//the passed attention code.
 	//
-		
-	while((connection = (dsi_connection*)mOpenConnections->ItemAt(i++)) != NULL)
+	
+	while (i < (int)mOpenConnections.size())
 	{
+		connection = mOpenConnections.at(i++);
 		DBGWRITE(dbg_level_trace, "Sending global attention (0x%x)\n", attentionMsg);
 		
 		//
@@ -263,8 +279,10 @@ afp_session* dsi_scavenger::FindSessionByID(int32 idSize, int8* id)
 
 	std::lock_guard<std::mutex> guard(mMutex);
 	
-	while((connection = (dsi_connection*)mOpenConnections->ItemAt(i++)) != NULL)
+	while (i < (int)mOpenConnections.size())
 	{
+		connection = mOpenConnections.at(i++);
+
 		session = connection->GetAFPSessionObject();
 		
 		if (session != NULL)
@@ -301,8 +319,10 @@ afp_session* dsi_scavenger::FindSessionByToken(int32 token)
 
 	std::lock_guard<std::mutex> guard(mMutex);
 		
-	while((connection = (dsi_connection*)mOpenConnections->ItemAt(i++)) != NULL)
+	while (i < (int)mOpenConnections.size())
 	{
+		connection = mOpenConnections.at(i++);
+
 		session = connection->GetAFPSessionObject();
 		
 		if (session != NULL)

@@ -12,7 +12,6 @@
 #include "afpaccess.h"
 #include "afpextattr.h"
 #include "afphostname.h"
-#include "afpaccess.h"
 #include "afpreplay.h"
 #include "commands.h"
 #include "dsi_stats.h"
@@ -425,6 +424,8 @@ AFPERROR FPGetSrvrInfo(
 	//
 	*afpDataSize = (pBuffer - afpReplyBuffer);
 
+	DBGWRITE(dbg_level_trace, "FPGetSrvrInfo reply datasize (%d bytes): ", *afpDataSize);
+
 	return( AFP_OK );
 }
 
@@ -486,10 +487,13 @@ AFPERROR FPGetSessionToken(
 
 		afpID = new int8[afpIDSize];
 
-		if (afpID != NULL) {
-
-			afpRequest.GetRawData(afpID, afpIDSize);
+		if (afpID == NULL)
+		{
+			DBGWRITE(dbg_level_error, "Failed to allocate client ID buffer!\n");
+			return( afpMiscErr );
 		}
+
+		afpRequest.GetRawData(afpID, afpIDSize);
 	}
 
 	switch(afpType)
@@ -510,7 +514,7 @@ AFPERROR FPGetSessionToken(
 			if (afpKillSession != NULL)
 			{
 				DBGWRITE(dbg_level_trace, "Killing old session!\n");
-				afpSession->KillSession();
+				afpKillSession->KillSession();
 			}
 
 			afpSession->SetClientID(afpIDSize, afpID);
@@ -1433,8 +1437,8 @@ AFPERROR FPEnumerate(
 		return( afpError );
 	}
 
-	DBGWRITE(dbg_level_trace, "Enumerating directory: dirID: %lu, path: %s at index: %lu\n",
-			afpDirID, afpPathname, afpStartIndex);
+	DBGWRITE(dbg_level_trace, "Enumerating directory: dirID: %d, path: %s at index: %d, max_reply_size: %d\n",
+			afpDirID, afpPathname, afpStartIndex, afpMaxReplySize);
 
 	//
 	//OK, now the hard part. We need to iterate through all the directories
@@ -1525,10 +1529,15 @@ AFPERROR FPEnumerate(
 			//
 			afpObjectsFound++;
 
+			DBGWRITE(dbg_level_trace, "  Item %d: parms_buf_len=%d, reply_buf_len=%d, start_index=%d, max_reply=%d\n",
+				afpObjectsFound, afpParmsBuffer.GetDataLength(), afpReply.GetDataLength(), afpStartIndex, afpMaxReplySize);
+
 			//
 			//If we haven't hit the start index yet, continue on...
 			//
 			if (afpObjectsFound < afpStartIndex) {
+				DBGWRITE(dbg_level_trace, "  Skipping item %d (before start index %d)\n",
+					afpObjectsFound, afpStartIndex);
 				continue;
 			}
 
@@ -1554,6 +1563,8 @@ AFPERROR FPEnumerate(
 			//
 			if (sizeRequired >= afpMaxReplySize)
 			{
+				DBGWRITE(dbg_level_trace, "  Breaking: sizeRequired (%d) >= afpMaxReplySize (%d)\n",
+					sizeRequired, afpMaxReplySize);
 				//
 				//We need to stay inside the callers max reply size in the request.
 				//
@@ -1565,6 +1576,8 @@ AFPERROR FPEnumerate(
 			//
 			if (sizeRequired > afpReply.GetBufferSize())
 			{
+				DBGWRITE(dbg_level_trace, "  Breaking: sizeRequired (%d) > reply buffer size (%d)\n",
+					sizeRequired, afpReply.GetBufferSize());
 				//
 				//This should never happen (yeah right). In case it does, just
 				//bail from here.
@@ -1664,6 +1677,8 @@ AFPERROR FPEnumerate(
 	//
 	*afpDataSize = afpReply.GetDataLength();
 
+	// When no items were added to the reply, tell the client there's nothing
+	// left to enumerate. Mac clients rely on this error to know when to stop.
 	return((afpActCount == 0) ? afpObjectNotFound : AFP_OK);
 }
 
@@ -2176,6 +2191,11 @@ AFPERROR FPFlushFork(
 				{
 					forkItem->file->Sync();
 				}
+				else
+				{
+					DBGWRITE(dbg_level_warning, "File is not valid or writable, sync skipped\n");
+					afpError = afpMiscErr;
+				}
 			}
 			else
 			{
@@ -2283,6 +2303,17 @@ AFPERROR FPOpenFork(
 	afpBitmap	= afpRequest.GetInt16();
 	afpMode		= afpRequest.GetInt16();
 	afpPathType	= afpRequest.GetInt8();
+
+	//
+	//The open mode must request read and/or write access. A mode with
+	//neither bit set is invalid; without this check the file would be
+	//opened read-only (O_RDONLY) below with no access check performed.
+	//
+	if ((afpMode & (kReadMode | kWriteMode)) == 0)
+	{
+		DBGWRITE(dbg_level_warning, "Invalid open mode (no read/write bits)! (0x%04x)\n", (unsigned)afpMode);
+		return( afpParmErr );
+	}
 
 	//
 	//Get a pointer to the volume object we'll be working with
@@ -3102,8 +3133,8 @@ AFPERROR FPRead(
 		//locked.
 		//
 		if (fp_rangelock::RangeLocked(
-						seekResult,
-						seekResult + afpReqCount,
+						afpOffset,
+						afpOffset + afpReqCount,
 						afpSession,
 						forkItem->entry
 						))
@@ -3272,7 +3303,7 @@ AFPERROR FPWrite(
 	{
 		if (afpAttributes & kFileWriteInhibit)
 		{
-			DBGWRITE(dbg_level_warning, "File is locked and cannot be deleted! (%s)\n", forkItem->entry->Name());
+			DBGWRITE(dbg_level_warning, "File is locked and cannot be written to! (%s)\n", forkItem->entry->Name());
 			return( afpObjectLocked );
 		}
 	}
@@ -3549,13 +3580,34 @@ AFPERROR FPMoveAndRename(
 	}
 
 	//
-	//Check to make sure we are allowed to write on the volume.
+	//Moving an object removes it from its current directory, so we need
+	//write access to the source's PARENT directory. Checking the source
+	//object itself is the wrong bit for a directory (its own bits would be
+	//used instead of the parent's), which could allow a client to move a
+	//directory it has no right to remove.
 	//
-	afpError = afpCheckWriteAccess(afpSession, afpVolume, &afpSrcEntry);
+	{
+		BDirectory	srcParent;
+		BEntry		srcParentEntry;
+
+		if (afpSrcEntry.GetParent(&srcParent) != B_OK)
+		{
+			DBGWRITE(dbg_level_warning, "Couldn't get parent of source object!\n");
+			return( afpObjectNotFound );
+		}
+
+		if (srcParent.GetEntry(&srcParentEntry) != B_OK)
+		{
+			DBGWRITE(dbg_level_warning, "Couldn't get entry of source parent!\n");
+			return( afpObjectNotFound );
+		}
+
+		afpError = afpCheckWriteAccess(afpSession, afpVolume, &srcParentEntry);
+	}
 
 	if (!AFP_SUCCESS(afpError))
 	{
-		DBGWRITE(dbg_level_trace, "User doesn't have write access!\n");
+		DBGWRITE(dbg_level_warning, "User doesn't have write access to the source directory!\n");
 		return( afpError );
 	}
 
@@ -3707,7 +3759,7 @@ AFPERROR FPMoveAndRename(
  * FPRename()
  *
  * Description:
- *		Write data from an open file.
+ *		Rename a file or directory.
  *
  * Returns: AFPERROR
  */
@@ -3732,11 +3784,7 @@ AFPERROR FPRename(
 	int16			afpAttributes	= 0;
 	AFPERROR		afpError		= AFP_OK;
 
-	DBGWRITE(dbg_level_warning, "Enter\n");
-
-	//
-	//First word is command and padding.
-	//
+	DBGWRITE(dbg_level_trace, "Enter\n");
 	afpRequest.Advance(sizeof(int16));
 
 
@@ -4351,7 +4399,7 @@ AFPERROR FPByteRangeLock(
  * FPCopyFile()
  *
  * Description:
- *		Lock a range of bytes within an open file.
+ *		Copy a file from one location to another.
  *
  * Returns: AFPERROR
  */
@@ -4559,7 +4607,7 @@ AFPERROR FPCopyFile(
 		return( afpParmErr );
 	}
 
-	srcFile.SetTo(&afpSrcEntry, B_READ_WRITE);
+	srcFile.SetTo(&afpSrcEntry, B_READ_ONLY);
 
 	if (srcFile.InitCheck() != B_OK)
 	{
@@ -4614,7 +4662,7 @@ AFPERROR FPCreateID(
 	int8		afpPathType		= 0;
 	AFPERROR	afpError		= AFP_OK;
 
-	DBGWRITE(dbg_level_warning, "Enter...\n");
+	DBGWRITE(dbg_level_trace, "Enter\n");
 
 	//
 	//First word is command the padding byte.

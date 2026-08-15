@@ -152,8 +152,12 @@ struct DESKTOP_ENTRY
 #define DESK_ENTRY_CACHE_SIZE		(NUM_DESK_ENTRIES_TO_CACHE * sizeof(DESKTOP_ENTRY))
 
 // Desktop database file format (on-disk):
-//   [DESKTOP_DB_HEADER] 24 bytes — magic + version + per-type counts
+//   [DESKTOP_DB_HEADER] 20 bytes — magic + version + per-type counts
 //   [DESKTOP_ENTRY]    N entries, contiguous
+//
+// Legacy databases (created before the header was added) have no
+// header; entries start at offset 0. They are migrated to the
+// current format on the next write.
 #define DESKTOP_DB_MAGIC	0x61667064u  // "afpd"
 #define DESKTOP_DB_VERSION	1u
 #define DESKTOP_DB_HEADER_SIZE	sizeof(DESKTOP_DB_HEADER)
