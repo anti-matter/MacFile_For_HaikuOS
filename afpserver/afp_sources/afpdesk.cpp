@@ -1099,6 +1099,39 @@ AFPERROR FPRemoveAPPL(
 //===============================Worker Routines===============================
 
 /*
+ * afp_DesktopDBHasHeader()
+ *
+ * Description:
+ *		Check if the desktop database starts with a valid header.
+ *		Legacy databases (created before the header was added)
+ *		contain entries starting at offset 0.
+ *
+ * Returns: bool
+ */
+
+static bool afp_DesktopDBHasHeader(
+	BFile* desktop_file
+	)
+{
+	off_t desk_file_size;
+	if (desktop_file->GetSize(&desk_file_size) != B_OK || desk_file_size < DESKTOP_DB_HEADER_SIZE)
+	{
+		return false;
+	}
+
+	char header_buf[DESKTOP_DB_HEADER_SIZE];
+	desktop_file->Seek(0, SEEK_SET);
+	if (desktop_file->Read(header_buf, DESKTOP_DB_HEADER_SIZE) < DESKTOP_DB_HEADER_SIZE)
+	{
+		return false;
+	}
+
+	const DESKTOP_DB_HEADER* header = reinterpret_cast<const DESKTOP_DB_HEADER*>(header_buf);
+	return header->magic == DESKTOP_DB_MAGIC && header->version == DESKTOP_DB_VERSION;
+}
+
+
+/*
  * afp_GetDesktopEntries()
  *
  * Description:
@@ -1122,13 +1155,18 @@ std::unique_ptr<DESKTOP_ENTRY[]> afp_GetDesktopEntries(
 		return nullptr;
 	}
 
-	if (desk_file_size < DESKTOP_DB_HEADER_SIZE + sizeof(DESKTOP_ENTRY))
+	//
+	//Legacy databases have no header; entries start at offset 0.
+	//
+	off_t dataOffset = afp_DesktopDBHasHeader(desktop_file) ? DESKTOP_DB_HEADER_SIZE : 0;
+
+	if (desk_file_size < dataOffset + sizeof(DESKTOP_ENTRY))
 	{
 		// No entries in the db yet.
 		return nullptr;
 	}
 
-	int32 num_entries = (desk_file_size - DESKTOP_DB_HEADER_SIZE) / sizeof(DESKTOP_ENTRY);
+	int32 num_entries = (desk_file_size - dataOffset) / sizeof(DESKTOP_ENTRY);
 	if (num_entries <= 0)
 	{
 		return nullptr;
@@ -1137,13 +1175,12 @@ std::unique_ptr<DESKTOP_ENTRY[]> afp_GetDesktopEntries(
 	DBGWRITE(dbg_level_info, "Desktop file size: %lu\n", desk_file_size);
 	DBGWRITE(dbg_level_info, "Desktop entries: %lu\n", num_entries);
 
-	desktop_file->Seek(0, SEEK_SET);
+	desktop_file->Seek(dataOffset, SEEK_SET);
 	auto entries = std::make_unique<DESKTOP_ENTRY[]>(num_entries);
-	off_t bytesRead = 0;
-	char header_buf[DESKTOP_DB_HEADER_SIZE];
-	if (desktop_file->Read(header_buf, DESKTOP_DB_HEADER_SIZE) == DESKTOP_DB_HEADER_SIZE)
+	if (desktop_file->Read(entries.get(), num_entries * sizeof(DESKTOP_ENTRY)) < (ssize_t)(num_entries * sizeof(DESKTOP_ENTRY)))
 	{
-		bytesRead = desktop_file->Read(entries.get(), num_entries * sizeof(DESKTOP_ENTRY));
+		DBGWRITE(dbg_level_error, "Error reading desktop entries!\n");
+		return nullptr;
 	}
 
 	*entry_count = num_entries;
@@ -1172,6 +1209,32 @@ void afp_CountDesktopItems(
 	if (appl_count != nullptr) *appl_count = 0;
 	if (cmnt_count != nullptr) *cmnt_count = 0;
 
+	if (!afp_DesktopDBHasHeader(deskitem->file))
+	{
+		//
+		//Legacy database without a header; count the entries by scanning.
+		//
+		int32 entry_count = 0;
+		auto entries = afp_GetDesktopEntries(deskitem->file, &entry_count);
+		if (entries == nullptr)
+		{
+			return;
+		}
+
+		for (int32 i = 0; i < entry_count; i++)
+		{
+			switch (entries[i].entryType)
+			{
+				case ENTRY_TYPE_ICON:	if (icon_count != nullptr) (*icon_count)++;	break;
+				case ENTRY_TYPE_APPL:	if (appl_count != nullptr) (*appl_count)++;	break;
+				case ENTRY_TYPE_CMNT:	if (cmnt_count != nullptr) (*cmnt_count)++;	break;
+				default:	break;
+			}
+		}
+
+		return;
+	}
+
 	off_t desk_file_size;
 	if (deskitem->file->GetSize(&desk_file_size) != B_OK || desk_file_size < DESKTOP_DB_HEADER_SIZE)
 	{
@@ -1195,7 +1258,7 @@ void afp_CountDesktopItems(
 	if (icon_count != nullptr) *icon_count = header->iconCount;
 	if (appl_count != nullptr) *appl_count = header->applCount;
 	if (cmnt_count != nullptr) *cmnt_count = header->cmntCount;
-	
+
 }
 
 

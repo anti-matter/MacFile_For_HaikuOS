@@ -314,7 +314,7 @@ AFPERROR FPContLogin(
 	{
 		case afpUAMDHCAST128:
 		{
-			char 		szPassword[DHX_PASSWDLEN] = {};
+			char 		szPassword[DHX_PASSWDLEN+1] = {};
 			DHXInfo*	dhxInfo = (DHXInfo*)afpSession->GetExtendedLoginInfo();
 			
 			if (dhxInfo == NULL)

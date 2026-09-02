@@ -18,6 +18,81 @@ char errString[24];
 
 
 /*
+ * IsWithinVolume()
+ *
+ * Description:
+ *		Verifies that the given entry is the volume root or a descendant of
+ *		it. Used to stop a client from reaching files outside the shared
+ *		volume via a crafted directory ID.
+ *
+ * Returns: true if the entry is within the volume, false otherwise.
+ */
+
+static bool IsWithinVolume(
+	fp_volume*	afpVolume,
+	BEntry*		afpEntry
+)
+{
+	BPath		rootPath;
+	BPath		entryPath;
+	BEntry		rootEntry;
+	const char*	root;
+	const char*	entry;
+	size_t		rootLen;
+
+	//
+	//Use the canonical path of the volume's root directory (not the
+	//configured path, which may contain symlinks) so it is consistent
+	//with the canonical path of the entry.
+	//
+	if (afpVolume->GetDirectory()->GetEntry(&rootEntry) != B_OK)
+	{
+		return( false );
+	}
+
+	if (rootEntry.GetPath(&rootPath) != B_OK)
+	{
+		return( false );
+	}
+
+	if (afpEntry->GetPath(&entryPath) != B_OK)
+	{
+		return( false );
+	}
+
+	root	= rootPath.Path();
+	entry	= entryPath.Path();
+	rootLen	= strlen(rootPath.Path());
+
+	//
+	//A share mounted at the filesystem root contains everything.
+	//
+	if ((rootLen == 1) && (root[0] == '/'))
+	{
+		return( true );
+	}
+
+	//
+	//The entry must be the volume root itself, or live under "root/".
+	//
+	if (strncmp(entry, root, rootLen) != 0)
+	{
+		return( false );
+	}
+
+	if (entry[rootLen] == '\0')
+	{
+		//
+		//The entry is the volume root itself.
+		//
+		return( true );
+	}
+
+	return( entry[rootLen] == '/' );
+}
+
+
+/*
  * SetAFPEntry()
  *
  * Description:
@@ -42,6 +117,19 @@ AFPERROR fp_objects::SetAFPEntry(
 	AFPERROR	afpError 	= AFP_OK;
 		
 	volumeDir = afpVolume->GetDirectory();
+
+	//
+	//The parent of the volume root is never accessible to a client.
+	//Allowing it would let a client reach files outside the shared
+	//volume. Every command that resolves an entry goes through here,
+	//so we reject it centrally (the enumeration command also rejects
+	//it before calling).
+	//
+	if (afpDirID == kParentOfRoot)
+	{
+		DBGWRITE(dbg_level_warning, "Access to the parent of the volume root is not allowed\n");
+		return( afpParmErr );
+	}
 	
 	//
 	//First, if we're not operating in the root directory, then
@@ -195,6 +283,18 @@ AFPERROR fp_objects::SetAFPEntry(
 		{
 			DBGWRITE(dbg_level_error, "InitCheck() or Exists() failed! (%s)\n", GET_BERR_STR(status));
 
+			afpError = afpObjectNotFound;
+		}
+
+		//
+		//Verify the resolved entry is actually inside the shared
+		//volume. This stops a client from using a crafted directory
+		//ID (e.g. an arbitrary node ref on the same device) to reach
+		//files outside the share.
+		//
+		if (AFP_SUCCESS(afpError) && !IsWithinVolume(afpVolume, &afpEntry))
+		{
+			DBGWRITE(dbg_level_warning, "Entry is outside the volume, denying access\n");
 			afpError = afpObjectNotFound;
 		}
 	}

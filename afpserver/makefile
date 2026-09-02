@@ -6,9 +6,6 @@
 
 ## Application Specific Settings ---------------------------------------------
 
-%:
-	@echo $$DBG $$DBGR
-
 # specify the name of the binary
 NAME= afp_server
 
@@ -120,3 +117,9 @@ DRIVER_PATH =
 
 ## include the makefile-engine
 include $(BUILDHOME)/etc/makefile-engine
+
+# Temporary workaround for Haiku rc bug:
+# rc fails when -o contains a relative subdirectory path.
+$(OBJ_DIR)/Resource.rsrc: Resource.rdef
+	cat $< | $(CC) -E $(INCLUDES) $(CFLAGS) - | grep -av '^#' | \
+		$(RESCOMP) -I ./ -o "$(CURDIR)/$@" -

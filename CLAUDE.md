@@ -79,6 +79,44 @@ cd ShareVolume && make
 
 Output: `MacFile_x86_Release.zip` or `MacFile_x86_64_Release.zip` in `distribution/`.
 
+### Remote build server (HaikuOS)
+
+The project is compiled on a real Haiku machine (there is no cross-compiler for Linux). A build server is available over SSH and should be used to verify that changes build.
+
+- **Access**: `ssh user@haikuos` — key-based auth, no password prompt.
+- **Server OS**: Haiku R1 beta6, x86_64.
+- **Repo on server**: `~/dev/MacFile_For_HaikuOS` (same GitHub `origin` as this clone).
+
+**Gotcha — `BUILDHOME`:** it is *not* set in a non-interactive SSH session, but every makefile does `include $(BUILDHOME)/etc/makefile-engine`. Without it, the include resolves to `/etc/makefile-engine` and the build fails immediately with `No rule to make target '/etc/makefile-engine'`. Always export `BUILDHOME=/boot/system/develop` when building over SSH.
+
+**Build workflow** (from this repo):
+
+```bash
+# 1. Commit and push your branch from here.
+git push origin <branch>
+
+# 2. On the server, fetch and check it out. A throwaway branch keeps the
+#    server's working checkout (usually work3) untouched:
+ssh user@haikuos 'cd ~/dev/MacFile_For_HaikuOS \
+  && git fetch origin && git checkout -B build-test origin/<branch>'
+
+# 3. Build the AFP daemon (debug). Note the BUILDHOME export.
+ssh user@haikuos 'cd ~/dev/MacFile_For_HaikuOS/afpserver \
+  && BUILDHOME=/boot/system/develop ./dbgbuild.sh'
+```
+
+Notes:
+- **Debug build**: use `dbgbuild.sh` (which is `DBG="DEBUG" DBGR="TRUE" make`), not plain `make`.
+- **Output binary**: `afpserver/objects.x86_64-cc13-debug/afp_server` (debug) — *not* `afpserver/afp_server`.
+- **Clean build**: pass the same debug vars to `make clean`, or it cleans the *release* objects dir and the debug build then does nothing:
+  ```bash
+  ssh user@haikuos 'cd ~/dev/MacFile_For_HaikuOS/afpserver \
+    && BUILDHOME=/boot/system/develop DBG=DEBUG DBGR=TRUE make clean \
+    && BUILDHOME=/boot/system/develop ./dbgbuild.sh'
+  ```
+
+**Known build-server issue (as of 2026-09-01):** the final `mimeset` step can fail with `mimeset: ".../afp_server": No such file or directory` even though the file exists. This is a filesystem/environment problem on the server, **not** a code or compile error — by that point every source has compiled and the binary is fully linked and resource-merged (`xres`). If only `mimeset` fails, treat the build as successful and use the binary at the path above. (The drive is being diagnosed.)
+
 ## Components
 
 | Component | Binary | Directory | Purpose |
