@@ -1,0 +1,58 @@
+{
+    "configurations": [
+        {
+            "name": "Haiku",
+            "compilerPath": "/usr/bin/g++",
+            "intelliSenseMode": "linux-gcc-x64",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "defines": [
+                "__HAIKU__"
+            ],
+            "includePath": [
+                "${workspaceFolder}/**",
+
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/c++",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/c++/x86_64-unknown-haiku",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/c++/backward",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/gcc/include",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/gcc/include-fixed",
+
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/app",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/device",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/drivers",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/game",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/interface",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/kernel",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/locale",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/mail",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/media",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/midi",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/midi2",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/net",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/opengl",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/storage",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/support",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/translation",
+
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/add-ons/graphics",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/add-ons/input_server",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/add-ons/mail_daemon",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/add-ons/registrar",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/add-ons/screen_saver",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/add-ons/tracker",
+
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/be_apps/NetPositive",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/os/be_apps/Tracker",
+
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/bsd",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/glibc",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/gnu",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers/posix",
+                "${env:HOME}/haiku-sdk/boot/system/develop/headers"
+            ]
+        }
+    ],
+    "version": 4
+}
