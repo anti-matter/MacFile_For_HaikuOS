@@ -9,9 +9,7 @@
 class afp_session;
 typedef int32 AFPERROR;
 
-//
-//AFP Error codes
-//
+// AFP Error codes
 enum {
 	afpAccessDenied				= -5000,
 	afpAuthContinue				= -5001,
@@ -66,12 +64,12 @@ enum {
 	afpSameNodeErr				= -5063,
 };
 
-//File flags.
+// File flags.
 #define kShortPathType			0
 #define kLongPathType			1
 #define kPathDelimeter			':'
 
-//File name string types
+// File name string types
 #define kShortNames				1
 #define kLongNames				2
 #define kUnicodeNames			3
@@ -117,7 +115,7 @@ time_t FromAFPTime(uint32_t afpTime);
 #define TO_AFP_TIME(t)			ToAFPTime(t)
 #define FROM_AFP_TIME(t)		FromAFPTime(t)
 
-//AFP version constants
+// AFP version constants
 enum {
 	afpVersion22	= 1,
 	afpVersion30,
@@ -126,7 +124,7 @@ enum {
 	afpVersion33
 };
 
-//UAM constants
+// UAM constants
 enum {
 	afpUAMGuest		= 1,
 	afpUAMClearText,
@@ -145,18 +143,14 @@ enum {
 
 typedef unsigned char Password[8];
 
-//
-//Attention codes
-//
+// Attention codes
 #define ATTN_SERVER_SHUTDOWN        0x8000
 #define ATTN_USER_DISCONNECT        0x9000
 #define ATTN_SERVER_MESSAGE         0x2000
 #define ATTN_SERVER_NOTIFY          0x3001
 #define ATTN_TIME_MASK              0x0FFF
 
-//
-//Client ID types for FPGetSessionToken call
-//
+// Client ID types for FPGetSessionToken call
 enum {
 	kLoginWithoutID			= 0,
 	kLoginWithID			= 1,
@@ -169,9 +163,7 @@ enum {
 	kGetKerberosSessionKey	= 8
 };
 	
-//
-//Enumerate offsets
-//
+// Enumerate offsets
 #define ENUM_FILE_BITMAP_OFFSET	0
 #define ENUM_DIR_BITMAP_OFFSET	2
 #define ENUM_NUM_ENTRIES		4
@@ -205,105 +197,101 @@ enum {
 #define	AFP_HAIKU_GROUP_GUESTS_NAME				"Guests"
 #define AFP_HAIKU_GROUP_GUESTS_ID				34
 
-//
-//Some constants for server messages
-//
+// Some constants for server messages
 #define AFP_MSG_MAXLEN							199
 #define AFP_MSG_LOGINTYPE						0
 #define AFP_MSG_SERVERTYPE						1
 
 enum {
-	afpByteRangeLock			= 1,	//*						/*AFPCall command codes*/
-	afpVolClose					= 2,	//*						/*AFPCall command codes*/
-	afpDirClose					= 3,	//						/*AFPCall command codes*/
-	afpForkClose				= 4,	//*						/*AFPCall command codes*/
-	afpCopyFile					= 5,	//*						/*AFPCall command codes*/
-	afpDirCreate				= 6,	//*						/*AFPCall command codes*/
-	afpFileCreate				= 7,	//*						/*AFPCall command codes*/
-	afpDelete					= 8,	//*						/*AFPCall command codes*/
-	afpEnumerate				= 9,	//*						/*AFPCall command codes*/
-	afpFlush					= 10,	//*						/*AFPCall command codes*/
-	afpForkFlush				= 11,	//*						/*AFPCall command codes*/
-	afpGetDirParms				= 12,	//						/*AFPCall command codes*/
-	afpGetFileParms				= 13,	//						/*AFPCall command codes*/
-	afpGetForkParms				= 14,	//*						/*AFPCall command codes*/
-	afpGetSInfo					= 15,	//*						/*AFPCall command codes*/
-	afpGetSParms				= 16,	//*						/*AFPCall command codes*/
-	afpGetVolParms				= 17,	//*						/*AFPCall command codes*/
-	afpLogin					= 18,	//*						/*AFPCall command codes*/
-	afpContLogin				= 19,	//-						/*AFPCall command codes*/
-	afpLogout					= 20,	//*						/*AFPCall command codes*/
-	afpMapID					= 21,	//*						/*AFPCall command codes*/
-	afpMapName					= 22,	//						/*AFPCall command codes*/
-	afpMove						= 23,	//*						/*AFPCall command codes*/
-	afpOpenVol					= 24,	//*						/*AFPCall command codes*/
-	afpOpenDir					= 25,	//						/*AFPCall command codes*/
-	afpOpenFork					= 26,	//*						/*AFPCall command codes*/
-	afpRead						= 27,	//*						/*AFPCall command codes*/
-	afpRename					= 28,	//*						/*AFPCall command codes*/
-	afpSetDirParms				= 29,	//*						/*AFPCall command codes*/
-	afpSetFileParms				= 30,	//*						/*AFPCall command codes*/
-	afpSetForkParms				= 31,	//*						/*AFPCall command codes*/
-	afpSetVolParms				= 32,	//						/*AFPCall command codes*/
-	afpWrite					= 33,	//*						/*AFPCall command codes*/
-	afpGetFlDrParms				= 34,	//*						/*AFPCall command codes*/
-	afpSetFlDrParms				= 35,	//*						/*AFPCall command codes*/
-	afpChangePwd				= 36,	//*
-	afpGetUserInfo				= 37,	//*
-	afpGetSrvrMsg				= 38,	//*
-	afpCreateID					= 39,	//*
-	afpDeleteID					= 40,	//-
+	afpByteRangeLock			= 1,	// *						/*AFPCall command codes*/
+	afpVolClose					= 2,	// *						/*AFPCall command codes*/
+	afpDirClose					= 3,	// 						/*AFPCall command codes*/
+	afpForkClose				= 4,	// *						/*AFPCall command codes*/
+	afpCopyFile					= 5,	// *						/*AFPCall command codes*/
+	afpDirCreate				= 6,	// *						/*AFPCall command codes*/
+	afpFileCreate				= 7,	// *						/*AFPCall command codes*/
+	afpDelete					= 8,	// *						/*AFPCall command codes*/
+	afpEnumerate				= 9,	// *						/*AFPCall command codes*/
+	afpFlush					= 10,	// *						/*AFPCall command codes*/
+	afpForkFlush				= 11,	// *						/*AFPCall command codes*/
+	afpGetDirParms				= 12,	// 						/*AFPCall command codes*/
+	afpGetFileParms				= 13,	// 						/*AFPCall command codes*/
+	afpGetForkParms				= 14,	// *						/*AFPCall command codes*/
+	afpGetSInfo					= 15,	// *						/*AFPCall command codes*/
+	afpGetSParms				= 16,	// *						/*AFPCall command codes*/
+	afpGetVolParms				= 17,	// *						/*AFPCall command codes*/
+	afpLogin					= 18,	// *						/*AFPCall command codes*/
+	afpContLogin				= 19,	// -						/*AFPCall command codes*/
+	afpLogout					= 20,	// *						/*AFPCall command codes*/
+	afpMapID					= 21,	// *						/*AFPCall command codes*/
+	afpMapName					= 22,	// 						/*AFPCall command codes*/
+	afpMove						= 23,	// *						/*AFPCall command codes*/
+	afpOpenVol					= 24,	// *						/*AFPCall command codes*/
+	afpOpenDir					= 25,	// 						/*AFPCall command codes*/
+	afpOpenFork					= 26,	// *						/*AFPCall command codes*/
+	afpRead						= 27,	// *						/*AFPCall command codes*/
+	afpRename					= 28,	// *						/*AFPCall command codes*/
+	afpSetDirParms				= 29,	// *						/*AFPCall command codes*/
+	afpSetFileParms				= 30,	// *						/*AFPCall command codes*/
+	afpSetForkParms				= 31,	// *						/*AFPCall command codes*/
+	afpSetVolParms				= 32,	// 						/*AFPCall command codes*/
+	afpWrite					= 33,	// *						/*AFPCall command codes*/
+	afpGetFlDrParms				= 34,	// *						/*AFPCall command codes*/
+	afpSetFlDrParms				= 35,	// *						/*AFPCall command codes*/
+	afpChangePwd				= 36,	// *
+	afpGetUserInfo				= 37,	// *
+	afpGetSrvrMsg				= 38,	// *
+	afpCreateID					= 39,	// *
+	afpDeleteID					= 40,	// -
 	afpResolveID				= 41,
 	afpExchangeFiles			= 42,
-	afpDTOpen					= 48,	//*						/*AFPCall command codes*/
-	afpDTClose					= 49,	//*						/*AFPCall command codes*/
-	afpGetIcon					= 51,	//*						/*AFPCall command codes*/
-	afpGtIcnInfo				= 52,	//*						/*AFPCall command codes*/
-	afpAddAPPL					= 53,	//*						/*AFPCall command codes*/
-	afpRmvAPPL					= 54,	//*						/*AFPCall command codes*/
-	afpGetAPPL					= 55,	//*						/*AFPCall command codes*/
-	afpAddCmt					= 56,	//*						/*AFPCall command codes*/
-	afpRmvCmt					= 57,	//*						/*AFPCall command codes*/
-	afpGetCmt					= 58,	//*						/*AFPCall command codes*/
-	afpAddIcon					= 192,	//*						/*Special code for ASP Write commands*/
+	afpDTOpen					= 48,	// *						/*AFPCall command codes*/
+	afpDTClose					= 49,	// *						/*AFPCall command codes*/
+	afpGetIcon					= 51,	// *						/*AFPCall command codes*/
+	afpGtIcnInfo				= 52,	// *						/*AFPCall command codes*/
+	afpAddAPPL					= 53,	// *						/*AFPCall command codes*/
+	afpRmvAPPL					= 54,	// *						/*AFPCall command codes*/
+	afpGetAPPL					= 55,	// *						/*AFPCall command codes*/
+	afpAddCmt					= 56,	// *						/*AFPCall command codes*/
+	afpRmvCmt					= 57,	// *						/*AFPCall command codes*/
+	afpGetCmt					= 58,	// *						/*AFPCall command codes*/
+	afpAddIcon					= 192,	// *						/*Special code for ASP Write commands*/
 	
-	//AFP3.0
-	afpByteRangeLockExt			= 59,	//*
-	afpReadExt					= 60,	//*
-	afpWriteExt					= 61,	//*
+	// AFP3.0
+	afpByteRangeLockExt			= 59,	// *
+	afpReadExt					= 60,	// *
+	afpWriteExt					= 61,	// *
 	afpGetAuthMethods			= 62,
-	afpLoginExt					= 63,	//*
-	afpGetSessionToken			= 64,	//*
-	afpDisconnectOldSession		= 65,	//*
-	afpEnumerateExt				= 66,	//*
-	afpCatSearchExt				= 67,	//-
-	afpEnumerateExt2			= 68,	//*
+	afpLoginExt					= 63,	// *
+	afpGetSessionToken			= 64,	// *
+	afpDisconnectOldSession		= 65,	// *
+	afpEnumerateExt				= 66,	// *
+	afpCatSearchExt				= 67,	// -
+	afpEnumerateExt2			= 68,	// *
 	
-	//AFP3.2
-	afpGetExtAttr				= 69,	//*
-	afpSetExtAttr				= 70,	//*
-	afpRemoveExtAttr			= 71,	//*
-	afpListExtAttr				= 72,	//*
+	// AFP3.2
+	afpGetExtAttr				= 69,	// *
+	afpSetExtAttr				= 70,	// *
+	afpRemoveExtAttr			= 71,	// *
+	afpListExtAttr				= 72,	// *
 	
-	//AFP3.2+
-	afpSyncDir					= 78,	//*
-	afpSyncFork					= 79,	//*
+	// AFP3.2+
+	afpSyncDir					= 78,	// *
+	afpSyncFork					= 79,	// *
 	
-	//AFP3.1
-	afpZzzzz					= 122,	//*
+	// AFP3.1
+	afpZzzzz					= 122,	// *
 	
 	afpLastFunc					= afpSyncFork
 };
 
 
-//
-//Types of messages from the server and max str size.
-//
+// Types of messages from the server and max str size.
 #define SRVR_MSG_LOGON		0
 #define SRVR_MSG_ATTN		1
-#define SRVR_MSG_MAXSIZE	200	//Max characters in string + length byte
+#define SRVR_MSG_MAXSIZE	200	// Max characters in string + length byte
 
-//Msg bitmaps
+// Msg bitmaps
 enum {
 	KFPMsgSrvrBit		=	0x1
 };
@@ -324,18 +312,14 @@ enum {
 	kFPVolBlockSize		=	0x800
 };
 
-//
-//Volume types (set in kFPVolSignatureBit)
-//
+// Volume types (set in kFPVolSignatureBit)
 enum {
 	kFlatVolumeType			= 1,
 	kFixedDirectoryID		= 2,
-	kVariableDirectoryID	= 3	//Deprecated
+	kVariableDirectoryID	= 3	// Deprecated
 };
 
-//
-//Volume attribute bits
-//
+// Volume attribute bits
 enum {
 	kFPVolReadOnly						= 0x01,
 	kFPVolHasVolumePassword				= 0x02,
@@ -345,7 +329,7 @@ enum {
 	kFPVolSupportsUnixPrivs				= 0x20,
 	kFPVolSupportsUnicodeNames			= 0x40,
 	kFPVolNoNetworkUserIDs				= 0x80,
-	kDefaultPrivsFromParent 			= 0x100, //Below here added in AFP3.2
+	kDefaultPrivsFromParent 			= 0x100, // Below here added in AFP3.2
    	kNoExchangeFiles 					= 0x200, 
    	kSupportsExtAttrs 					= 0x400,
    	kSupportsACLs 						= 0x800,
@@ -353,7 +337,7 @@ enum {
    	kSupportsTMLockSteal				= 0x2000
 };
 
-//Position in reply buffer where parameters requested start
+// Position in reply buffer where parameters requested start
 #define FileDirParmsStart	6
 #define FILEPARMS_ALL		kFPFileAttributes | kFPParentID | kFPCreateDate |		\
 							kFPModDate | kFPBackupDate | kFPFinderInfo | 			\
@@ -371,7 +355,7 @@ enum {
 #define kAccess_WALL		(kAccess_WS  | kAccess_WR  | kAccess_WW )
 #define kAccess_UALL		(kAccess_UAS | kAccess_UAR | kAccess_UAW)
 
-//Access rights bits
+// Access rights bits
 enum {
 	kAccess_OS		= 0x00000001,
 	kAccess_OR		= 0x00000002,
@@ -385,10 +369,10 @@ enum {
 	kAccess_UAS		= 0x01000000,
 	kAccess_UAR		= 0x02000000,
 	kAccess_UAW		= 0x04000000,
-	kAccess_Owner	= (1 << 31) //0x80000000
+	kAccess_Owner	= (1 << 31) // 0x80000000
 };
 
-//File bitmaps
+// File bitmaps
 enum {
 	kFPFileNone			= 0x0000,
 	kFPFileAttributes	= 0x0001,
@@ -404,7 +388,7 @@ enum {
 	kFPRFLen			= 0x0400,
 	kFPProDos			= 0x2000,
 	
-	//AFP3.0
+	// AFP3.0
 	kFPExtDataForkLen	= 0x0800,
 	kFPLaunchLimit		= 0x1000,
 	kFPUnicodeName		= 0x2000,
@@ -412,7 +396,7 @@ enum {
 	kFPUnixPrivs		= 0x8000
 };
 
-//Dir bitmaps
+// Dir bitmaps
 enum {
 	kFPDirNone			= 0x0000,
 	kFPDirAttribute		= 0x0001,
@@ -430,12 +414,12 @@ enum {
 	kFPDirAccess		= 0x1000,
 	kFPDirProDOS		= 0x2000,
 	
-	//AFP3.0
+	// AFP3.0
 	kFPDirUnicodeName	= 0x2000,
 	kFPDirUnixPrivs		= 0x8000
 };
 
-//File attribute flags
+// File attribute flags
 enum {
 	kFileInvisible		= 0x00001,
 	kFileMultiUser		= 0x00002,
@@ -451,14 +435,14 @@ enum {
 	kFileSetClearFlag	= 0x08000
 };
 
-//Directory attribut flags
+// Directory attribut flags
 enum {
 	kDirInvisible		= 0x00001,
 	kDirIsExpFolder		= 0x00002,
 	kDirSystem			= 0x00004,
 	kDirMounted			= 0x00008,
 	kDirInExpFolder		= 0x00010,
-	kDirWriteInhibit	= 0x00020, //WriteInhibit not supported for directories
+	kDirWriteInhibit	= 0x00020, // WriteInhibit not supported for directories
 	kDirBackupNeeded	= 0x00040,
 	kDirRenameInhibit	= 0x00080,
 	kDirDeleteInhibit	= 0x00100,
@@ -468,7 +452,7 @@ enum {
 	kFileDirIsDir		= 0x80
 };
 
-//UserInfo bitmaps
+// UserInfo bitmaps
 enum {
 	kUserID		= 0x1,
 	kGroupID	= 0x2
@@ -530,7 +514,7 @@ typedef struct
 	int16	y;
 }MAC_POINT;
 
-//Finder Info struct
+// Finder Info struct
 typedef struct
 {
 	char		fdType[4];
@@ -541,9 +525,7 @@ typedef struct
 	char		fdFinderData[16];
 }FINDER_INFO, *PFINDER_INFO;
 
-//
-//Finder flags (fdFlags) in FINDER_INFO
-//
+// Finder flags (fdFlags) in FINDER_INFO
 enum
 {
 	kFDIsShared			= 0x0040,
@@ -558,7 +540,7 @@ enum
 	kFDIsAlias			= 0x8000
 };
 
-//FPGetSrvrInfo() server flags bit values
+// FPGetSrvrInfo() server flags bit values
 enum {
 	kSupportsCopyFile			= 0x1,
 	kSupportsChngPswd			= 0x2,
@@ -568,7 +550,7 @@ enum {
 	kSupportsTCPIP				= 0x20,
 	kSupportsSrvrNotification	= 0x40,
 	
-	//AFP3.0
+	// AFP3.0
 	kSupportsReconnect			= 0x80,
 	kSupportsDirectorySvcs		= 0x100,
 	kSupportsUTF8Name			= 0x200,
@@ -576,7 +558,7 @@ enum {
 	kSuperClient				= 0x8000
 };
 
-//FPGetSrvrInfo() offsets
+// FPGetSrvrInfo() offsets
 #define SRVRINFO_OFFSET_MACHTYPE		0
 #define SRVRINFO_OFFSET_AFPVERSCOUNT	2
 #define SRVRINFO_OFFSET_UAMCOUNT		4
@@ -584,7 +566,7 @@ enum {
 #define SRVRINFO_OFFSET_FLAGS			8
 #define SRVRINFO_OFFSET_SRVRNAME		10
 
-//FPByteRangeLock flag bits
+// FPByteRangeLock flag bits
 enum {
 	kUnlockFlag					= 0x01,
 	kStartEndFlag				= 0x80,
@@ -595,7 +577,7 @@ enum {
 	kSelFromEnd					= FALSE
 };
 
-//FPGetSrvrMsg bitmap flags
+// FPGetSrvrMsg bitmap flags
 enum {
 	kSendMessageAsUnicode		= 0x02
 };
@@ -834,4 +816,4 @@ AFPERROR FPZzzz(
 	int32*			afpDataSize
 	);
 
-#endif //__afp__
+#endif // __afp__

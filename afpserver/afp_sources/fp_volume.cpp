@@ -40,10 +40,8 @@ fp_volume::fp_volume(BPath* path, uint32 srvrVolFlags)
 	mDirectory 		= new BDirectory(path->Path());
 	mIsDirty		= false;
 
-	//
-	//Get the root and parent of root node id's so we can
-	//find them later.
-	//
+	// Get the root and parent of root node id's so we can
+	// find them later.
 	if (mDirectory->InitCheck() == B_OK)
 	{
 		BEntry		parentOfRoot;
@@ -194,15 +192,11 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, int8 afpVersion, afp_buffer&
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//First in the buffer goes the volume bitmap we were passed.
-	//
+	// First in the buffer goes the volume bitmap we were passed.
 	afpBuffer.push_num(volBitmap);
 
-	//
-	//Obtain the entry_ref for the Be Volume we're sitting on
-	//so we can obtain information about it.
-	//
+	// Obtain the entry_ref for the Be Volume we're sitting on
+	// so we can obtain information about it.
 	if (entry.GetRef(&afpVolumeRef) != B_OK)
 	{
 		DBGWRITE(dbg_level_error, "Failed to get ref for afp volume\n");
@@ -229,11 +223,9 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, int8 afpVersion, afp_buffer&
 			volAttributes |= kFPVolReadOnly;
 		}
 
-		//
-		//Only advertise AFP 3.x features to clients that support them.
-		//AppleShare Client 3.7.4 (AFP 2.2) crashes when it sees unknown
-		//volume attribute flags, so we must not set them for older clients.
-		//
+		// Only advertise AFP 3.x features to clients that support them.
+		// AppleShare Client 3.7.4 (AFP 2.2) crashes when it sees unknown
+		// volume attribute flags, so we must not set them for older clients.
 		if (afpVersion >= afpVersion30)
 		{
 			DBGWRITE(dbg_level_trace, "Setting AFP 3.x volume attributes for AFP version %d\n", afpVersion);
@@ -292,10 +284,8 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, int8 afpVersion, afp_buffer&
 
 	if (volBitmap & kFPVolBytesFreeBit)
 	{
-		//
-		//For AFP 2.1 and older clients, we cannot report volume
-		//sizes larger than INT32_MAX.
-		//
+		// For AFP 2.1 and older clients, we cannot report volume
+		// sizes larger than INT32_MAX.
 		off_t freeBytesClamped = freeBytes;
 
 		if (freeBytes >= INT32_MAX)
@@ -310,12 +300,10 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, int8 afpVersion, afp_buffer&
 
 	if (volBitmap & kFPVolBytesTotalBit)
 	{
-		//
-		//The total number of bytes (free + used) on the AFP volume as an int32 (AFP 2.x clamped to INT32_MAX).
-		//Algebraically: freeBytes + (capacity - freeBytes) == capacity.
-		//Use unclamped freeBytes so the formula is correct for disks >INT32_MAX.
-		//Guard against negative freeBytes from filesystem errors.
-		//
+		// The total number of bytes (free + used) on the AFP volume as an int32 (AFP 2.x clamped to INT32_MAX).
+		// Algebraically: freeBytes + (capacity - freeBytes) == capacity.
+		// Use unclamped freeBytes so the formula is correct for disks >INT32_MAX.
+		// Guard against negative freeBytes from filesystem errors.
 		off_t bytesTotal = capacity;
 
 		if (bytesTotal < 0 || bytesTotal > INT32_MAX)
@@ -330,18 +318,14 @@ AFPERROR fp_volume::fp_GetVolParms(int16 volBitmap, int8 afpVersion, afp_buffer&
 
 	if (volBitmap & kFPVolNameBit)
 	{
-		//
-		//Save the position were we'll store the offset to the
-		//volume name.
-		//
+		// Save the position were we'll store the offset to the
+		// volume name.
 		volNamePtr = afpBuffer.GetCurrentPosPtr();
 		afpBuffer.Advance(sizeof(int16));
 	}
 
-	//
-	//The following 3 bits will only be set if the caller
-	//is using AFP 2.2 or later.
-	//
+	// The following 3 bits will only be set if the caller
+	// is using AFP 2.2 or later.
 
 	if (volBitmap & kFPVolExtBytesFree)
 	{

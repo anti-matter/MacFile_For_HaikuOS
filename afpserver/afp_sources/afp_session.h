@@ -19,13 +19,13 @@ typedef struct
 {
 	uint16			refnum;
 	BFile*			file;
-	int16			forkopen;	//either kResourceForkBit or kDataFork
+	int16			forkopen;	// either kResourceForkBit or kDataFork
 	BEntry*			entry;
 	fp_volume*		volume;
 	BList*			brlList;
 	BLocker*		mutex;
-	BMallocIO*		rsrcIO;		//Cache that holds entire rsrc fork data
-	bool			rsrcDirty;	//Flag as to whether fork is "dirty" and needs to be written to disk
+	BMallocIO*		rsrcIO;		// Cache that holds entire rsrc fork data
+	bool			rsrcDirty;	// Flag as to whether fork is "dirty" and needs to be written to disk
 	bool			isResFile;
 }OPEN_FORK_ITEM;
 
@@ -49,14 +49,14 @@ public:
 	
 	virtual uint16		GetNextServerRequestID(void);
 
-	//Volume methods
+	// Volume methods
 	virtual AFPERROR	VolumeOpened(fp_volume* volume);
 	virtual AFPERROR	VolumeClosed(fp_volume* volume);
 	
 	virtual bool		HasVolumeOpen(fp_volume* volume);
 	virtual bool		HasVolumeOpen(int16 volID, fp_volume** volume=NULL);
 
-	//File methods
+	// File methods
 	virtual AFPERROR		OpenFile(
 								fp_volume* volume,
 								BEntry* 	fentry,
@@ -71,7 +71,7 @@ public:
 	virtual OPEN_FORK_ITEM*	GetForkItem(uint16 refnum);
 	virtual BFile*			GetBFileFromRef(uint16 refnum);
 	
-	//Desktop methods
+	// Desktop methods
 	virtual AFPERROR		OpenDesktop(
 								BEntry*		entry,
 								BFile*		file,
@@ -82,7 +82,7 @@ public:
 	virtual AFPERROR		CloseDesktop(uint16 refnum);
 	virtual OPEN_DESK_ITEM* GetDeskItem(uint16 refnum);
 	
-	//Token info
+	// Token info
 	virtual void		SetClientID(int32 idSize, int8* id);
 	virtual void		GetClientID(int32* idSize, int8** id);
 	virtual void		SetAFPTimeStamp(uint32 timeStamp)	{ mAFPTimeStamp = timeStamp; }
@@ -147,25 +147,19 @@ private:
 	
 	dsi_connection*	mConnection;
 	
-	//
-	//This is for the new FPZzzz command which tells the server
-	//when the client is going to sleep.
-	//
+	// This is for the new FPZzzz command which tells the server
+	// when the client is going to sleep.
 	bool			mClientIsSleeping;
 	
-	//
-	//These are used so the AFP client can reference this session in
-	//the event of a client crash or disconnection.
-	//
+	// These are used so the AFP client can reference this session in
+	// the event of a client crash or disconnection.
 	int32			mIDLength;
 	int8*			mID;
 	
 	int32			mToken;
 	uint32			mAFPTimeStamp;
 	
-	//
-	//For extended UAMs we need to store some extra information
-	//
+	// For extended UAMs we need to store some extra information
 	uint8*			mExtendedLoginBlob;
 	uint32			mExtendedLoginSize;
 };
@@ -176,4 +170,4 @@ private:
 
 
 
-#endif //__afp_session__
+#endif // __afp_session__

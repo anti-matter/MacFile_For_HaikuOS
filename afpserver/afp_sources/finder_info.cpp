@@ -28,13 +28,13 @@ static mac_extension_map extMap[] = {  // NOLINT(misc-use-anonymous-namespace)
     {.extension = ".hpp",   .type = "TEXT", .creator = "CWIE"},
     {.extension = ".pch",   .type = "TEXT", .creator = "CWIE"},
     {.extension = ".pch++", .type = "TEXT", .creator = "CWIE"},
-    {.extension = ".prj",   .type = "MMPr", .creator = "CWIE"}, //CW Professional 1 project file
-    {.extension = ".mcp",   .type = "MMPr", .creator = "CWIE"}, //CW Professional 4+ project file
-    {.extension = ".cwlib", .type = "MPLF", .creator = "CWIE"}, //CW Professional 4+ library file
-    {.extension = ".ppob",  .type = "rsrc", .creator = "MWC2"}, //PowerPlant object file (CW Professional 4+)
-    {.extension = ".err",   .type = "MMCH", .creator = "CWIE"}, //Error list
-    {.extension = ".res",   .type = "rsrc", .creator = "RSED"}, //Resource file
-    {.extension = ".o",     .type = "OBJ ", .creator = "MPS "}  //Library (MPW)
+    {.extension = ".prj",   .type = "MMPr", .creator = "CWIE"}, // CW Professional 1 project file
+    {.extension = ".mcp",   .type = "MMPr", .creator = "CWIE"}, // CW Professional 4+ project file
+    {.extension = ".cwlib", .type = "MPLF", .creator = "CWIE"}, // CW Professional 4+ library file
+    {.extension = ".ppob",  .type = "rsrc", .creator = "MWC2"}, // PowerPlant object file (CW Professional 4+)
+    {.extension = ".err",   .type = "MMCH", .creator = "CWIE"}, // Error list
+    {.extension = ".res",   .type = "rsrc", .creator = "RSED"}, // Resource file
+    {.extension = ".o",     .type = "OBJ ", .creator = "MPS "}  // Library (MPW)
 };
 
 void FinderInfoBasedOnExtension(std::string filename, FINDER_INFO* finfo)

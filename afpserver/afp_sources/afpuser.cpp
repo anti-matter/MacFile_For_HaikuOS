@@ -104,29 +104,21 @@ AFPERROR FPLogin(
 	
 	DPRINT(("[afp:FPLogin]ENTER\n"));
 	
-	//
-	//Check for maximum logon sessions limit being reached. If it is, we
-	//just return afpAccessDenied.
-	//
+	// Check for maximum logon sessions limit being reached. If it is, we
+	// just return afpAccessDenied.
 	if (gMaxAFPSessions != 0)
 	{
-		//
-		//Implement
-		//
+		// Implement
 	}
 	
-	//
-	//If the session is already authenticated, there's no reason to continue.
-	//
+	// If the session is already authenticated, there's no reason to continue.
 	if (afpSession->IsAuthenticated())
 	{
 		DPRINT(("[afp:FPLogin]User already authenticated\n"));
 		return( afpMiscErr );
 	}
 	
-	//
-	//The first byte in the buffer is the afp command byte.
-	//
+	// The first byte in the buffer is the afp command byte.
 	afpCommand = afpBuffer.GetInt8();
 	
 	if (afpCommand == afpLoginExt)
@@ -135,9 +127,7 @@ AFPERROR FPLogin(
 		afpFlags = afpBuffer.GetInt16();
 	}
 		
-	//
-	//Get the AFP version the client is requesting to use and store it.
-	//
+	// Get the AFP version the client is requesting to use and store it.
 	afpBuffer.GetString(szAFPVersion, sizeof(szAFPVersion));
 	DPRINT(("[afp:FPLogin]AFPVersion = %s\n", szAFPVersion));
 	
@@ -151,10 +141,8 @@ AFPERROR FPLogin(
 	
 	afpSession->SetAFPVersion(afpAFPVersion);
 	
-	//
-	//Retrieve the UAM type string, convert it to an int, and then
-	//store the uam type in the session object.
-	//
+	// Retrieve the UAM type string, convert it to an int, and then
+	// store the uam type in the session object.
 	afpBuffer.GetString(szUAMVersion, sizeof(szUAMVersion));
 	DPRINT(("[afp:FPLogin]UAMVersion = %s\n", szUAMVersion));
 
@@ -168,9 +156,7 @@ AFPERROR FPLogin(
 	
 	afpSession->SetUAMLoginType(afpUAMType);
 	
-	//
-	//Every UAM other then guest requires the user name, so retrieve it now.
-	//
+	// Every UAM other then guest requires the user name, so retrieve it now.
 	if (afpUAMType != afpUAMGuest)
 	{
 		if (afpCommand == afpLoginExt)
@@ -186,7 +172,7 @@ AFPERROR FPLogin(
 			afpBuffer.GetString(szUserName, sizeof(szUserName));
 		}
 		
-		afpBuffer.AdvanceIfOdd();	//Padding byte
+		afpBuffer.AdvanceIfOdd();	// Padding byte
 	}
 	
 	switch(afpUAMType)
@@ -197,9 +183,7 @@ AFPERROR FPLogin(
 			
 			afpError = afpImpLogonUser(AFP_GUEST_NAME, NULL, &userInfo);
 
-			//
-			//If we get here without error, then we are authenticated.
-			//
+			// If we get here without error, then we are authenticated.
 			if (AFP_SUCCESS(afpError))
 			{
 				afpSession->SetIsAuthenticated(true);
@@ -223,10 +207,8 @@ AFPERROR FPLogin(
 			{
 				if (afpError == afpPwdExpiredErr)
 				{
-					//
-					//Flag for temporary login, allows only the changing of
-					//passwords for expired accounts.
-					//
+					// Flag for temporary login, allows only the changing of
+					// passwords for expired accounts.
 					userInfo.flags |= kTempAuthenticated;
 				}
 				
@@ -238,24 +220,18 @@ AFPERROR FPLogin(
 		
 		case afpUAMDHCAST128:
 		{
-			//
-			//This login UAM uses SSL to encrypt the password buffer using
-			//public and private keys.
-			//
+			// This login UAM uses SSL to encrypt the password buffer using
+			// public and private keys.
 			
 			DHXInfo*	dhxInfo = NULL;
 			
-			//
-			//This is where we store all the information we'll need for the login continue.
-			//
+			// This is where we store all the information we'll need for the login continue.
 			dhxInfo = (DHXInfo*)afpSession->BeginExtendedLogin(sizeof(DHXInfo));
 			
 			if (dhxInfo == NULL)
 			{
-				//
-				//We failed to allocated the necessary block of data to store information
-				//between login api calls. No choice but to bail out.
-				//
+				// We failed to allocated the necessary block of data to store information
+				// between login api calls. No choice but to bail out.
 				
 				DPRINT(("[afp:FPLogin]Failed to allocate DHXInfo structure, exiting.\n"));
 				return( afpMiscErr );
@@ -360,10 +336,8 @@ AFPERROR FPContLogin(
 		}
 		else
 		{
-			//
-			//Flag for temporary login, allows only the changing of
-			//passwords for expired accounts.
-			//
+			// Flag for temporary login, allows only the changing of
+			// passwords for expired accounts.
 			userInfo.flags |= kTempAuthenticated;
 		}
 		
@@ -402,9 +376,7 @@ AFPERROR FPLogout(
 	
 	afpSession->SetIsAuthenticated(false);
 	
-	//
-	//Take away temporary access if it was granted.
-	//
+	// Take away temporary access if it was granted.
 	afpSession->GetUserInfo(&userInfo);
 	if (userInfo.flags & kTempAuthenticated)
 	{
@@ -450,9 +422,7 @@ AFPERROR FPChangePswd(
 	
 	afpRequest.AdvanceIfOdd();
 		
-	//
-	//Starting with AFP3.0, the username is just 2 bytes of zeros.
-	//
+	// Starting with AFP3.0, the username is just 2 bytes of zeros.
 	if (afpSession->GetAFPVersion() > afpVersion22)
 	{
 		afpRequest.Advance(sizeof(int16));
@@ -473,9 +443,7 @@ AFPERROR FPChangePswd(
 			return( afpBadUAM );
 		
 		case afpUAMClearText:
-			//
-			//Grab the old and new cleartext passwords from the buffer.
-			//
+			// Grab the old and new cleartext passwords from the buffer.
 			afpRequest.GetRawData(szOldPassword, UAM_CLRTXTPWDLEN);
 			szOldPassword[UAM_CLRTXTPWDLEN+1] = 0;
 			afpRequest.GetRawData(szNewPassword, UAM_CLRTXTPWDLEN);
@@ -489,25 +457,19 @@ AFPERROR FPChangePswd(
 		{
 			DHXInfo* dhxInfo = NULL;
 			
-			//
-			//This may be our second time through in which case dxhInfo is already
-			//created and filled with information.
-			//
+			// This may be our second time through in which case dxhInfo is already
+			// created and filled with information.
 			dhxInfo = (DHXInfo*)afpSession->GetExtendedLoginInfo();
 			
 			if (dhxInfo == NULL)
 			{
-				//
-				//Must be our first time through, so no blob info saved yet.
-				//
+				// Must be our first time through, so no blob info saved yet.
 				dhxInfo = (DHXInfo*)afpSession->BeginExtendedLogin(sizeof(DHXInfo));
 				
 				if (dhxInfo == NULL)
 				{
-					//
-					//We failed to allocated the necessary block of data to store information
-					//between login api calls. No choice but to bail out.
-					//
+					// We failed to allocated the necessary block of data to store information
+					// between login api calls. No choice but to bail out.
 					
 					DPRINT(("[afp:FPChangePswd]Failed to allocate DHXInfo structure, exiting.\n"));
 					return( afpMiscErr );
@@ -532,11 +494,9 @@ AFPERROR FPChangePswd(
 			
 			if (afpError == afpAuthContinue)
 			{
-				//
-				//We've only complete the first step in the key exchange/encryption
-				//process. Returning afpAuthContinue and we'll be called again with
-				//the new/old password encrypted payload.
-				//
+				// We've only complete the first step in the key exchange/encryption
+				// process. Returning afpAuthContinue and we'll be called again with
+				// the new/old password encrypted payload.
 				return( afpError );
 			}
 			
@@ -544,9 +504,7 @@ AFPERROR FPChangePswd(
 			
 			if (!AFP_SUCCESS(afpError))
 			{
-				//
-				//We had a failure in the DHX change password routine.
-				//
+				// We had a failure in the DHX change password routine.
 				
 				goto exit;
 			}

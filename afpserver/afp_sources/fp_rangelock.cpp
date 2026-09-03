@@ -24,10 +24,8 @@ fp_rangelock::fp_rangelock(afp_session* session, OPEN_FORK_ITEM* forkItem)
 	gLockList.AddItem(this);
 	gLockListLocker.Unlock();
 
-	//
-	//We add this locker object to the forkItem struct so
-	//it can be referenced on a per-fork basis.
-	//
+	// We add this locker object to the forkItem struct so
+	// it can be referenced on a per-fork basis.
 	mForkRef 	= forkItem;
 	mSession	= session;
 
@@ -124,9 +122,7 @@ bool fp_rangelock::RangeLocked(
 				((rangeEnd >= start) && (rangeEnd <= end))		||
 				((rangeStart <= start) && (rangeEnd >= end))	)
 			{
-				//
-				//We fall within the lock range, so we'll return TRUE.
-				//
+				// We fall within the lock range, so we'll return TRUE.
 				result = true;
 				break;
 			}

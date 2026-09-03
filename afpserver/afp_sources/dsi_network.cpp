@@ -29,13 +29,11 @@ void afpInitializeServerNetworking()
 
 	gServerRunning = true;
 
-	afp_Initialize(); //afpmsg.cpp
+	afp_Initialize(); // afpmsg.cpp
 
-	//
-	//This will initilalize the hostname that we use. We don't need to
-	//do this, actually. But, we do it anyway to reduce any potential
-	//for a delay in the first logon to the server.
-	//
+	// This will initilalize the hostname that we use. We don't need to
+	// do this, actually. But, we do it anyway to reduce any potential
+	// for a delay in the first logon to the server.
 	afp_GetHostname(NULL, 0);
 
 	newID = spawn_thread(
@@ -87,9 +85,7 @@ status_t afpSrvrConnectThread(void* data)
 			continue;
 		}
 
-		//
-		//Set the address format for the bind operation.
-		//
+		// Set the address format for the bind operation.
 		memset(&sa, 0, sizeof(sa));
 
 		sa.sin_family		= AF_INET;
@@ -111,10 +107,8 @@ status_t afpSrvrConnectThread(void* data)
 			continue;
 		}
 
-		//
-		//Now tell the socket to begin listening for new connections.
-		//Backlog of 128 gives headroom for connection bursts during startup.
-		//
+		// Now tell the socket to begin listening for new connections.
+		// Backlog of 128 gives headroom for connection bursts during startup.
 		if (listen(listenSocket, 128) < 0)
 		{
 			DBGWRITE(dbg_level_error, "Failed to listen()!\n");
@@ -131,12 +125,10 @@ status_t afpSrvrConnectThread(void* data)
 		{
 			thread_id		newID = 0;
 
-			//
-			//Use select() with a short timeout so we can periodically check
-			//gServerRunning. This allows the server to shut down cleanly even
-			//when no clients are connecting — without it, accept() would block
-			//indefinitely and the shutdown loop would hang forever.
-			//
+			// Use select() with a short timeout so we can periodically check
+			// gServerRunning. This allows the server to shut down cleanly even
+			// when no clients are connecting — without it, accept() would block
+			// indefinitely and the shutdown loop would hang forever.
 			fd_set fd;
 			struct timeval tv;
 

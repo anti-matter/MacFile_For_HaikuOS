@@ -30,29 +30,23 @@ AFPERROR afpAccessCheck(
 				|| (afpEntry == NULL)
 				|| (afpSession->IsAuthenticated() == false)	)
 	{
-		//
-		//We need these parameters to do a valid access check. We also need
-		//the session to actually have been authenticated.
-		//
-		
+		// We need these parameters to do a valid access check. We also need
+		// the session to actually have been authenticated.
+
 		DBGWRITE(dbg_level_warning, "User is not authenticated\n");
 		return( afpParmErr );
 	}
 
 	if ((afpAccess < afpAccessRead) || (afpAccess > afpAccessSearch))
 	{
-		//
-		//No supported flag was set, pass back parameter error to the caller.
-		//
-		
+		// No supported flag was set, pass back parameter error to the caller.
+
 		DBGWRITE(dbg_level_warning, "Bad access flags\n");
 		return( afpParmErr );
 	}
 	
-	//
-	//If the afpEntry is itself a directory, we get the permissions
-	//for that directory instead of the parent.
-	//
+	// If the afpEntry is itself a directory, we get the permissions
+	// for that directory instead of the parent.
 	if (afpEntry->IsDirectory())
 	{
 		BDirectory dir;
@@ -68,10 +62,8 @@ AFPERROR afpAccessCheck(
 	
 	if (afpSession->IsAdmin())
 	{
-		//
-		//Administrators always get full access to everything.
-		//
-			
+		// Administrators always get full access to everything.
+
 		afpResult = AFP_OK;
 		
 		DBGWRITE(dbg_level_trace, "Admin access check returning: %d\n", afpResult);
@@ -98,7 +90,7 @@ AFPERROR afpAccessCheck(
 		
 		DBGWRITE(dbg_level_trace, "User access check returning: %d\n", afpResult);
 	}
-	else //guest
+	else // guest
 	{
 		switch(afpAccess)
 		{
@@ -143,6 +135,7 @@ AFPERROR afpCheckSearchAccess(
 	return( afpAccessCheck(afpSession, afpEntry, afpAccessSearch) );
 }
 
+
 /*
  * afpCheckReadAccess()
  *
@@ -182,14 +175,10 @@ AFPERROR afpCheckWriteAccess(
 	
 	if (afpVolume != NULL)
 	{
-		//
-		//Check to make sure we are allowed to write on the volume.
-		//
+		// Check to make sure we are allowed to write on the volume.
 		if ((afpVolume->GetVolumeFlags() & kAFPReadOnly) != 0)
 		{
-			//
-			//The volume we're attempting to write to is read only.
-			//
+			// The volume we're attempting to write to is read only.
 			DBGWRITE(dbg_level_warning, "Volume is locked! (%s)\n", afpVolume->GetVolumeName());
 			return( afpVolLocked );
 		}

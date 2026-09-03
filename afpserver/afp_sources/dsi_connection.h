@@ -9,25 +9,19 @@
 #include "afp.h"
 #include "afp_session.h"
 
-//
-//This is the largest request that the server can receive
-//from the client. It does not include the DSI header size
-//or the AFP command.
-//
+// This is the largest request that the server can receive
+// from the client. It does not include the DSI header size
+// or the AFP command.
 #define SRVR_REQUEST_QUANTUM_SIZE	(INT16_MAX - DSI_HEADER_SIZE)
 
 #define RECV_BUFFER_SIZE		(UINT16_MAX) 
 #define SEND_BUFFER_SIZE		(UINT16_MAX)
 #define OVERFLOW_BUFFER_SIZE	4096
 
-//
-//AFP over TCP/IP port number
-//
+// AFP over TCP/IP port number
 #define AFP_TCP_PORT			548
 
-//
-//Offsets for the DSI header fields
-//
+// Offsets for the DSI header fields
 #define DSI_OFFSET_FLAGS		0
 #define DSI_OFFSET_COMMAND		1
 #define DSI_OFFSET_REQUESTID	2
@@ -40,19 +34,15 @@
 
 #define AFP_MAX_CMD_SIZE		512
 
-//For AFP3.2+, Replay cache size
+// For AFP3.2+, Replay cache size
 #define AFP_REPLAY_CACHE_SIZE		32
 
-//
-//DSIOpen option fields
-//
+// DSIOpen option fields
 #define kServerRequestQuanta		0x00
 #define kServerReplayCacheSize		0x02
 #define kClientAttentionQuantum		0x01
 
-//
-//DSI commands
-//
+// DSI commands
 enum
 {
 	DSI_CMD_CloseSession	= 1,
@@ -64,11 +54,11 @@ enum
 	DSI_CMD_Attention 		= 8
 };
 
-//DSI flag possibilities
+// DSI flag possibilities
 #define DSI_REQUEST_FLAG	0x00
 #define DSI_REPLY_FLAG		0x01
 
-//Maximum request ID
+// Maximum request ID
 #define DSI_MAX_REQUEST_ID	UINT16_MAX
 
 struct ConnectionData
@@ -135,36 +125,26 @@ private:
 	thread_id mThreadId;
 	int16 mExpectedDSIClientRequestID;
 	
-	//
-	//This is the AFP session associated with this network connection.
-	//
+	// This is the AFP session associated with this network connection.
 	std::unique_ptr<afp_session> mSession;
 	bool mSessionOpen;
 	
-	//
-	//This is the buffer we use for recieving data from the client.
-	//
+	// This is the buffer we use for recieving data from the client.
 	std::unique_ptr<int8[]> mReceiveBuffer;
 	size_t mBytesInReceiveBuffer;
 	int32 mAttentionQuantumSize;
 	
-	//
-	//The receive thread will continue as long as this is true.
-	//
+	// The receive thread will continue as long as this is true.
 	bool mContinueRecv;
 	
-	//
-	//This BList serves as the replay cache for AFP3.3 and later connections
-	//
+	// This BList serves as the replay cache for AFP3.3 and later connections
 	std::unique_ptr<BList> mReplayCache;
 	
-	//
-	//Only one send at a time...
-	//
+	// Only one send at a time...
 	std::mutex mSendMutex;
 };
 
 status_t ServerConnection(void* data);
 
 
-#endif //__BAFPConnection__
+#endif // __BAFPConnection__

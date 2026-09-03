@@ -347,10 +347,8 @@ void afpServerApplication::MessageReceived(BMessage* message)
 		case CMD_AFP_ADDSHARE:
 			if (message->FindString(AFP_PARAM_PATHSTRING, &string) == B_OK)
 			{
-				//
-				//Sending custom volume flags is not required since we've done
-				//a version without them.
-				//
+				// Sending custom volume flags is not required since we've done
+				// a version without them.
 				if (message->FindInt32(AFP_PARAM_INT32, (int32*)&volFlags) == B_OK) {
 				
 					volData.flags	= volFlags;
@@ -381,14 +379,10 @@ void afpServerApplication::MessageReceived(BMessage* message)
 		case CMD_AFP_RMVSHARE:
 			if (message->FindString(AFP_PARAM_PATHSTRING, &string) == B_OK)
 			{
-				//
-				//Tell the server to not share this volume anymore.
-				//
+				// Tell the server to not share this volume anymore.
 				if (StopSharingVolume(string.String()) == B_OK)
 				{
-					//
-					//Remove the volume from the volume preferences file.
-					//
+					// Remove the volume from the volume preferences file.
 					RemoveVolumeData(string.String());
 					
 					message->SendReply(be_afp_success);
@@ -482,11 +476,9 @@ void afpServerApplication::MessageReceived(BMessage* message)
 			}
 			break;
 
-		//
-		//We watch the nodes associated with our shared AFP volumes. If
-		//one of the share points for our volumes is moved, renamed or deleted,
-		//then we automatically stop sharing that directory.
-		//
+		// We watch the nodes associated with our shared AFP volumes. If
+		// one of the share points for our volumes is moved, renamed or deleted,
+		// then we automatically stop sharing that directory.
 		case B_NODE_MONITOR:
 		{
 			fp_volume*	afpVolume	= NULL;
@@ -515,9 +507,7 @@ void afpServerApplication::MessageReceived(BMessage* message)
 					break;
 			}
 			
-			//
-			//Look for the volume associated to this node.
-			//
+			// Look for the volume associated to this node.
 			afpVolume = FindVolume(nref);
 			
 			if (afpVolume != NULL)
@@ -567,9 +557,7 @@ void afpServerApplication::ReadyToRun()
 	char			buffer[256];
 	AFP_USER_DATA	userData;
 	
-	//
-	//Read in the logon message from the message preference file
-	//
+	// Read in the logon message from the message preference file
 	if (find_directory(B_USER_SETTINGS_DIRECTORY, &path) == B_OK)
 	{	
 		sprintf(fpath, "%s/%s", path.Path(), AFP_LOGONMSG_FILE_NAME);
@@ -590,23 +578,17 @@ void afpServerApplication::ReadyToRun()
 	
 	afpVerifyUserDatabase();
 		
-	//
-	//Check for and create if necessary the Guest user account
-	//
+	// Check for and create if necessary the Guest user account
 	if (afpGetUserDataByName(AFP_GUEST_NAME, &userData) == B_OK)
 	{
-		//
-		//Nothing to do here since the account already exists.
-		//
+		// Nothing to do here since the account already exists.
 	}
 	else
 	{		
 		afpSaveNewUser(AFP_GUEST_NAME, "", kDontDisplay);
 	}
 
-	//
-	//Create the volume list and share all volumes as configured.
-	//
+	// Create the volume list and share all volumes as configured.
 	ShareAllVolumes();
 }
 
@@ -621,6 +603,6 @@ void afpServerApplication::ReadyToRun()
 
 void afpServerApplication::Pulse()
 {
-	//Provides a "heartbeat" for your application; a good place to blink cursors, etc.
-	//You set the pulse rate in BApplication::SetPulseRate().
+	// Provides a "heartbeat" for your application; a good place to blink cursors, etc.
+	// You set the pulse rate in BApplication::SetPulseRate().
 }

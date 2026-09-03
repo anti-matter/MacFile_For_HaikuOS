@@ -36,8 +36,8 @@ typedef uint32 FILECREATOR;
 
 struct DESKTOP_ENTRY
 {
-	int8		entryType; 	//Entry type (icon, APPL, etc.)
-	uint32		tag; 		//For private use by Apple and the AFP Client.
+	int8		entryType; 	// Entry type (icon, APPL, etc.)
+	uint32		tag; 		// For private use by Apple and the AFP Client.
 	
 	FILETYPE	fileType;
 	FILECREATOR	fileCreator;
@@ -154,7 +154,7 @@ struct DESKTOP_ENTRY
 // Desktop database file format (on-disk):
 //   [DESKTOP_DB_HEADER] 20 bytes — magic + version + per-type counts
 //   [DESKTOP_ENTRY]    N entries, contiguous
-//
+// 
 // Legacy databases (created before the header was added) have no
 // header; entries start at offset 0. They are migrated to the
 // current format on the next write.
@@ -249,7 +249,7 @@ AFPERROR FPRemoveAPPL(
 	int32*			afpDataSize
 	);
 	
-//---------------------------------------------------
+// ---------------------------------------------------
 
 AFPERROR afp_FindDTEntry(
 	afp_session*	afpSession,
@@ -272,4 +272,4 @@ AFPERROR afp_RemoveEntry(
 	DESKTOP_ENTRY*	dtEntry
 	);
 
-#endif //__afpdesk__
+#endif // __afpdesk__

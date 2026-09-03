@@ -6,10 +6,8 @@
 #include "commands.h"
 #include "afphostname.h"
 
-//
-//This is the computer/hostname that this afpserver will
-//return to mac clients.
-//
+// This is the computer/hostname that this afpserver will
+// return to mac clients.
 char	gComputerName[MAX_HOSTNAME_LEN];
 bool	gComputerNameInitialized = false;
 
@@ -65,11 +63,9 @@ status_t afp_SetHostname(const char* hostname)
 
 status_t afp_GetHostname(char* hostname, int32 cbHostname)
 {
-	//
-	//If gComputerName is null, then that means the name hasn't
-	//been initialized yet. Call the routine to get the default
-	//value from the net settings.
-	//
+	// If gComputerName is null, then that means the name hasn't
+	// been initialized yet. Call the routine to get the default
+	// value from the net settings.
 	if (gComputerNameInitialized == false)
 	{
 		char temp_hostname[MAX_HOSTNAME_LEN];
@@ -82,10 +78,8 @@ status_t afp_GetHostname(char* hostname, int32 cbHostname)
 		}
 		else
 		{
-			//
-			//We encountered some catostrophic error, a server name
-			//cannot be found anywhere in the system.
-			//
+			// We encountered some catostrophic error, a server name
+			// cannot be found anywhere in the system.
 			
 			return( B_ERROR );
 		}
@@ -130,9 +124,7 @@ void afp_FindHostNameFromNetSettings(char* hostname, int32 cbHostname)
 	
 	memset(hostname, 0, cbHostname);
 	
-	//
-	//Copy the name we found into the supplied buffer.
-	//
+	// Copy the name we found into the supplied buffer.
 	
 	if (ptr != NULL)
 	{
@@ -149,9 +141,7 @@ void afp_FindHostNameFromNetSettings(char* hostname, int32 cbHostname)
 	}
 	else
 	{
-		//
-		//Set some name in case the everything above fails.
-		//
+		// Set some name in case the everything above fails.
 		
 		strcpy(hostname, "HaikuServer");
 	}
@@ -179,11 +169,9 @@ void afp_GetHostnameFromSettingsFile(char* hostname, int32 cbHostname)
 		return;
 	}
 
-	//
-	//Read in the afp-specific hostname that the server will report
-	//to the user. This name will show up in the Mac's Finder windows
-	//and logon UAMs as the name of this server.
-	//
+	// Read in the afp-specific hostname that the server will report
+	// to the user. This name will show up in the Mac's Finder windows
+	// and logon UAMs as the name of this server.
 	
 	if (find_directory(B_USER_SETTINGS_DIRECTORY, &path) == B_OK)
 	{	
@@ -197,16 +185,12 @@ void afp_GetHostnameFromSettingsFile(char* hostname, int32 cbHostname)
 			file.Read(hostname, cbHostname);
 		}
 		
-		//
-		//If the file isn't there, or it is empty, create the default
-		//hostname for this server.
-		//
+		// If the file isn't there, or it is empty, create the default
+		// hostname for this server.
 		
 		if ((file.InitCheck() != B_OK) || (strlen(hostname) == 0))
 		{
-			//
-			//Set the default hostname since a pref file wasn't found.
-			//
+			// Set the default hostname since a pref file wasn't found.
 			
 			DPRINT(("[afphostname]Finding default computer name\n"));
 			

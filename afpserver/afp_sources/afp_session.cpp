@@ -180,9 +180,7 @@ AFPERROR afp_session::VolumeOpened(fp_volume* volume)
 
 	if (mOpenVolumes->CountItems() >= MAX_AFP_OPEN_VOLUMES)
 	{
-		//
-		//The client has exceeded his max number of volumes allowed.
-		//
+		// The client has exceeded his max number of volumes allowed.
 		mLock.Unlock();
 		return( afpParmErr );
 	}
@@ -305,9 +303,7 @@ AFPERROR afp_session::OpenFile(
 
 	if (mOpenFiles->CountItems() >= MAX_AFP_FILES_OPEN)
 	{
-		//
-		//The client has exceeded his max number of open files allowed.
-		//
+		// The client has exceeded his max number of open files allowed.
 		afpError = afpTooManyFilesOpen;
 	}
 	else
@@ -319,10 +315,8 @@ AFPERROR afp_session::OpenFile(
 		else if (mode & kWriteMode)
 			openMode = B_WRITE_ONLY;
 
-		//
-		//Create the bit of memory that will help us track
-		//open files for this session.
-		//
+		// Create the bit of memory that will help us track
+		// open files for this session.
 		forkitem = (OPEN_FORK_ITEM*)malloc(sizeof(OPEN_FORK_ITEM));
 
 		if (forkitem == NULL) {
@@ -348,10 +342,8 @@ AFPERROR afp_session::OpenFile(
 		
 		if (fork == kDataFork || forkitem->isResFile)
 		{
-			//
-			//Create the file object for this file. The constructor
-			//opens the file for access.
-			//
+			// Create the file object for this file. The constructor
+			// opens the file for access.
 			newFile = new BFile(fentry, openMode);
 
 			if (newFile != NULL)
@@ -367,24 +359,18 @@ AFPERROR afp_session::OpenFile(
 		}
 		else
 		{
-			//
-			//We're opening the Macintosh resource fork. Since Be doesn't
-			//deal with resource forks, we have to maintain a memory buffer
-			//to hold the resource data.
-			//
+			// We're opening the Macintosh resource fork. Since Be doesn't
+			// deal with resource forks, we have to maintain a memory buffer
+			// to hold the resource data.
 
 			forkitem->rsrcIO = OpenAndReadInResourceFork(forkitem->entry);
 		}
 
-		//
-		//Add this fork to the open fork list for tracking.
-		//
+		// Add this fork to the open fork list for tracking.
 		mOpenFiles->AddItem(forkitem);
 
-		//
-		//The volume object keeps track of files that are
-		//open on its volume.
-		//
+		// The volume object keeps track of files that are
+		// open on its volume.
 		volume->AddOpenFile(forkitem);
 
 		*refnum 	= forkitem->refnum;
@@ -424,32 +410,22 @@ BMallocIO* afp_session::OpenAndReadInResourceFork(BEntry* entry)
 		return( NULL );
 	}
 
-	//
-	//We set the allocation block size to 1024 since that's what
-	//the default filesystem block size is anyway.
-	//
+	// We set the allocation block size to 1024 since that's what
+	// the default filesystem block size is anyway.
 	io->SetBlockSize(1024);
 
-	//
-	//Get the current size of the resource fork on disk.
-	//
+	// Get the current size of the resource fork on disk.
 	status = node.GetAttrInfo(AFP_RSRC_ATTRIBUTE, &info);
 
-	//
-	//If GetAttrInfo() failed, it could just be because we haven't
-	//created a resource fork on the file yet. That's OK.
-	//
+	// If GetAttrInfo() failed, it could just be because we haven't
+	// created a resource fork on the file yet. That's OK.
 	if ((status == B_OK) && (info.size > 0) && (io->SetSize(info.size) == B_OK))
 	{
-		//
-		//Get a ptr to the buffer so we can read the data into it. I'm
-		//not sure if this is legal or not.
-		//
+		// Get a ptr to the buffer so we can read the data into it. I'm
+		// not sure if this is legal or not.
 		readPtr = (int8*)io->Buffer();
 
-		//
-		//Read in the current resource fork contents so we can modify it.
-		//
+		// Read in the current resource fork contents so we can modify it.
 		actCount = node.ReadAttr(
 						AFP_RSRC_ATTRIBUTE,
 						B_RAW_TYPE,
@@ -460,9 +436,7 @@ BMallocIO* afp_session::OpenAndReadInResourceFork(BEntry* entry)
 
 		if (actCount < B_OK)
 		{
-			//
-			//We couldn't read from the resource fork for some reason.
-			//
+			// We couldn't read from the resource fork for some reason.
 			DPRINT(("[OpenAndReadInResourceFork]Failed to read resource data!\n"));
 		}
 	}
@@ -490,9 +464,7 @@ void afp_session::CloseAndWriteOutResourceFork(OPEN_FORK_ITEM* forkItem, bool cl
 	{
 		node.RemoveAttr(AFP_RSRC_ATTRIBUTE);
 
-		//
-		//Now write the data back to the resource stream of the file.
-		//
+		// Now write the data back to the resource stream of the file.
 		afpActCount = node.WriteAttr(
 						AFP_RSRC_ATTRIBUTE,
 						B_RAW_TYPE,
@@ -501,14 +473,11 @@ void afp_session::CloseAndWriteOutResourceFork(OPEN_FORK_ITEM* forkItem, bool cl
 						forkItem->rsrcIO->BufferLength()
 						);
 
-		//
-		//We don't check for an error here since there's nothing we can do
-		//at this point since we're closing the file.
-		//
+		// We don't check for an error here since there's nothing we can do
+		// at this point since we're closing the file.
 
-		//
-		//The resource fork isn't "dirty" anymore, update the bit.
-		//
+		// 
+		// The resource fork isn't "dirty" anymore, update the bit.
 		forkItem->rsrcDirty = false;
 	}
 
@@ -676,22 +645,16 @@ AFPERROR afp_session::OpenDesktop(
 		return( afpParmErr );
 	}
 
-	//
-	//Create the memory block that tracks this open desktop file.
-	//
+	// Create the memory block that tracks this open desktop file.
 	deskitem = (OPEN_DESK_ITEM*)malloc(sizeof(OPEN_DESK_ITEM));
 
 	if (deskitem == NULL)
 	{
-		//
-		//We failed to allocate the memory for a new desktop.
-		//
+		// We failed to allocate the memory for a new desktop.
 		return( afpParmErr );
 	}
 
-	//
-	//Record everything we'll need to know about this open desktop file.
-	//
+	// Record everything we'll need to know about this open desktop file.
 	deskitem->refnum	= mNextDeskRef++;
 	deskitem->volID		= volID;
 	deskitem->file		= file;
@@ -844,10 +807,8 @@ AFPERROR afp_session::GetUserInfo(AFP_USER_DATA* userInfo)
 {
 	AFPERROR	afpError = AFP_OK;
 
-	//
-	//We update the user info in case it has been changed while
-	//this session has been logged on.
-	//
+	// We update the user info in case it has been changed while
+	// this session has been logged on.
 	afpError = afpGetUserDataByName(mUserName, userInfo);
 
 	return( afpError );
@@ -885,10 +846,8 @@ bool afp_session::IsAdmin()
 
 	if (mUAMLoginType != afpUAMGuest)
 	{
-		//
-		//We update the user info in case it has been changed while
-		//this session has been logged on.
-		//
+		// We update the user info in case it has been changed while
+		// this session has been logged on.
 		afpError = afpGetUserDataByName(mUserName, &userInfo);
 
 		if (AFP_SUCCESS(afpError))
@@ -897,10 +856,8 @@ bool afp_session::IsAdmin()
 		}
 		else
 		{
-			//
-			//The user has been deleted while he was logged on. Kill
-			//the session.
-			//
+			// The user has been deleted while he was logged on. Kill
+			// the session.
 			KillSession();
 		}
 	}

@@ -40,4 +40,4 @@ private:
 	afp_session*		mSession;
 };
 
-#endif //__fp_rangelock__
+#endif // __fp_rangelock__

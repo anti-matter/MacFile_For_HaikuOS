@@ -32,33 +32,25 @@ public:
 	virtual uint32		Stat_LastOpTime()				{return mLastOpTime;}
 	
 private:
-	//
-	//Track the raw transfered bytes to and from the server and
-	//all AFP clients.
-	//
+	// Track the raw transfered bytes to and from the server and
+	// all AFP clients.
 	int64				mBytesSent;
 	int64				mBytesReceived;
 	
-	//
-	//Saves the last time we took a snap shot of the network time.
-	//
+	// Saves the last time we took a snap shot of the network time.
 	uint32				mTimeHack;
 	uint64				mTimeHackSentBytes;
 	uint64				mTimeHackRecvBytes;
 	int32				mLastBPS;
 	
-	//
-	//Keep track of the DSI packets we process.
-	//
+	// Keep track of the DSI packets we process.
 	uint32				mDSIPacketsProcessed;
 	
-	//
-	//Time read operations
-	//
+	// Time read operations
 	bigtime_t			mOpStartTime;
 	uint32				mLastOpTime;
 };
 
 
 
-#endif //__dsi_stats__
+#endif // __dsi_stats__

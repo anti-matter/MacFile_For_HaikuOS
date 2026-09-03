@@ -31,7 +31,7 @@ void hex_dump(
 
 #define DBG_DUMP_BUFFER(buffer, cb_buffer, level) hex_dump(buffer, cb_buffer, level)
 
-#else //DEBUG
+#else // DEBUG
 
 #define DBGWRITE(level, message, ...)
 #define DBG_DUMP_BITMAP(bm, level)
@@ -39,5 +39,5 @@ void hex_dump(
 
 #endif
 
-#endif //__debug__
+#endif // __debug__
 

@@ -28,10 +28,8 @@ void AFPReplayAddReply(
 	int32 cacheCount 		= replayCache->CountItems();
 	AFPReplayCacheItem*	rci = NULL;
 		
-	//
-	//First determine if we need to remove an old item from the cache
-	//to make room for the new one.
-	//
+	// First determine if we need to remove an old item from the cache
+	// to make room for the new one.
 	if (cacheCount >= AFP_REPLAY_CACHE_SIZE)
 	{
 		rci = (AFPReplayCacheItem*)replayCache->FirstItem();
@@ -44,9 +42,7 @@ void AFPReplayAddReply(
 		}
 	}
 	
-	//
-	//Create the new replay cache buffer
-	//
+	// Create the new replay cache buffer
 	rci = new AFPReplayCacheItem;
 	
 	if (rci != NULL)
@@ -80,9 +76,7 @@ AFPReplayCacheItem* AFPReplaySearchForReply(
 	AFPReplayCacheItem* item = NULL;
 	int32 i = 0;
 	
-	//
-	//Perform a linear search, nothing fancy here, keep the buffer small.
-	//
+	// Perform a linear search, nothing fancy here, keep the buffer small.
 	item = (AFPReplayCacheItem*)replayCache->ItemAt(i);
 	
 	do
@@ -91,9 +85,7 @@ AFPReplayCacheItem* AFPReplaySearchForReply(
 		{
 			if ((item->requestID == requestID) && (item->reply[0] == afpCommand))
 			{
-				//
-				//We found a match, return the reply in the cache.
-				//
+				// We found a match, return the reply in the cache.
 				return(item);
 			}
 		}
@@ -166,9 +158,7 @@ AFPERROR AFPTraverseAndSyncDir(BDirectory* rootDir)
 		
 		if (dir == NULL)
 		{
-			//
-			//This shouldn't happen, but we check anyway just to be safe.
-			//	
+			// This shouldn't happen, but we check anyway just to be safe.
 			break;
 		}
 		
@@ -180,10 +170,8 @@ AFPERROR AFPTraverseAndSyncDir(BDirectory* rootDir)
 			{
 				BDirectory *newDir = new BDirectory(&entry);
 				
-				//
-				//Store the newly found directory in our list so we
-				//get to it later.
-				//
+				// Store the newly found directory in our list so we
+				// get to it later.
 				directories.AddItem(newDir);
 			}
 			else
@@ -200,15 +188,11 @@ AFPERROR AFPTraverseAndSyncDir(BDirectory* rootDir)
 			}
 		}
 		
-		//
-		//We don't need the allocated BDirectory anymore, so get
-		//rid of it now, it's also how we track if we're done or not
-		//
+		// We don't need the allocated BDirectory anymore, so get
+		// rid of it now, it's also how we track if we're done or not
 		directories.RemoveItem(dir);
 		
-		//
-		//We don't own the passed in root dir, so we can't delete it.
-		//
+		// We don't own the passed in root dir, so we can't delete it.
 		if (dir != rootDir) {
 			
 			delete dir;
@@ -249,34 +233,24 @@ AFPERROR FPSyncDir(
 	
 	DBGWRITE(dbg_level_trace, "Enter\n");
 	
-	//
-	//The first word contains the afp command and the pad byte.
-	//
+	// The first word contains the afp command and the pad byte.
 	afpRequest.Advance(sizeof(int16));
 	
-	//
-	//Extract the volID and dirID for the directory to sync
-	//
+	// Extract the volID and dirID for the directory to sync
 	afpVolumeID		= afpRequest.GetInt16();
 	afpDirID		= afpRequest.GetInt32();
 	
-	//
-	//Get a pointer to the volume object and check for validity
-	//
+	// Get a pointer to the volume object and check for validity
 	afpVolume = FindVolume(afpVolumeID);
 	
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail and return error code.
-		//
+		// The volume ID is not valid, bail and return error code.
 		DBGWRITE(dbg_level_trace, "Volume not found (%d)\n", afpVolumeID);
 		return( afpObjectNotFound );
 	}
 
-	//
-	//Get the file entry that points to the directory we need to flush
-	//
+	// Get the file entry that points to the directory we need to flush
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpDirID,
@@ -290,9 +264,7 @@ AFPERROR FPSyncDir(
 	}
 	else
 	{
-		//
-		//Check to make sure we are allowed to write on the volume and in the dir.
-		//
+		// Check to make sure we are allowed to write on the volume and in the dir.
 		afpError = afpCheckWriteAccess(afpSession, afpVolume, &afpEntry);
 		
 		if (!AFP_SUCCESS(afpError))
@@ -305,10 +277,8 @@ AFPERROR FPSyncDir(
 						
 			if (dir.InitCheck() == B_OK)
 			{
-				//
-				//Traverse through the directory heirarchy rooted with this
-				//directory and flush all file/dir content to disk.
-				//
+				// Traverse through the directory heirarchy rooted with this
+				// directory and flush all file/dir content to disk.
 				afpError = AFPTraverseAndSyncDir(&dir);
 			}
 			else
@@ -317,7 +287,7 @@ AFPERROR FPSyncDir(
 				afpError = afpParmErr;
 			}
 		}
-		else //not a directory
+		else // not a directory
 		{	
 			DBGWRITE(dbg_level_warning, "A non-directory was supplied!\n");
 			afpError = afpParmErr;

@@ -13,9 +13,7 @@
 
 extern int 	afpAppReturnValue;
 
-//
-//Here are some standard things that make coding easier
-//
+// Here are some standard things that make coding easier
 #define IN
 #define OUT
 
@@ -88,7 +86,7 @@ inline char* GetBeErrorString(int32 error)
 
 #define GET_ERR_STR(e)
 
-#endif //DEBUG
+#endif // DEBUG
 
 #define PUSH_CSTRING(s,p) {									\
 			*p = strlen(s);									\
@@ -97,4 +95,4 @@ inline char* GetBeErrorString(int32 error)
 			p += strlen(s);									\
 }
 
-#endif //__afpGlobals__
+#endif // __afpGlobals__

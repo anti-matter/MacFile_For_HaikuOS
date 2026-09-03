@@ -6,7 +6,7 @@
 #include "byte_swap.h"
 #include "afp.h"
 
-constexpr uchar REPLACE_SLASH_CHAR = 0xb6; //'π';
+constexpr uchar REPLACE_SLASH_CHAR = 0xb6; // 'π';
 
 class afp_buffer
 {
@@ -18,10 +18,8 @@ public:
 
 	bool Reallocate(int32 newsize);
 
-	//
-	//The following methods are for retrieving data from
-	//the AFP buffer.
-	//
+	// The following methods are for retrieving data from
+	// the AFP buffer.
 	AFPERROR	GetString(char* string, uint16 cbstring, bool isPath=false, int8 pathType=kLongNames);
 
 	int8  GetInt8()		{ return pull_num<int8>();  }
@@ -31,9 +29,7 @@ public:
 
 	void GetRawData(void* buffer, int16 amount);
 
-	//
-	//These methods paste in data into an AFP buffer for sending
-	//
+	// These methods paste in data into an AFP buffer for sending
 	AFPERROR AddCStringAsPascal(const char* string);
 	AFPERROR AddUniString(char* string, bool isPath=false, bool isAFPName=true);
 	AFPERROR GetUniString(char* string, uint16 cbstring, uint16* stringLen);
@@ -57,10 +53,8 @@ public:
 
 	int32 GetDataLength() { return(mCurrentPos-mBuffer); }
 
-	//
-	//These are general purpose methods used for both putting and
-	//getting of data from the buffer.
-	//
+	// These are general purpose methods used for both putting and
+	// getting of data from the buffer.
 	int8* GetCurrentPosPtr()	{ return( mCurrentPos ); }
 	void  Advance(int32 amount)	{ mCurrentPos += amount; }
 	int8* GetBuffer()			{ return( mBuffer );	 }
@@ -147,4 +141,4 @@ T afp_buffer::pull_num()
 	return result;
 }
 
-#endif //__afp_buffer__
+#endif // __afp_buffer__

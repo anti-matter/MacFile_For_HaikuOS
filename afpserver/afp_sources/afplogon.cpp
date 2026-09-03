@@ -24,12 +24,10 @@ AFPERROR afpImpChangePswd(
 	AFP_USER_DATA	userData;
 	AFPERROR		afpError = AFP_OK;
 	
-	//
-	//First, we validate that the correct username and password
-	//were provided for the account. We use the logon user function
-	//for convenience, however this may need to change in the future
-	//if Haiku gets a real user/account system.
-	//
+	// First, we validate that the correct username and password
+	// were provided for the account. We use the logon user function
+	// for convenience, however this may need to change in the future
+	// if Haiku gets a real user/account system.
 	afpError = afpImpLogonUser(userName, oldPassword, &userData);
 	
 	if (!AFP_SUCCESS(afpError))
@@ -37,17 +35,13 @@ AFPERROR afpImpChangePswd(
 		return( afpError );
 	}
 	
-	//
-	//afpImpLogonUser() zeros out the password in the userData field,
-	//so we have to get it again. This sucks, but better for security.
-	//
+	// afpImpLogonUser() zeros out the password in the userData field,
+	// so we have to get it again. This sucks, but better for security.
 	afpError = afpGetUserDataByName(userName, &userData);
 	
 	if (AFP_SUCCESS(afpError))
 	{
-		//
-		//Check to make sure that the user is allowed to change their password
-		//
+		// Check to make sure that the user is allowed to change their password
 		if ((userData.flags & kCanChngPswd) == 0)
 		{
 			DPRINT(("[afplogon:afpImpChangePswd]User does not change password privileges\n"));
@@ -57,31 +51,23 @@ AFPERROR afpImpChangePswd(
 		DPRINT(("[afplogon:afpImpChangePswd]Old password: %s\n", oldPassword));
 		DPRINT(("[afplogon:afpImpChangePswd]New password: %s\n", newPassword));
 		
-		//
-		//We don't allow zero length passwords since this is bad security.
-		//
+		// We don't allow zero length passwords since this is bad security.
 		if (strlen(newPassword) == 0) {
 			
 			return( afpPwdTooShortErr );
 		}
 		
-		//
-		//Don't allow the user to reset the password to the same one again.
-		//
+		// Don't allow the user to reset the password to the same one again.
 		if (!strcmp(userData.password, newPassword)) {
 			
 			return( afpPwdSameErr );
 		}
 		
-		//
-		//Now, store the password in our userInfo buffer
-		//
+		// Now, store the password in our userInfo buffer
 		memset(userData.password, 0, sizeof(userData.password));
 		strcpy(userData.password, newPassword);
 		
-		//
-		//If the must change password flag is set, we can clear it now.
-		//
+		// If the must change password flag is set, we can clear it now.
 		if ((userData.flags & kMustChngPswd) != 0)
 		{
 			userData.flags &= ~kMustChngPswd;
@@ -110,15 +96,13 @@ AFPERROR afpImpChangePswd(
 AFPERROR afpImpLogonUser(
 	const char*		userName,
 	char*			password,
-	AFP_USER_DATA*	userInfo	//return user info (copied into)
+	AFP_USER_DATA*	userInfo	// return user info (copied into)
 )
 {
 	AFPERROR		afpError = afpUserNotAuth;
 	AFP_USER_DATA	userData;
 	
-	//
-	//In all cases, must absolutely have a user name
-	//
+	// In all cases, must absolutely have a user name
 	if ((userName == NULL) || (userInfo == NULL))
 	{
 		return( afpParmErr );
@@ -128,9 +112,7 @@ AFPERROR afpImpLogonUser(
 	
 	if (AFP_SUCCESS(afpError))
 	{
-		//
-		//First make sure the user account is enabled.
-		//
+		// First make sure the user account is enabled.
 		if ((userData.flags & kUserEnabled) == 0)
 		{
 			DPRINT(("[afplogon:logon]User account disabled\n"));
@@ -139,9 +121,7 @@ AFPERROR afpImpLogonUser(
 			return( afpUserNotAuth );
 		}
 		
-		//
-		//Now compare the cleartext passwords.
-		//
+		// Now compare the cleartext passwords.
 		if (password != NULL)
 		{
 			if (strcmp(password, userData.password))
@@ -155,24 +135,18 @@ AFPERROR afpImpLogonUser(
 		{
 			if ((password == NULL) && (strlen(userData.password) > 0))
 			{
-				//
-				//There's some kind of trickery going on here!
-				//
+				// There's some kind of trickery going on here!
 				DPRINT(("[afplogon:logon]Password NULL, but account has password\n"));
 				
 				afpError = afpUserNotAuth;
 			}
 			else
 			{
-				//
-				//Copy the user info into the supplied buffer.
-				//
+				// Copy the user info into the supplied buffer.
 				memcpy(userInfo, &userData, sizeof(userData));
 				memset(userInfo->password, 0, sizeof(userInfo->password));
 
-				//
-				//Check for password expiry
-				//
+				// Check for password expiry
 				if ((AFP_SUCCESS(afpError)) && ((userData.flags & kMustChngPswd) != 0))
 				{
 					afpError = afpPwdExpiredErr;
@@ -180,17 +154,13 @@ AFPERROR afpImpLogonUser(
 			}
 		}
 		
-		//
-		//Zero out all uneeded buffers for safety
-		//
+		// Zero out all uneeded buffers for safety
 		memset(&userData, 0, sizeof(userData));
 	}
 	else
 	{
-		//
-		//We couldn't find the user name in our database, return
-		//the right afp error code.
-		//
+		// We couldn't find the user name in our database, return
+		// the right afp error code.
 		afpError = afpUserNotAuth;
 	}
 	
@@ -223,9 +193,7 @@ AFPERROR afpSaveNewUser(
 	AFP_USER_DATA	userData;
 	ssize_t			size 	= 0;
 	
-	//
-	//Make sure the user name doesn't already exist.
-	//
+	// Make sure the user name doesn't already exist.
 	if (afpGetUserDataByName(userName, NULL) == AFP_OK)
 	{
 		DPRINT(("[afpSaveNewUser]User already exists!\n"));
@@ -247,9 +215,7 @@ AFPERROR afpSaveNewUser(
 			
 			sprintf(attrName, "%s%s", AFP_USERS_TYPE, userName);
 			
-			//
-			//Now store the data in the structure.
-			//
+			// Now store the data in the structure.
 			memset(&userData, 0, sizeof(AFP_USER_DATA));
 			
 			strcpy(userData.username, userName);
@@ -257,17 +223,13 @@ AFPERROR afpSaveNewUser(
 			
 			userData.flags = flags;
 			
-			//
-			//Find the next user id to assign to this one
-			//
+			// Find the next user id to assign to this one
 			while(afpGetIndUser(&temp, index) == B_OK)
 				index++;
 			
 			userData.id = index;
 			
-			//
-			//Now, set the group id based on the type of user this is
-			//
+			// Now, set the group id based on the type of user this is
 			if (userData.flags & kIsAdmin)
 				userData.group = AFP_HAIKU_GROUP_ADMINS_ID;
 			else if (strcmp(userName, AFP_GUEST_NAME) == 0)
@@ -277,16 +239,12 @@ AFPERROR afpSaveNewUser(
 			
 			size = file.WriteAttr(attrName, 0, 0, &userData, sizeof(AFP_USER_DATA));
 			
-			//
-			//Now update the user schema version information.
-			//
+			// Now update the user schema version information.
 			if (strcmp(userName, AFP_GUEST_NAME) == 0)
 			{
-				//
-				//The guest account is only created when the perfs file does not
-				//exist (clean install). We use this opportunity to set record the
-				//schema version in the attribute.
-				//
+				// The guest account is only created when the perfs file does not
+				// exist (clean install). We use this opportunity to set record the
+				// schema version in the attribute.
 				uint32 vers = AFP_USERDB_VERSION;
 				
 				size = file.WriteAttr(AFP_USERS_SCHEMA_VERSION, 0, 0, &vers, sizeof(vers));
@@ -388,7 +346,7 @@ AFPERROR afpGetIndUser(
 					
 					if (size > B_OK)
 					{
-						//DPRINT(("[afpGetIndUser]Returning %s user\n", userData->username));
+						// DPRINT(("[afpGetIndUser]Returning %s user\n", userData->username));
 						return( AFP_OK );
 					}
 					else
@@ -506,20 +464,16 @@ AFPERROR afpUpdateUserInfo(
 	AFP_USER_DATA	oldData;
 	ssize_t			size 	= 0;
 	
-	//
-	//Make sure the user name already exists in our settings file.
-	//
+	// Make sure the user name already exists in our settings file.
 	if (afpGetUserDataByName(userData.username, &oldData) != AFP_OK)
 	{
 		DPRINT(("[afpUpdateUserInfo]User does not exist! [%s]\n", userData.username));
 		return( be_afp_usernotfound );
 	}
 
-	//
-	//The configuration API does not maintain user or group ID's, these
-	//are hidden from the API. So, we have to ensure they are set correctly
-	//when updating the user information.
-	//
+	// The configuration API does not maintain user or group ID's, these
+	// are hidden from the API. So, we have to ensure they are set correctly
+	// when updating the user information.
 	
 	userData.id		= oldData.id;
 	userData.group	= oldData.group;
@@ -576,16 +530,12 @@ AFPERROR afpGetUserDBVersion(uint32* version)
 			
 			if (size <= 0)
 			{
-				//
-				//In the event of an error, size contains the error code.
-				//
+				// In the event of an error, size contains the error code.
 				return( size );
 			}
 			else
 			{
-				//
-				//Success, set the return parameter with the version
-				//
+				// Success, set the return parameter with the version
 				*version = vers;
 				
 				return( B_OK );
@@ -619,10 +569,8 @@ AFPERROR afpVerifyUserDatabase()
 	{
 		if (vers < AFP_USERDB_VERSION)
 		{
-			//
-			//The version in the existing prefs file is old, or the version
-			//attribute does not exist (again, the version is old).
-			//
+			// The version in the existing prefs file is old, or the version
+			// attribute does not exist (again, the version is old).
 			
 			BPath			path;
 			BNode			file;
@@ -636,24 +584,18 @@ AFPERROR afpVerifyUserDatabase()
 			
 			switch(vers)
 			{
-				//
-				//A version of 0 means there was no version attribute at all, this
-				//means we're upgrading from v1 of the user schema. The only difference
-				//is that user & group ID's are now used.
-				//
+				// A version of 0 means there was no version attribute at all, this
+				// means we're upgrading from v1 of the user schema. The only difference
+				// is that user & group ID's are now used.
 				case 0:
 					DPRINT(("[afpVerifyUserDatabase]Upgrading user schema from v1...\n"));
 					
 					while(afpGetIndUser(&temp, index) == B_OK)
 					{
-						//
-						//Set the new user ID to the next available ID.
-						//
+						// Set the new user ID to the next available ID.
 						temp.id = index;
 						
-						//
-						//Now, set the group id based on the type of user this is
-						//
+						// Now, set the group id based on the type of user this is
 						if (temp.flags & kIsAdmin)
 							temp.group = AFP_HAIKU_GROUP_ADMINS_ID;
 						else if (strcmp(temp.username, AFP_GUEST_NAME) == 0)
@@ -673,10 +615,8 @@ AFPERROR afpVerifyUserDatabase()
 					break;
 			}
 			
-			//
-			//Update the version attribute with the latest version number
-			//so we won't come here again for no reason.
-			//
+			// Update the version attribute with the latest version number
+			// so we won't come here again for no reason.
 			
 			vers = AFP_USERDB_VERSION;
 			

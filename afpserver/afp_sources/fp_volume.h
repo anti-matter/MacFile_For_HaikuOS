@@ -9,9 +9,7 @@
 #include "afp_session.h"
 #include "afp_buffer.h"
 
-//
-//Server specific flags to keep track of volume options.
-//
+// Server specific flags to keep track of volume options.
 enum
 {
 	kAFPReadOnly	= 0x02
@@ -23,11 +21,9 @@ public:
 						fp_volume(BPath* path, uint32 srvrVolFlags=0);
 	virtual				~fp_volume();
 		
-	//
-	//The volume object keeps track of open files. This is
-	//how we know how to set the data or rsrc fork open
-	//bits in the file's attributes.
-	//
+	// The volume object keeps track of open files. This is
+	// how we know how to set the data or rsrc fork open
+	// bits in the file's attributes.
 	virtual void		AddOpenFile(OPEN_FORK_ITEM* forkitem);
 	virtual bool		IsFileOpen(BEntry* entry, int8 fork, uint16* ref=NULL);
 	virtual void		RemoveOpenFile(OPEN_FORK_ITEM* forkitem);
@@ -64,4 +60,4 @@ private:
 		BLocker			mLock;
 };
 
-#endif //__fp_volume__
+#endif // __fp_volume__

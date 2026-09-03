@@ -14,4 +14,4 @@ void afpInitializeServerNetworking();
 status_t afpSrvrConnectThread(void* data);
 
 
-#endif //__dsi_network__
+#endif // __dsi_network__

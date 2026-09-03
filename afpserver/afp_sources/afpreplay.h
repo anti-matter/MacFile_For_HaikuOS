@@ -42,4 +42,4 @@ AFPERROR FPSyncFork(
 	int32*			afpDataSize
 	);
  
- #endif //__afpreplay__
+ #endif // __afpreplay__

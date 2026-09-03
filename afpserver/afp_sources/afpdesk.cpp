@@ -40,66 +40,46 @@ AFPERROR FPOpenDT(
 	
 	DBGWRITE(dbg_level_trace, "Enter\n");
 	
-	//
-	//First word is command and padding.
-	//
+	// First word is command and padding.
 	afpRequest.Advance(sizeof(int16));
 	
-	//
-	//The only parameter for this API is the volume ID for
-	//which we want to access the DT database.
-	//
+	// The only parameter for this API is the volume ID for
+	// which we want to access the DT database.
 	afpVolumeID = afpRequest.GetInt16();
 	
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpVolumeID);
 	
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpVolumeID);
 		return( afpParmErr );
 	}
 	
-	//
-	//The client must have the volume open for access using
-	//FPOpenVol before making this call.
-	//
+	// The client must have the volume open for access using
+	// FPOpenVol before making this call.
 	if (!afpSession->HasVolumeOpen(afpVolume))
 	{
-		//
-		//Nope, client made a boo boo, return parm error.
-		//
+		// Nope, client made a boo boo, return parm error.
 		DBGWRITE(dbg_level_warning, "User doesn't have volume open!\n");
 		return( afpParmErr );
 	}
 		
-	//
-	//Build the full path to the desktop database.
-	//
+	// Build the full path to the desktop database.
 	snprintf(afpDeskPath, sizeof(afpDeskPath), "%s/%s", afpVolume->GetPath()->Path(), DESKTOP_FILE_NAME);
 
 	root = afpVolume->GetDirectory();
 	
-	//
-	//Check to see if the desktop db already exists at the root.
-	//
+	// Check to see if the desktop db already exists at the root.
 	if (!root->Contains(DESKTOP_FILE_NAME))
 	{
 		FINDER_INFO	finfo;
 		
-		//
-		//Nope, file doesn't exist, create it.
-		//
+		// Nope, file doesn't exist, create it.
 		if (root->CreateFile(DESKTOP_FILE_NAME, NULL) != B_OK)
 		{
-			//
-			//Massive error, couldn't create the desktop directory
-			//
+			// Massive error, couldn't create the desktop directory
 			DBGWRITE(dbg_level_warning, "Failed to create desktop file\n");
 			return( afpParmErr );
 		}
@@ -118,9 +98,7 @@ AFPERROR FPOpenDT(
 			}
 		}
 		
-		//
-		//Get a BEntry the points to the directory we just created.
-		//
+		// Get a BEntry the points to the directory we just created.
 		afpDTEntry = new BEntry(afpDeskPath);
 		
 		if (afpDTEntry != NULL)
@@ -132,10 +110,8 @@ AFPERROR FPOpenDT(
 			}
 			else
 			{
-				//
-				//The desktop file should be invisible to Mac clients. Set
-				//the Finder Info so this happens.
-				//
+				// The desktop file should be invisible to Mac clients. Set
+				// the Finder Info so this happens.
 				finfo.fdLocation.x	= 20;
 				finfo.fdLocation.y	= 20;
 				finfo.fdFldr		= 0;
@@ -145,9 +121,7 @@ AFPERROR FPOpenDT(
 				
 				if (!AFP_SUCCESS(afpError))
 				{
-					//
-					//Failure setting the AFP attributes for the new directory!
-					//
+					// Failure setting the AFP attributes for the new directory!
 					DBGWRITE(dbg_level_warning, "Failure setting FInfo on new desktop file\n");
 				}
 			}
@@ -159,10 +133,8 @@ AFPERROR FPOpenDT(
 		afpError 	= (afpDTEntry != NULL) ? AFP_OK : afpParmErr;
 	}
 	
-	//
-	//Now that we've either created the desktop file or it already exists,
-	//open the file and get a BFile object for it.
-	//
+	// Now that we've either created the desktop file or it already exists,
+	// open the file and get a BFile object for it.
 	if (AFP_SUCCESS(afpError))
 	{
 		afpError	= afpParmErr;
@@ -172,21 +144,17 @@ AFPERROR FPOpenDT(
 		{
 			if (afpDTFile->InitCheck() != B_OK)
 			{
-				//
-				//Something really strange happend, the file exists but we can't
-				//get an object to point to it.
-				//
+				// Something really strange happend, the file exists but we can't
+				// get an object to point to it.
 				DBGWRITE(dbg_level_error, "Failure in InitCheck() for desktop file\n");
 			}
 			else
 			{
 				uint16	afpRefNum = 0;
 				
-				//
-				//Call on the session object to remember this opened desktop
-				//database. The session is responsible for maintaining the
-				//opened list as well as closing all open desks.
-				//
+				// Call on the session object to remember this opened desktop
+				// database. The session is responsible for maintaining the
+				// opened list as well as closing all open desks.
 				afpError = afpSession->OpenDesktop(
 										afpDTEntry,
 										afpDTFile,
@@ -203,10 +171,8 @@ AFPERROR FPOpenDT(
 		}
 	}
 	
-	//
-	//If there were any errors, we need to make sure we clean up
-	//after ourselves.
-	//
+	// If there were any errors, we need to make sure we clean up
+	// after ourselves.
 	if (!AFP_SUCCESS(afpError))
 	{
 		DBGWRITE(dbg_level_error, "FPOpenDT failed! Releasing memory!\n");
@@ -251,9 +217,7 @@ AFPERROR FPCloseDT(
 	
 	DBGWRITE(dbg_level_trace, "Enter\n");
 	
-	//
-	//First word is command and padding.
-	//
+	// First word is command and padding.
 	afpRequest.Advance(sizeof(int16));
 	
 	afpRefID = afpRequest.GetInt16();
@@ -291,9 +255,7 @@ AFPERROR FPAddIcon(
 	
 	memset(&dtEntry, 0, sizeof(dtEntry));
 	
-	//
-	//First word is command and padding.
-	//
+	// First word is command and padding.
 	afpRequest.Advance(sizeof(int16));
 	
 	afpRefID = afpRequest.GetInt16();
@@ -352,7 +314,7 @@ AFPERROR FPGetIcon(
 	memset(&dtEntry, 0, sizeof(dtEntry));
 	memset(&iconEntry, 0, sizeof(iconEntry));
 	
-	//First word is command and padding.
+	// First word is command and padding.
 	afpRequest.Advance(sizeof(int16));
 	
 	afpRefID = afpRequest.GetInt16();
@@ -376,13 +338,11 @@ AFPERROR FPGetIcon(
 					
 	if (AFP_SUCCESS(afpError) && dtEntry.dataSize > 0)
 	{
-		//
-		//We found the bitmap and the caller actually has memory
-		//reserved for the bimap.
-		//
-		//As per the spec, even if the client didn't reserve enough
-		//space, we still copy what we can.
-		//
+		// We found the bitmap and the caller actually has memory
+		// reserved for the bimap.
+		// 
+		// As per the spec, even if the client didn't reserve enough
+		// space, we still copy what we can.
 		
 		int16 copySize = min_c(iconEntry.dataSize, dtEntry.dataSize);
 		
@@ -425,23 +385,17 @@ AFPERROR FPGetIconInfo(
 	memset(&searchEntry, 0, sizeof(searchEntry));
 	memset(&iconEntry, 0, sizeof(iconEntry));
 
-	//
-	//First word is command and padding.
-	//
+	// First word is command and padding.
 	afpRequest.Advance(sizeof(int16));
 	
-	//
-	//Build the search criteria for the icon we're looking for
-	//from the supplied parameters.
-	//
+	// Build the search criteria for the icon we're looking for
+	// from the supplied parameters.
 	searchEntry.entryType = ENTRY_TYPE_ICON;
 	const auto afpRefID = afpRequest.pull_num<int16>();
 	searchEntry.fileCreator = afpRequest.pull_num<uint32>();
 	const auto afpIconIndex = afpRequest.pull_num<uint16>();
 	
-	//
-	//Use the handy-dandy worker function to do the search.
-	//
+	// Use the handy-dandy worker function to do the search.
 	afpError = afp_FindDTEntry(
 					afpSession,
 					afpRefID,
@@ -497,19 +451,15 @@ AFPERROR FPAddComment(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 	
-	//First word is command and padding.
+	// First word is command and padding.
 	afpRequest.Advance(sizeof(int16));
 	
-	//
-	//Extract the new entry information from the supplied parms.
-	//
+	// Extract the new entry information from the supplied parms.
 	afpRefID	= afpRequest.GetInt16();
 	afpDirID	= afpRequest.GetInt32();
 	afpPathtype	= afpRequest.GetInt8();
 	
-	//
-	//Get the name of the object we're saving the comment for.
-	//
+	// Get the name of the object we're saving the comment for.
 	afpError = afpRequest.GetString(
 					afpPathname,
 					sizeof(afpPathname), 
@@ -523,15 +473,11 @@ AFPERROR FPAddComment(
 		return( afpParmErr );
 	}
 	
-	//
-	//The next name starts on an even boundary
-	//
+	// The next name starts on an even boundary
 	if ((afpRequest.GetCurrentPosPtr() - afpReqBuffer) % 2)
 		afpRequest.Advance(sizeof(int8));
 	
-	//
-	//Now, get the comment as passed from the client.
-	//
+	// Now, get the comment as passed from the client.
 	afpError = afpRequest.GetString(
 					afpComment,
 					sizeof(afpComment), 
@@ -545,10 +491,8 @@ AFPERROR FPAddComment(
 		return( afpParmErr );
 	}
 	
-	//
-	//Get a pointer to the open desk items data structure so we can
-	//get info about the actual dt file.
-	//
+	// Get a pointer to the open desk items data structure so we can
+	// get info about the actual dt file.
 	afpDeskItem = afpSession->GetDeskItem(afpRefID);
 	
 	if (afpDeskItem == NULL)
@@ -557,23 +501,17 @@ AFPERROR FPAddComment(
 		return( afpParmErr );
 	}
 	
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpDeskItem->volID);
 	
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpDeskItem->volID);
 		return( afpParmErr );
 	}
 	
-	//
-	//Set the entry object that will point to this afp object.
-	//
+	// Set the entry object that will point to this afp object.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpDirID,
@@ -640,21 +578,15 @@ AFPERROR FPGetComment(
 	
 	DBGWRITE(dbg_level_trace, "Enter\n");
 	
-	//
-	//First word is command and padding.
-	//
+	// First word is command and padding.
 	afpRequest.Advance(sizeof(int16));
 
-	//
-	//Extract the new entry information from the supplied parms.
-	//
+	// Extract the new entry information from the supplied parms.
 	afpRefID	= afpRequest.GetInt16();
 	afpDirID	= afpRequest.GetInt32();
 	afpPathtype	= afpRequest.GetInt8();
 	
-	//
-	//Get the name of the object we're getting the comment from.
-	//
+	// Get the name of the object we're getting the comment from.
 	afpError = afpRequest.GetString(
 					afpPathname,
 					sizeof(afpPathname), 
@@ -667,10 +599,8 @@ AFPERROR FPGetComment(
 		return( afpParmErr );
 	}
 	
-	//
-	//Get a pointer to the open desk items data structure so we can
-	//get info about the actual dt file.
-	//
+	// Get a pointer to the open desk items data structure so we can
+	// get info about the actual dt file.
 	afpDeskItem = afpSession->GetDeskItem(afpRefID);
 	
 	if (afpDeskItem == NULL)
@@ -679,23 +609,17 @@ AFPERROR FPGetComment(
 		return( afpParmErr );
 	}
 	
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpDeskItem->volID);
 	
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpDeskItem->volID);
 		return( afpParmErr );
 	}
 	
-	//
-	//Set the entry object that will point to this afp object.
-	//
+	// Set the entry object that will point to this afp object.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpDirID,
@@ -709,10 +633,8 @@ AFPERROR FPGetComment(
 		off_t		fsize	= 0;
 		attr_info	info	= {0,0};
 		
-		//
-		//Initialize the afperror to say we didn't find a comment
-		//for the file.
-		//
+		// Initialize the afperror to say we didn't find a comment
+		// for the file.
 		afpError = afpItemNotFound;
 		
 		
@@ -750,10 +672,8 @@ AFPERROR FPGetComment(
 					
 	if (AFP_SUCCESS(afpError))
 	{
-		//
-		//We succeeded in finding the comment. Stuff the comment
-		//into the reply blob.
-		//
+		// We succeeded in finding the comment. Stuff the comment
+		// into the reply blob.
 		afpReply.AddCStringAsPascal(afpComment);
 				
 		*afpDataSize = afpReply.GetDataLength();
@@ -794,21 +714,15 @@ AFPERROR FPRemoveComment(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 	
-	//
-	//First word is command and padding.
-	//
+	// First word is command and padding.
 	afpRequest.Advance(sizeof(int16));
 	
-	//
-	//Extract the new entry information from the supplied parms.
-	//
+	// Extract the new entry information from the supplied parms.
 	afpRefID	= afpRequest.GetInt16();
 	afpDirID	= afpRequest.GetInt32();
 	afpPathtype	= afpRequest.GetInt8();
 	
-	//
-	//Get the name of the object we're saving the comment for.
-	//
+	// Get the name of the object we're saving the comment for.
 	afpError = afpRequest.GetString(
 					afpPathname,
 					sizeof(afpPathname), 
@@ -821,10 +735,8 @@ AFPERROR FPRemoveComment(
 		return( afpParmErr );
 	}
 	
-	//
-	//Get a pointer to the open desk items data structure so we can
-	//get info about the actual dt file.
-	//
+	// Get a pointer to the open desk items data structure so we can
+	// get info about the actual dt file.
 	afpDeskItem = afpSession->GetDeskItem(afpRefID);
 	
 	if (afpDeskItem == NULL)
@@ -833,23 +745,17 @@ AFPERROR FPRemoveComment(
 		return( afpParmErr );
 	}
 	
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpDeskItem->volID);
 	
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpDeskItem->volID);
 		return( afpParmErr );
 	}
 	
-	//
-	//Set the entry object that will point to this afp object.
-	//
+	// Set the entry object that will point to this afp object.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpDirID,
@@ -899,7 +805,7 @@ AFPERROR FPAddAPPL(
 
 	memset(&newEntry, 0, sizeof(newEntry));
 
-	//First word is command and padding.
+	// First word is command and padding.
 	afpRequest.Advance(sizeof(int16));
 	
 	afpRefID 				= afpRequest.pull_num<int16>();
@@ -967,7 +873,7 @@ AFPERROR FPGetAPPL(
 	memset(&searchEntry, 0, sizeof(searchEntry));
 	memset(&foundEntry, 0, sizeof(foundEntry));
 
-	//First word is command and padding.
+	// First word is command and padding.
 	afpRequest.Advance(sizeof(int16));
 
 	afpRefID 				= afpRequest.pull_num<int16>();
@@ -1002,9 +908,7 @@ AFPERROR FPGetAPPL(
 			return( afpParmErr );
 		}
 		
-		//
-		//Set the entry object that will point to this afp object.
-		//
+		// Set the entry object that will point to this afp object.
 		afpError = fp_objects::SetAFPEntry(
 									afpVolume,
 									foundEntry.dirID,
@@ -1064,9 +968,7 @@ AFPERROR FPRemoveAPPL(
 
 	memset(&searchEntry, 0, sizeof(searchEntry));
 
-	//
-	//First word is command and padding.
-	//
+	// First word is command and padding.
 	afpRequest.Advance(sizeof(int16));
 	
 	afpRefID 				= afpRequest.pull_num<int16>();
@@ -1082,12 +984,10 @@ AFPERROR FPRemoveAPPL(
 					afpPathtype
 					);
 	
-	//
-	//Although the spec says to, we don't check to make sure that
-	//the actual application really exists on the volume. Why? Because
-	//when you move or delete a file, the client always calls this
-	//AFTER it deletes or moves it.
-	//
+	// Although the spec says to, we don't check to make sure that
+	// the actual application really exists on the volume. Why? Because
+	// when you move or delete a file, the client always calls this
+	// AFTER it deletes or moves it.
 
 	afp_RemoveEntry(afpSession, afpRefID, &searchEntry);
 	
@@ -1096,7 +996,7 @@ AFPERROR FPRemoveAPPL(
 
 
 
-//===============================Worker Routines===============================
+// ===============================Worker Routines===============================
 
 /*
  * afp_DesktopDBHasHeader()
@@ -1155,9 +1055,7 @@ std::unique_ptr<DESKTOP_ENTRY[]> afp_GetDesktopEntries(
 		return nullptr;
 	}
 
-	//
-	//Legacy databases have no header; entries start at offset 0.
-	//
+	// Legacy databases have no header; entries start at offset 0.
 	off_t dataOffset = afp_DesktopDBHasHeader(desktop_file) ? DESKTOP_DB_HEADER_SIZE : 0;
 
 	if (desk_file_size < dataOffset + sizeof(DESKTOP_ENTRY))
@@ -1211,9 +1109,7 @@ void afp_CountDesktopItems(
 
 	if (!afp_DesktopDBHasHeader(deskitem->file))
 	{
-		//
-		//Legacy database without a header; count the entries by scanning.
-		//
+		// Legacy database without a header; count the entries by scanning.
 		int32 entry_count = 0;
 		auto entries = afp_GetDesktopEntries(deskitem->file, &entry_count);
 		if (entries == nullptr)
@@ -1287,9 +1183,7 @@ AFPERROR afp_FindDTEntry(
 	
 	if (deskitem == NULL)
 	{
-		//
-		//Big problems if we can't get the desktop file blob.
-		//
+		// Big problems if we can't get the desktop file blob.
 		return( afpParmErr );
 	}
 	
@@ -1341,7 +1235,7 @@ AFPERROR afp_FindDTEntry(
 	{
 		if (searchCriteria->entryType == ENTRY_TYPE_ICON)
 		{
-			//Data size is 0 if looking for FPGetIconInfo, otherwise it's a FPGetIcon call.
+			// Data size is 0 if looking for FPGetIconInfo, otherwise it's a FPGetIcon call.
 			if (searchCriteria->dataSize != 0)
 			{				
 				if (searchCriteria->equal_icon(&entries[j]))
@@ -1377,7 +1271,7 @@ AFPERROR afp_FindDTEntry(
 		}
 		else if (searchCriteria->entryType == ENTRY_TYPE_CMNT)
 		{
-			//We should never get here. Comments are handled/stored in the file attributes.
+			// We should never get here. Comments are handled/stored in the file attributes.
 		}
 	}
 	
@@ -1425,9 +1319,7 @@ AFPERROR afp_AddEntry(
 	
 	if (deskitem == NULL)
 	{
-		//
-		//Big problems if we can't get the desktop file blob.
-		//
+		// Big problems if we can't get the desktop file blob.
 		DBGWRITE(dbg_level_warning, "Failed to get desk item\n");
 		return( afpParmErr );
 	}
@@ -1444,11 +1336,9 @@ AFPERROR afp_AddEntry(
 	
 	if (AFP_SUCCESS(afpError))
 	{
-		//
-		//We found an entry matching this file and type already
-		//in the database. We're supposed to check the bitmap
-		//size and only replace it if it's the same.
-		//
+		// We found an entry matching this file and type already
+		// in the database. We're supposed to check the bitmap
+		// size and only replace it if it's the same.
 		if (dtEntry->entryType == ENTRY_TYPE_ICON)
 		{
 			if (dtEntry->dataSize != foundEntry.dataSize)
@@ -1589,9 +1479,7 @@ AFPERROR afp_RemoveEntry(
 	
 	if (deskitem == NULL)
 	{
-		//
-		//Big problems if we can't get the desktop file blob.
-		//
+		// Big problems if we can't get the desktop file blob.
 		return( afpParmErr );
 	}
 	
@@ -1659,37 +1547,3 @@ AFPERROR afp_RemoveEntry(
 	
 	return( afpError );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

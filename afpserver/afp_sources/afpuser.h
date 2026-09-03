@@ -40,4 +40,4 @@ AFPERROR FPChangePswd(
 	);
 
 
-#endif //__afpuser__
+#endif // __afpuser__

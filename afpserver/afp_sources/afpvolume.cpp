@@ -31,9 +31,7 @@ void SaveVolumeData(VolumeStorageData* volData)
 	char		fpath[256];
 	char		attrName[B_ATTR_NAME_LENGTH];
 	
-	//
-	//Save the current volume flag settings to the file.
-	//
+	// Save the current volume flag settings to the file.
 	if (find_directory(B_USER_SETTINGS_DIRECTORY, &path) == B_OK)
 	{
 		dir.SetTo(path.Path());
@@ -56,9 +54,7 @@ void SaveVolumeData(VolumeStorageData* volData)
 		}
 	}
 
-	//
-	//Now update the volume object live.
-	//
+	// Now update the volume object live.
 	fp_volume*	volume 	= NULL;
 	int			i		= 0;
 	

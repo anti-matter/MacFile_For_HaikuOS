@@ -19,4 +19,4 @@ public:
 	virtual void Pulse();
 };
 	
-#endif //__afpServerApplication__
+#endif // __afpServerApplication__

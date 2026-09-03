@@ -14,27 +14,26 @@
 #define AFP_ATTR_ATTRIBUTE	"Afp_Attributes"
 #define AFP_ATTR_LONGNAME	"Afp_Longname"
 
-//
-//These macros make working with posix perms easier. For our purposes, we
-//treat the posix perms as follows:
-//
-//				Owner		User		Guest
-//		Read	S_IRUSR		S_IRGRP		S_IROTH
-//		Write	S_IWUSR		S_IWGRP		S_IWOTH
-//		Search	S_IXUSR		S_IXGRP		S_IXOTH
-//
+// These macros make working with posix perms easier. For our purposes, we
+// treat the posix perms as follows:
+// 
+// 				Owner		User		Guest
+// 		Read	S_IRUSR		S_IRGRP		S_IROTH
+// 		Write	S_IWUSR		S_IWGRP		S_IWOTH
+// 		Search	S_IXUSR		S_IXGRP		S_IXOTH
+// 
 
-//Owner permissions
+// Owner permissions
 #define	POSIX_AFP_IROWNER	S_IRUSR
 #define POSIX_AFP_IWOWNER	S_IWUSR
 #define POSIX_AFP_ISOWNER	S_IXUSR
 
-//User permissions
+// User permissions
 #define POSIX_AFP_IRUSER	S_IRGRP
 #define POSIX_AFP_IWUSER	S_IWGRP
 #define POSIX_AFP_ISUSER	S_IXGRP
 
-//Guest permissions
+// Guest permissions
 #define POSIX_AFP_IRGUEST	S_IROTH
 #define POSIX_AFP_IWGUEST	S_IWOTH
 #define POSIX_AFP_ISGUEST	S_IXOTH
@@ -130,4 +129,4 @@ private:
 };
 
 
-#endif //__fp_objects__
+#endif // __fp_objects__

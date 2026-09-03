@@ -32,31 +32,23 @@ AFPERROR FPGetServerMessage(
 	int16			afpMessageType		= 0;
 	int16			afpMessageBitmap	= 0;
 	
-	//
-	//First word contains command and padding
-	//
+	// First word contains command and padding
 	afpRequest.Advance(sizeof(int16));
 	
-	//
-	//Get the message type and parameters.
-	//
+	// Get the message type and parameters.
 	afpMessageType		= afpRequest.GetInt16();
 	afpMessageBitmap	= afpRequest.GetInt16();
 	
-	//
-	//We put the first 2 parameters in the block that basically just
-	//echo the AFP parameters sent to us.
-	//
+	// We put the first 2 parameters in the block that basically just
+	// echo the AFP parameters sent to us.
 	afpReply.AddInt16(afpMessageType);
 	afpReply.AddInt16(afpMessageBitmap);
 	
 	switch(afpMessageType)
 	{
-		//
-		//12.29.04: Starting with AFP3.0, bit 1 of the message bitmap indicates that
-		//the client wants the message string in unicode format. Thanks to
-		//Apple for updating the docs several years later so I can fix the bug.
-		//
+		// 12.29.04: Starting with AFP3.0, bit 1 of the message bitmap indicates that
+		// the client wants the message string in unicode format. Thanks to
+		// Apple for updating the docs several years later so I can fix the bug.
 		case AFP_MSG_LOGINTYPE:
 			if (afpMessageBitmap & kSendMessageAsUnicode)
 				afpReply.AddUniString(g_afpLoginMessage, false);

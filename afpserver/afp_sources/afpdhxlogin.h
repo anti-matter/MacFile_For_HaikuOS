@@ -18,13 +18,11 @@
 #define DHX_CRYPT2BUFLEN 	(DHX_KEYSIZE + DHX_PASSWDLEN)
 #define DHX_CHNGPSWDBUFLEN	(DHX_KEYSIZE + (DHX_PASSWDLEN*2))
 
-//hash a number to a 16-bit integer
+// hash a number to a 16-bit integer
 #define dhxhash(a) ((((unsigned long) (a) >> 8) ^ (unsigned long) (a)) & 0xffff)
 
-//
-//The following is the blob we store between FPLogin() and 
-//FPLoginCont() function calls.
-//
+// The following is the blob we store between FPLogin() and 
+// FPLoginCont() function calls.
 typedef struct
 {
 	char		userName[UAM_USERNAMELEN+1];
@@ -77,4 +75,4 @@ void afpGetRandomNumber(
 	int16 			cbBuf
 );
 
-#endif //__afpdhxlogin__
+#endif // __afpdhxlogin__

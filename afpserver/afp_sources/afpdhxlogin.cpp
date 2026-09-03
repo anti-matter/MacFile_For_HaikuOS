@@ -81,9 +81,7 @@ AFPERROR DHXLogin(
 		goto exit;
 	}
 
-	//
-	//dh now owns pbn and gbn; clear our references so we don't double-free them.
-	//
+	// dh now owns pbn and gbn; clear our references so we don't double-free them.
 	pbn = NULL;
 	gbn = NULL;
 
@@ -117,9 +115,7 @@ AFPERROR DHXLogin(
 
 	afpReply.AddInt16(sessid);
 
-	//
-	//Write our public key, left-padded with zeros to DHX_KEYSIZE bytes.
-	//
+	// Write our public key, left-padded with zeros to DHX_KEYSIZE bytes.
 	keyDst = (unsigned char*)afpReply.GetCurrentPosPtr();
 	memset(keyDst, 0, DHX_KEYSIZE);
 	BN_bn2bin(pub_key, keyDst + (DHX_KEYSIZE - pubKeyLen));

@@ -40,7 +40,7 @@ AFP_TABLE afpTable[] = {
 	{FPUnimplemented, 			""},
 	{FPByteRangeLock, 			"FPByteRangeLock"},
 	{FPCloseVol, 				"FPCloseVol"},
-	{FPUnimplemented, 			""},					//afpDirClose
+	{FPUnimplemented, 			""},					// afpDirClose
 	{FPCloseFork, 				"FPCloseFork"},
 	{FPCopyFile, 				"FPCopyFile"},
 	{FPCreateDir,				"FPCreateDir"},
@@ -49,8 +49,8 @@ AFP_TABLE afpTable[] = {
 	{FPEnumerate,				"FPEnumerate"},
 	{FPFlush,					"FPFlush"},
 	{FPFlushFork,				"FPFlushFork"},
-	{FPUnimplemented,			""},					//afpGetDirParms
-	{FPUnimplemented,			""},					//afpGetFileParms
+	{FPUnimplemented,			""},					// afpGetDirParms
+	{FPUnimplemented,			""},					// afpGetFileParms
 	{FPGetForkParms,			"FPGetForkParms"},
 	{FPGetSrvrInfo,				"FPGetSrvrInfo"},
 	{FPGetSrvrParms,			"FPGetSrvrParms"},
@@ -62,14 +62,14 @@ AFP_TABLE afpTable[] = {
 	{FPMapName,					"FPMapName"},
 	{FPMoveAndRename,			"FPMoveAndRename"},
 	{FPOpenVol,					"FPOpenVol"},
-	{FPUnimplemented,			""},					//afpOpenDir
+	{FPUnimplemented,			""},					// afpOpenDir
 	{FPOpenFork,				"FPOpenFork"},
 	{FPRead,					"FPRead"},
 	{FPRename,					"FPRename"},
 	{FPSetFileDirParms,			"FPSetFileDirParms"},
 	{FPSetFileDirParms,			"FPSetFileDirParms"},
 	{FPSetForkParms,			"FPSetForkParms"},
-	{FPUnimplemented,			""},					//afpSetVolParms
+	{FPUnimplemented,			""},					// afpSetVolParms
 	{FPWrite,					"FPWrite"},
 	{FPGetFileDirParms,			"FPGetFileDirParms"},
 	{FPSetFileDirParms,			"FPSetFileDirParms"},
@@ -77,17 +77,17 @@ AFP_TABLE afpTable[] = {
 	{FPGetUserInfo,				"FPGetUserInfo"},
 	{FPGetServerMessage,		"FPGetServerMessage"},
 	{FPCreateID,				"FPCreateID"},
-	{FPUnimplemented,			""},					//afpDeleteID
-	{FPResolveID,			    "FPResolveID"},			//afpResolveID
-	{FPUnimplemented,			""},					//afpExchangeFiles
-	{FPUnimplemented,			""},					//43
-	{FPUnimplemented,			""},					//44
-	{FPUnimplemented,			""},					//45
-	{FPUnimplemented,			""},					//46
-	{FPUnimplemented,			""},					//47
+	{FPUnimplemented,			""},					// afpDeleteID
+	{FPResolveID,			    "FPResolveID"},			// afpResolveID
+	{FPUnimplemented,			""},					// afpExchangeFiles
+	{FPUnimplemented,			""},					// 43
+	{FPUnimplemented,			""},					// 44
+	{FPUnimplemented,			""},					// 45
+	{FPUnimplemented,			""},					// 46
+	{FPUnimplemented,			""},					// 47
 	{FPOpenDT,					"FPOpenDT"},
 	{FPCloseDT,					"FPCloseDT"},
-	{FPUnimplemented,			""},					//50
+	{FPUnimplemented,			""},					// 50
 	{FPGetIcon,					"FPGetIcon"},
 	{FPGetIconInfo,				"FPGetIconInfo"},
 	{FPAddAPPL,					"FPAddAPPL"},
@@ -99,22 +99,22 @@ AFP_TABLE afpTable[] = {
 	{FPByteRangeLock,			"FPByteRangeLock"},
 	{FPRead,					"FPRead"},
 	{FPWrite,					"FPWrite"},
-	{FPUnimplemented,			""},					//afpGetAuthMethods
+	{FPUnimplemented,			""},					// afpGetAuthMethods
 	{FPLogin,					"FPLogin"},
 	{FPGetSessionToken,			"FPGetSessionToken"},
 	{FPDisconnectOldSession,	"FPDisconnectOldSession"},
 	{FPEnumerate,				"FPEnumerateExt"},
-	{FPUnimplemented,			""},					//afpCatSearchExt
+	{FPUnimplemented,			""},					// afpCatSearchExt
 	{FPEnumerate,				"FPEnumerateExt2"},
 	{FPGetExtAttribute,			"FPGetExtAttribute"},
 	{FPSetExtAttribute,			"FPSetExtAttribute"},
 	{FPRemoveExtAttribute,		"FPRemoveExtAttribute"},
 	{FPListExtAttribute,		"FPListExtAttribute"},
-	{FPUnimplemented,			""},					//73
-	{FPUnimplemented,			""},					//74
-	{FPUnimplemented,			""},					//75
-	{FPUnimplemented,			""},					//76
-	{FPUnimplemented,			""},					//77
+	{FPUnimplemented,			""},					// 73
+	{FPUnimplemented,			""},					// 74
+	{FPUnimplemented,			""},					// 75
+	{FPUnimplemented,			""},					// 76
+	{FPUnimplemented,			""},					// 77
 	{FPSyncDir,					""},
 	{FPSyncFork,				""}
 };
@@ -204,10 +204,8 @@ AFPERROR FPDispatchCommand(
 
 	*afpDataSize = 0;
 
-	//
-	//Whether we're authenticated or not is how we determine
-	//what afp commands we allow the client to execute.
-	//
+	// Whether we're authenticated or not is how we determine
+	// what afp commands we allow the client to execute.
 	if (afpSession->IsAuthenticated())
 	{
 		if (afpCommand <= afpLastFunc)
@@ -264,11 +262,9 @@ AFPERROR FPDispatchCommand(
 
 				afpSession->GetUserInfo(&userInfo);
 
-				//
-				//If the users password has expired and they are temporarily authenticated
-				//(e.g. logged in but in a "weird only chngpswd works state"), allow them
-				//to change their password.
-				//
+				// If the users password has expired and they are temporarily authenticated
+				// (e.g. logged in but in a "weird only chngpswd works state"), allow them
+				// to change their password.
 				if ((userInfo.flags & kMustChngPswd) && (userInfo.flags & kTempAuthenticated))
 				{
 					afpError = FPChangePswd(afpSession, afpReqBuffer, afpReplyBuffer, afpDataSize);
@@ -316,9 +312,7 @@ AFPERROR FPGetSrvrInfo(
 
 	*afpDataSize = 0;
 
-	//
-	//Set the flags which tell what our server supports.
-	//
+	// Set the flags which tell what our server supports.
 	afpFlags = kSupportsTCPIP
 				| kSupportsSrvrNotification
 				| kSupportsCopyFile
@@ -329,49 +323,35 @@ AFPERROR FPGetSrvrInfo(
 
 	*((int16*)&afpReplyBuffer[SRVRINFO_OFFSET_FLAGS]) = htons(afpFlags);
 
-	//
-	//We don't have a custom volume icon.
-	//
+	// We don't have a custom volume icon.
 	*((int16*)&afpReplyBuffer[SRVRINFO_OFFSET_VOLUMEICON]) = 0;
 
-	//
-	//Blast in the computer name.
-	//
+	// Blast in the computer name.
 	afp_GetHostname(hostname, sizeof(hostname));
 
 	pBuffer = &afpReplyBuffer[SRVRINFO_OFFSET_SRVRNAME];
 	PUSH_CSTRING(hostname, pBuffer);
 
-	//
-	//Add an extra padding byte if the AFP buffer is not on
-	//an even boundary.
-	//
+	// Add an extra padding byte if the AFP buffer is not on
+	// an even boundary.
 	if ((pBuffer - afpReplyBuffer) % 2)
 		*pBuffer++ = 0x00;
 
-	//
-	//Save the server signature offset
-	//
+	// Save the server signature offset
 	pServerSigOffset = pBuffer;
 	pBuffer += sizeof(int16);
 
-	//
-	//Network address count offset, save it for later.
-	//
+	// Network address count offset, save it for later.
 	pAddressCountOffset = pBuffer;
 	pBuffer += sizeof(int16);
 
-	//
-	//Set the machine type and offset.
-	//
+	// Set the machine type and offset.
 	*((int16*)&afpReplyBuffer[SRVRINFO_OFFSET_MACHTYPE]) =
 											htons(pBuffer - afpReplyBuffer);
 
 	PUSH_CSTRING(AFP_MACHINE_TYPE, pBuffer);
 
-	//
-	//Paste in the AFP version we support.
-	//
+	// Paste in the AFP version we support.
 	*((int16*)&afpReplyBuffer[SRVRINFO_OFFSET_AFPVERSCOUNT]) =
 											htons(pBuffer - afpReplyBuffer);
 
@@ -383,9 +363,7 @@ AFPERROR FPGetSrvrInfo(
 	PUSH_CSTRING(AFP_32_VERSION_STR, pBuffer);
 	PUSH_CSTRING(AFP_33_VERSION_STR, pBuffer);
 
-	//
-	//Now the supported UAM's get included.
-	//
+	// Now the supported UAM's get included.
 	*((int16*)&afpReplyBuffer[SRVRINFO_OFFSET_UAMCOUNT]) =
 											htons(pBuffer - afpReplyBuffer);
 
@@ -399,29 +377,23 @@ AFPERROR FPGetSrvrInfo(
 		*pBuffer++ = UAM_COUNT - 1;
 	}
 
-	//
-	//This is always supported in our server, no matter what.
-	//
+	// This is always supported in our server, no matter what.
 	PUSH_CSTRING(UAM_CLEAR_TEXT, pBuffer);
 	PUSH_CSTRING(UAM_DHCAST128, pBuffer);
 
-	//
-	//Set the server sig offset and value.
-	//
+	// Set the server sig offset and value.
 	*((int16*)pServerSigOffset) = htons(pBuffer - afpReplyBuffer);
 	*pBuffer++ = 0;
 
-	//Network Address: Note, there is no reason for us to pass
-	//back address since we only support connections over TCP/IP.
-	//This feature is only for connection where the initial connection
-	//is done over AppleTalk.
+	// Network Address: Note, there is no reason for us to pass
+	// back address since we only support connections over TCP/IP.
+	// This feature is only for connection where the initial connection
+	// is done over AppleTalk.
 
 	*((int16*)pAddressCountOffset) = htons(pBuffer - afpReplyBuffer);
 	*pBuffer++ = 0;
 
-	//
-	//This size does NOT include the size of the DSI Header.
-	//
+	// This size does NOT include the size of the DSI Header.
 	*afpDataSize = (pBuffer - afpReplyBuffer);
 
 	DBGWRITE(dbg_level_trace, "FPGetSrvrInfo reply datasize (%d bytes): ", *afpDataSize);
@@ -459,9 +431,7 @@ AFPERROR FPGetSessionToken(
 
 	DBGWRITE(dbg_level_trace, "Enter...\n");
 
-	//
-	//First byte is afp command and padding.
-	//
+	// First byte is afp command and padding.
 	afpRequest.Advance(sizeof(int16));
 	afpType	= afpRequest.GetInt16();
 
@@ -471,9 +441,7 @@ AFPERROR FPGetSessionToken(
 
 		DBGWRITE(dbg_level_trace, "Client ID size = %lu\n", afpIDSize);
 
-		//
-		//For types 3 & 4, a time stamp is included in the request
-		//
+		// For types 3 & 4, a time stamp is included in the request
 		switch(afpType)
 		{
 			case kLoginWithTimeAndID:
@@ -502,10 +470,8 @@ AFPERROR FPGetSessionToken(
 			DBGWRITE(dbg_level_trace, "kLoginWithoutID\n");
 			break;
 
-		//
-		//DEPRECATED: This constant is deprecated per AFP3.2 spec, but we keep
-		//it around for older clients.
-		//
+		// DEPRECATED: This constant is deprecated per AFP3.2 spec, but we keep
+		// it around for older clients.
 		case kLoginWithID:
 			DBGWRITE(dbg_level_trace, "kLoginWithID\n");
 
@@ -521,11 +487,9 @@ AFPERROR FPGetSessionToken(
 			fSavedID = true;
 			break;
 
-		//
-		//The client wants his old session to be discarded. The client is sending
-		//an IDLength, an ID, and a Timestamp. We only discard the old session if
-		//the timestamps DO NOT match.
-		//
+		// The client wants his old session to be discarded. The client is sending
+		// an IDLength, an ID, and a Timestamp. We only discard the old session if
+		// the timestamps DO NOT match.
 		case kLoginWithTimeAndID:
 			DBGWRITE(dbg_level_trace, "kLoginWithTimeAndID\n");
 
@@ -537,9 +501,7 @@ AFPERROR FPGetSessionToken(
 
 				if (afpKillSession->GetAFPTimeStamp() != afpTimeStamp)
 				{
-					//
-					//Time stamps don't match, discard the old session.
-					//
+					// Time stamps don't match, discard the old session.
 					afpSession->KillSession();
 					break;
 				}
@@ -551,17 +513,13 @@ AFPERROR FPGetSessionToken(
 			fSavedID = true;
 			break;
 
-		//
-		//DEPRECATED: Deprecated as per AFP3.2 spec
-		//
+		// DEPRECATED: Deprecated as per AFP3.2 spec
 		case kReconnWithID:
 			DBGWRITE(dbg_level_trace, "kReconnWithID\n");
 			break;
 
-		//
-		//The client has just reconnected to a previously disconnected
-		//session. Update the session with the new ID.
-		//
+		// The client has just reconnected to a previously disconnected
+		// session. Update the session with the new ID.
 		case kReconnWithTimeAndID:
 			DBGWRITE(dbg_level_trace, "kReconnWithTimeAndID\n");
 
@@ -571,10 +529,8 @@ AFPERROR FPGetSessionToken(
 			fSavedID = true;
 			break;
 
-		//
-		//The following IDs are unsupported by this afp server since we
-		//don't support the reconnect UAM.
-		//
+		// The following IDs are unsupported by this afp server since we
+		// don't support the reconnect UAM.
 		case kRecon1Login:
 		case kRecon1ReconnectLogin:
 		case kRecon1Refresh:
@@ -640,10 +596,8 @@ AFPERROR FPDisconnectOldSession(
 
 	if (afpTokenLength != AFP_SESSION_TOKEN_SIZE)
 	{
-		//
-		//Our token length is fixed, it's not right, we're in
-		//deep doo-doo.
-		//
+		// Our token length is fixed, it's not right, we're in
+		// deep doo-doo.
 		return( afpParmErr );
 	}
 
@@ -686,20 +640,14 @@ AFPERROR FPGetSrvrParms(
 
 	DBGWRITE(dbg_level_info, "Getting server parms...\n");
 
-	//
-	//First, stuff in the system time into the reply buffer.
-	//
+	// First, stuff in the system time into the reply buffer.
 	afpReply.AddInt32(TO_AFP_TIME(real_time_clock()));
 
-	//
-	//Stuff in the number of volumes we have shared out.
-	//
+	// Stuff in the number of volumes we have shared out.
 	numVolumes = volume_blist->CountItems();
 	afpReply.AddInt8(numVolumes);
 
-	//
-	//Now stuff in all the volume names as pascal strings.
-	//
+	// Now stuff in all the volume names as pascal strings.
 	for (i = 0; i < numVolumes; i++)
 	{
 		fp_volume*		afpVolume = NULL;
@@ -755,37 +703,25 @@ AFPERROR FPOpenVol(
 
 	afpRequest.Advance(sizeof(int16));
 
-	//
-	//Get the volume bitmap from the request buffer.
-	//
+	// Get the volume bitmap from the request buffer.
 	volBitmap = afpRequest.GetInt16();
 
-	//
-	//Extract the volume name the client wants to open.
-	//
+	// Extract the volume name the client wants to open.
 	afpRequest.GetString(szVolumeName, sizeof(szVolumeName));
 
-	//
-	//A null byte may be added to make the next parm start
-	//on an even boundary.
-	//
+	// A null byte may be added to make the next parm start
+	// on an even boundary.
 	afpRequest.AdvanceIfOdd();
 
-	//
-	//Extract the volume password, its okay if there isn't one there.
-	//
+	// Extract the volume password, its okay if there isn't one there.
 	afpRequest.GetRawData(szPassword, sizeof(szPassword));
 
 	DBGWRITE(dbg_level_info, "FPOpenVol volBitmap=0x%04X name=%s\n", volBitmap, szVolumeName);
 
-	//
-	//Now search for the volume object associated with the volume name.
-	//
+	// Now search for the volume object associated with the volume name.
 	afpVolume = FindVolume(szVolumeName);
 
-	//
-	//If we found the volume, then get the parameters.
-	//
+	// If we found the volume, then get the parameters.
 	if (afpVolume != NULL)
 	{
 		DBGWRITE(dbg_level_trace, "Opening volume %s\n", szVolumeName);
@@ -794,18 +730,14 @@ AFPERROR FPOpenVol(
 
 		if (AFP_SUCCESS(afpError))
 		{
-			//
-			//Now call the volume routine to actually flag the vol as open.
-			//This call could fail if the user currently has too many volumes
-			//already open.
-			//
+			// Now call the volume routine to actually flag the vol as open.
+			// This call could fail if the user currently has too many volumes
+			// already open.
 			afpError = afpVolume->fp_OpenVolume(afpSession);
 
 			if (AFP_SUCCESS(afpError))
 			{
-				//
-				//Get the size of the volume parameter data.
-				//
+				// Get the size of the volume parameter data.
 				*afpDataSize = afpReply.GetDataLength();
 				DBGWRITE(dbg_level_trace, "FPOpenVol reply hex (%d bytes): \n", *afpDataSize);
 				DBG_DUMP_BUFFER((const char*)afpReply.GetBuffer(), *afpDataSize, dbg_level_trace);
@@ -814,9 +746,7 @@ AFPERROR FPOpenVol(
 	}
 	else
 	{
-		//
-		//If we get here, we couldn't find the requested volume.
-		//
+		// If we get here, we couldn't find the requested volume.
 		afpError = afpParmErr;
 
 		DBGWRITE(dbg_level_trace, "Failed to find named volume\n");
@@ -852,25 +782,17 @@ AFPERROR FPCloseVol(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//The first word contains the afp command and padding byte.
-	//
+	// The first word contains the afp command and padding byte.
 	afpRequest.Advance(sizeof(int16));
 
-	//
-	//Get the volume ID requested to be closed.
-	//
+	// Get the volume ID requested to be closed.
 	afpVolumeID = afpRequest.GetInt16();
 
-	//
-	//Get the volume object in charge of the volume
-	//
+	// Get the volume object in charge of the volume
 	afpVolume = FindVolume(afpVolumeID);
 
-	//
-	//Now, if we found the volume and the user has it open, perform
-	//the close operation.
-	//
+	// Now, if we found the volume and the user has it open, perform
+	// the close operation.
 	if ((afpVolume != NULL) && (afpSession->HasVolumeOpen(afpVolume)))
 	{
 		afpError = afpVolume->fp_CloseVolume(afpSession);
@@ -903,41 +825,27 @@ AFPERROR FPGetVolParms(
 	fp_volume*	afpVolume		= NULL;
 	AFPERROR	afpError 		= AFP_OK;
 
-	//
-	//The first word contains the afp command and padding byte.
-	//
+	// The first word contains the afp command and padding byte.
 	afpRequest.Advance(sizeof(int16));
 
-	//
-	//Get the volume ID the client wants to get parms for.
-	//
+	// Get the volume ID the client wants to get parms for.
 	afpVolumeID = afpRequest.GetInt16();
 
-	//
-	//Now search for the volume object associated with the volume name.
-	//
+	// Now search for the volume object associated with the volume name.
 	afpVolume = FindVolume(afpVolumeID);
 
-	//
-	//If we found the volume using the volID, then afpSession will
-	//not be null. The client must also have previously opened the
-	//volume using FPOpenVol.
-	//
+	// If we found the volume using the volID, then afpSession will
+	// not be null. The client must also have previously opened the
+	// volume using FPOpenVol.
 	if ((afpVolume != NULL) && (afpSession->HasVolumeOpen(afpVolume)))
 	{
-		//
-		//Get the bitmap the describes what parms we are going to supply.
-		//
+		// Get the bitmap the describes what parms we are going to supply.
 		afpVolBitmap = afpRequest.GetInt16();
 
-		//
-		//Now call on the volume object to get the information requested.
-		//
+		// Now call on the volume object to get the information requested.
 		afpError = afpVolume->fp_GetVolParms(afpVolBitmap, afpSession->GetAFPVersion(), afpReply);
 
-		//
-		//Lastly, if we succeed, get the afp data length.
-		//
+		// Lastly, if we succeed, get the afp data length.
 		if (AFP_SUCCESS(afpError))
 		{
 			*afpDataSize = afpReply.GetDataLength();
@@ -945,10 +853,8 @@ AFPERROR FPGetVolParms(
 	}
 	else
 	{
-		//
-		//Either the volume ID is bad or the user did not have the
-		//volume opened for access.
-		//
+		// Either the volume ID is bad or the user did not have the
+		// volume opened for access.
 		afpError = afpParmErr;
 
 		DBGWRITE(dbg_level_error, "Bad ID or vol not opened!\n");
@@ -985,9 +891,7 @@ AFPERROR FPResolveID(
 	auto afpFileID = afpRequest.GetInt32();
 	auto afpBitmap = afpRequest.GetInt16();
 
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	auto afpVolume = FindVolume(afpVolumeID);
 
 	if (afpVolume == NULL)
@@ -1026,9 +930,7 @@ AFPERROR FPResolveID(
 
 	DBGWRITE(dbg_level_trace, "Found file via ID (%lu): %s\n", afpFileID, path.Path());
 
-	//
-	//Don't support the following bitmaps.
-	//
+	// Don't support the following bitmaps.
 	if (afpSession->GetAFPVersion() < afpVersion30)
 	{
 		if (afpBitmap & kFPProDos)
@@ -1042,15 +944,11 @@ AFPERROR FPResolveID(
 		afpBitmap &= ~kFPShortName;
 	}
 
-	//
-	//Return the bitmap that tells what information the rest
-	//of the buffer contains.
-	//
+	// Return the bitmap that tells what information the rest
+	// of the buffer contains.
 	afpReply.push_num(afpBitmap);
 
-	//
-	//If the bitmap is empty, then we return nothing but the bitmap.
-	//
+	// If the bitmap is empty, then we return nothing but the bitmap.
 	if (afpBitmap == kFPFileNone)
 	{
 		*afpDataSize = afpReply.GetDataLength();
@@ -1109,50 +1007,36 @@ AFPERROR FPGetFileDirParms(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//The first word contains the afp command and padding byte.
-	//
+	// The first word contains the afp command and padding byte.
 	afpRequest.Advance(sizeof(int16));
 
-	//
-	//Get the parms that define what we're to do and on what.
-	//
+	// Get the parms that define what we're to do and on what.
 	afpVolumeID 	= afpRequest.GetInt16();
 	afpDirID		= afpRequest.GetInt32();
 	afpFileBitmap	= afpRequest.GetInt16();
 	afpDirBitmap	= afpRequest.GetInt16();
 	afpPathType		= afpRequest.GetInt8();
 
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpVolumeID);
 
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpVolumeID);
 		return( afpParmErr );
 	}
 
-	//
-	//The client must have the volume open for access using
-	//FPOpenVol before making this call.
-	//
+	// The client must have the volume open for access using
+	// FPOpenVol before making this call.
 	if (!afpSession->HasVolumeOpen(afpVolume))
 	{
-		//
-		//Nope, client made a boo boo, return parm error.
-		//
+		// Nope, client made a boo boo, return parm error.
 		DBGWRITE(dbg_level_warning, "User doesn't have volume open!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//Get the pathname of the object we're working on.
-	//
+	// Get the pathname of the object we're working on.
 	afpError = afpRequest.GetString(afpPathname, sizeof(afpPathname), true, afpPathType);
 
 	DBGWRITE(dbg_level_info, "FPGetFileDirParms volID=%d dirID=%lu fileBitmap=0x%04X dirBitmap=0x%04X pathType=%d\n",
@@ -1162,9 +1046,7 @@ AFPERROR FPGetFileDirParms(
 		return( afpError );
 	}
 
-	//
-	//Set the entry object that will point to this afp object.
-	//
+	// Set the entry object that will point to this afp object.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpDirID,
@@ -1181,20 +1063,16 @@ AFPERROR FPGetFileDirParms(
 	DBGWRITE(dbg_level_trace, "DirID = %lu\n", afpDirID);
 	DBGWRITE(dbg_level_trace, "Pathname = %s\n", afpPathname);
 
-	//
-	//If the object is a directory, then set the attribute
-	//bit that informs the client.
-	//
+	// If the object is a directory, then set the attribute
+	// bit that informs the client.
 	if (afpEntry.IsDirectory()) {
 
 		afpAttributes |= kFileDirIsDir;
 	}
 
-	//
-	//We don't support the following bitmaps, so we clear them. Note that
-	//we don't clear the KFPProDos bit in AFP3.x since it is now the unicode
-	//name bit.
-	//
+	// We don't support the following bitmaps, so we clear them. Note that
+	// we don't clear the KFPProDos bit in AFP3.x since it is now the unicode
+	// name bit.
 	if (afpSession->GetAFPVersion() < afpVersion30)
 	{
 		if (afpDirBitmap & kFPProDos)	afpDirBitmap  &= ~kFPProDos;
@@ -1207,32 +1085,26 @@ AFPERROR FPGetFileDirParms(
 	if (afpDirBitmap & kFPDirShortName)		afpDirBitmap  &= ~kFPDirShortName;
 	if (afpFileBitmap & kFPShortName)		afpFileBitmap &= ~kFPShortName;
 
-	//
-	//The following items are returned in all versions of this call
-	//regardless of the bitmaps or object type.
-	//
+	// The following items are returned in all versions of this call
+	// regardless of the bitmaps or object type.
 	afpReply.AddInt16(afpFileBitmap);
 	afpReply.AddInt16(afpDirBitmap);
 	afpReply.AddInt8(afpAttributes);
 
 	DBGWRITE(dbg_level_info, "FPGetFileDirParms reply: fileBitmap_out=0x%04X dirBitmap_out=0x%04X attrs=0x%02X\n",
 				afpFileBitmap, afpDirBitmap, afpAttributes);
-	//
-	//If both bitmaps are null, then we are to just return
-	//the bitmaps and the attributes (no padding per AFP spec).
-	//
+	// If both bitmaps are null, then we are to just return
+	// the bitmaps and the attributes (no padding per AFP spec).
 	if ((afpFileBitmap == kFPFileNone) && (afpDirBitmap == kFPDirNone))
 	{
 		*afpDataSize = afpReply.GetDataLength();
 		return( AFP_OK );
 	}
 
-	//
-	//Add a padding byte before the FDP data. Per AFP spec, this padding
-	//is only present when file or directory parameter data follows.
-	//AppleShare Client 3.7.4 crashes if it finds unexpected padding
-	//bytes when both bitmaps are zero.
-	//
+	// Add a padding byte before the FDP data. Per AFP spec, this padding
+	// is only present when file or directory parameter data follows.
+	// AppleShare Client 3.7.4 crashes if it finds unexpected padding
+	// bytes when both bitmaps are zero.
 	afpReply.AddInt8(0);
 
 	if (afpEntry.IsDirectory())
@@ -1310,25 +1182,19 @@ AFPERROR FPEnumerate(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//The first word contains the afp command and padding byte.
-	//
+	// The first word contains the afp command and padding byte.
 	afpCommand = afpRequest.GetInt8();
 	afpRequest.Advance(sizeof(int8));
 
-	//
-	//Extract the enumerate parameters for the API.
-	//
+	// Extract the enumerate parameters for the API.
 	afpVolID		= afpRequest.GetInt16();
 	afpDirID		= afpRequest.GetInt32();
 	afpFileBitmap	= afpRequest.GetInt16();
 	afpDirBitmap	= afpRequest.GetInt16();
 	afpReqCount		= afpRequest.GetInt16();
 
-	//
-	//In AFP3.1 we may get the new Ext2 call which allows for a
-	//larger number of files to be on the volume.
-	//
+	// In AFP3.1 we may get the new Ext2 call which allows for a
+	// larger number of files to be on the volume.
 	switch(afpCommand)
 	{
 		case afpEnumerate:
@@ -1348,36 +1214,26 @@ AFPERROR FPEnumerate(
 
 	afpPathType	= afpRequest.GetInt8();
 
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpVolID);
 
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpVolID);
 		return( afpParmErr );
 	}
 
-	//
-	//The client must have the volume open for access using
-	//FPOpenVol before making this call.
-	//
+	// The client must have the volume open for access using
+	// FPOpenVol before making this call.
 	if (!afpSession->HasVolumeOpen(afpVolume))
 	{
-		//
-		//Nope, client made a boo boo, return parm error.
-		//
+		// Nope, client made a boo boo, return parm error.
 		DBGWRITE(dbg_level_warning, "User doesn't have volume open!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//Get the pathname of the object we're working on.
-	//
+	// Get the pathname of the object we're working on.
 	afpError = afpRequest.GetString(afpPathname, sizeof(afpPathname), true, afpPathType);
 
 	if (!AFP_SUCCESS(afpError))
@@ -1385,20 +1241,16 @@ AFPERROR FPEnumerate(
 		return( afpError );
 	}
 
-	//
-	//06.12.09: There should be no reason to enumerate the parent of the
-	//root directory. We must inhibit it as hackers could then gain access
-	//to the entire disk and its contents.
-	//
+	// 06.12.09: There should be no reason to enumerate the parent of the
+	// root directory. We must inhibit it as hackers could then gain access
+	// to the entire disk and its contents.
 	if (afpDirID == kParentOfRoot)
 	{
 		DBGWRITE(dbg_level_warning, "Parent of root directory is not allowed\n");
 		return( afpParmErr );
 	}
 
-	//
-	//We don't support the following bitmaps, so we clear them.
-	//
+	// We don't support the following bitmaps, so we clear them.
 	if (afpSession->GetAFPVersion() < afpVersion30)
 	{
 		if (afpDirBitmap & kFPDirProDOS)	afpDirBitmap  &= ~kFPDirProDOS;
@@ -1408,22 +1260,16 @@ AFPERROR FPEnumerate(
 	if (afpDirBitmap & kFPDirShortName)		afpDirBitmap  &= ~kFPDirShortName;
 	if (afpFileBitmap & kFPShortName)		afpFileBitmap &= ~kFPShortName;
 
-	//
-	//The first thing we do is add the bitmaps to the reply buffer.
-	//
+	// The first thing we do is add the bitmaps to the reply buffer.
 	afpReply.AddInt16(afpFileBitmap);
 	afpReply.AddInt16(afpDirBitmap);
 
-	//
-	//This is where the actual number of bytes in the buffer will
-	//be inserted into the buffer.
-	//
+	// This is where the actual number of bytes in the buffer will
+	// be inserted into the buffer.
 	afpActCountSpot = (int16*)afpReply.GetCurrentPosPtr();
 	afpReply.Advance(sizeof(int16));
 
-	//
-	//Set the entry object that will point to the directory we're enumerating.
-	//
+	// Set the entry object that will point to the directory we're enumerating.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpDirID,
@@ -1440,16 +1286,12 @@ AFPERROR FPEnumerate(
 	DBGWRITE(dbg_level_trace, "Enumerating directory: dirID: %d, path: %s at index: %d, max_reply_size: %d\n",
 			afpDirID, afpPathname, afpStartIndex, afpMaxReplySize);
 
-	//
-	//OK, now the hard part. We need to iterate through all the directories
-	//children and include them in the buffer until it is full.
-	//
+	// OK, now the hard part. We need to iterate through all the directories
+	// children and include them in the buffer until it is full.
 	BDirectory	directory(&afpEntry);
 	BEntry		entry;
 
-	//
-	//Make sure the directory object got intialized properly.
-	//
+	// Make sure the directory object got intialized properly.
 	if (directory.InitCheck() != B_OK)
 	{
 		DBGWRITE(dbg_level_error, "Directory object failed to initialize (dirID = %lu)\n", afpDirID);
@@ -1464,28 +1306,22 @@ AFPERROR FPEnumerate(
 
 		afpIsDirectory = entry.IsDirectory();
 
-		//
-		//Check to make sure we don't include items not to be included
-		//in the return enumeration.
-		//
+		// Check to make sure we don't include items not to be included
+		// in the return enumeration.
 		if (	((afpDirBitmap == kFPDirNone) && (afpIsDirectory))		||
 				((afpFileBitmap == kFPFileNone) && (!afpIsDirectory))	)
 		{
 			continue;
 		}
 
-		//
-		//Call the appropriate GetXXXParms calls.
-		//
+		// Call the appropriate GetXXXParms calls.
 		afpParmsBuffer.Rewind();
 		afpAttributes = 0;
 
 		if (afpIsDirectory)
 		{
-			//
-			//Check to make sure the session has search access to the directory
-			//before including directories in the enumeration.
-			//
+			// Check to make sure the session has search access to the directory
+			// before including directories in the enumeration.
 			afpError = afpCheckSearchAccess(afpSession, &afpEntry);
 			if (AFP_FAILURE(afpError))
 			{
@@ -1493,9 +1329,7 @@ AFPERROR FPEnumerate(
 				continue;
 			}
 
-			//
-			//Set the afp flag that marks this as a directory.
-			//
+			// Set the afp flag that marks this as a directory.
 			afpAttributes |= kFileDirIsDir;
 
 			afpError = fp_objects::fp_GetDirParms(
@@ -1508,10 +1342,8 @@ AFPERROR FPEnumerate(
 		}
 		else
 		{
-			//
-			//Check to make sure the session has read access to the directory
-			//before including any files.
-			//
+			// Check to make sure the session has read access to the directory
+			// before including any files.
 			afpError = afpCheckReadAccess(afpSession, &afpEntry);
 			if (AFP_FAILURE(afpError))
 			{
@@ -1524,17 +1356,13 @@ AFPERROR FPEnumerate(
 
 		if (AFP_SUCCESS(afpError))
 		{
-			//
-			//This is how many total objects we found during our search.
-			//
+			// This is how many total objects we found during our search.
 			afpObjectsFound++;
 
 			DBGWRITE(dbg_level_trace, "  Item %d: parms_buf_len=%d, reply_buf_len=%d, start_index=%d, max_reply=%d\n",
 				afpObjectsFound, afpParmsBuffer.GetDataLength(), afpReply.GetDataLength(), afpStartIndex, afpMaxReplySize);
 
-			//
-			//If we haven't hit the start index yet, continue on...
-			//
+			// If we haven't hit the start index yet, continue on...
 			if (afpObjectsFound < afpStartIndex) {
 				DBGWRITE(dbg_level_trace, "  Skipping item %d (before start index %d)\n",
 					afpObjectsFound, afpStartIndex);
@@ -1546,53 +1374,37 @@ AFPERROR FPEnumerate(
 			int32	sizeRequired;
 			int16	len;
 
-			//
-			//Check to make sure there is enough room in the buffer to add the
-			//file/dir information.
-			//
+			// Check to make sure there is enough room in the buffer to add the
+			// file/dir information.
 			sizeRequired = afpParmsBuffer.GetDataLength() + afpReply.GetDataLength();
 
-			//
-			//There are items after the file dirs parms that are added to the buffer,
-			//so we add a little extra to be safe.
-			//
+			// There are items after the file dirs parms that are added to the buffer,
+			// so we add a little extra to be safe.
 			sizeRequired += (4);
 
-			//
-			//wMaxReplySize is the maximum size our return buffer can be.
-			//
+			// wMaxReplySize is the maximum size our return buffer can be.
 			if (sizeRequired >= afpMaxReplySize)
 			{
 				DBGWRITE(dbg_level_trace, "  Breaking: sizeRequired (%d) >= afpMaxReplySize (%d)\n",
 					sizeRequired, afpMaxReplySize);
-				//
-				//We need to stay inside the callers max reply size in the request.
-				//
+				// We need to stay inside the callers max reply size in the request.
 				break;
 			}
 
-			//
-			//Make sure we didn't get bigger then our reply buffer can handle.
-			//
+			// Make sure we didn't get bigger then our reply buffer can handle.
 			if (sizeRequired > afpReply.GetBufferSize())
 			{
 				DBGWRITE(dbg_level_trace, "  Breaking: sizeRequired (%d) > reply buffer size (%d)\n",
 					sizeRequired, afpReply.GetBufferSize());
-				//
-				//This should never happen (yeah right). In case it does, just
-				//bail from here.
-				//
+				// This should never happen (yeah right). In case it does, just
+				// bail from here.
 				break;
 			}
 
-			//
-			//Increment the count of the # of objects we're returning.
-			//
+			// Increment the count of the # of objects we're returning.
 			afpActCount++;
 
-			//
-			//The first byte (or word for AFP3.x) contains the struct len.
-			//
+			// The first byte (or word for AFP3.x) contains the struct len.
 			if (afpCommand > afpEnumerate)
 			{
 				extStructLen = (int16*)afpReply.GetCurrentPosPtr();
@@ -1604,41 +1416,29 @@ AFPERROR FPEnumerate(
 				afpReply.Advance(sizeof(int8));
 			}
 
-			//
-			//Push in the attributes flag (dir, yes/no)
-			//
+			// Push in the attributes flag (dir, yes/no)
 			afpReply.AddInt8(afpAttributes);
 
-			//
-			//For AFP3.x, we add an extra null byte for padding here.
-			//
+			// For AFP3.x, we add an extra null byte for padding here.
 			if (afpCommand > afpEnumerate) {
 				afpReply.AddInt8(0);
 			}
 
-			//
-			//Insert the FDP parameters into the reply buffer.
-			//
+			// Insert the FDP parameters into the reply buffer.
 			afpReply.AddRawData(afpParmsBuffer.GetBuffer(), afpParmsBuffer.GetDataLength());
 
-			//
-			//Set the structure length byte in the buffer. The extra bytes are
-			//for the first parms in the structure (structLen, attributes and padding).
-			//
+			// Set the structure length byte in the buffer. The extra bytes are
+			// for the first parms in the structure (structLen, attributes and padding).
 			len = afpParmsBuffer.GetDataLength() + ((afpCommand > afpEnumerate) ? 4 : 2);
 
-			//
-			//This entry must end on an even boundary.
-			//
+			// This entry must end on an even boundary.
 			if (len % 2)
 			{
 				afpReply.AddInt8(0);
 				len++;
 			}
 
-			//
-			//AFP3.x uses a word to describe the struct length vs. a byte
-			//
+			// AFP3.x uses a word to describe the struct length vs. a byte
 			if (afpCommand > afpEnumerate)
 			{
 				*extStructLen = htons(len);
@@ -1649,32 +1449,24 @@ AFPERROR FPEnumerate(
 		}
 		else
 		{
-			//
-			//We had an error looking up the parms of an object.
-			//
+			// We had an error looking up the parms of an object.
 			DBGWRITE(dbg_level_error, "Error finding parms for object\n");
 		}
 
-		//
-		//If we've gotten as much data as the client requested, then
-		//exit this beast.
-		//
+		// If we've gotten as much data as the client requested, then
+		// exit this beast.
 		if ((afpActCount >= afpReqCount) || (afpReply.GetDataLength() >= afpMaxReplySize))
 		{
 			break;
 		}
 	}
 
-	//
-	//Set the actual number of objects found and in the buffer.
-	//
+	// Set the actual number of objects found and in the buffer.
 	*afpActCountSpot = htons(afpActCount);
 
 	DBGWRITE(dbg_level_trace, "Number of objects enumerated = %lu\n", afpActCount);
 
-	//
-	//This is the total size of the afp reply.
-	//
+	// This is the total size of the afp reply.
 	*afpDataSize = afpReply.GetDataLength();
 
 	// When no items were added to the reply, tell the client there's nothing
@@ -1715,51 +1507,37 @@ AFPERROR FPSetFileDirParms(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//The first word is afp command and padding byte.
-	//
+	// The first word is afp command and padding byte.
 	afpCommand = afpRequest.GetInt8();
 	afpRequest.Advance(sizeof(int8));
 
-	//
-	//Extract the volume and dir ID's as well as the bitmap that
-	//tells what we're setting.
-	//
+	// Extract the volume and dir ID's as well as the bitmap that
+	// tells what we're setting.
 	afpVolID	= afpRequest.GetInt16();
 	afpDirID	= afpRequest.GetInt32();
 	afpBitmap	= afpRequest.GetInt16();
 	afpPathType	= afpRequest.GetInt8();
 
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpVolID);
 
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpVolID);
 		return( afpParmErr );
 	}
 
-	//
-	//The client must have the volume open for access using
-	//FPOpenVol before making this call.
-	//
+	// The client must have the volume open for access using
+	// FPOpenVol before making this call.
 	if (!afpSession->HasVolumeOpen(afpVolume))
 	{
-		//
-		//Nope, client made a boo boo, return parm error.
-		//
+		// Nope, client made a boo boo, return parm error.
 		DBGWRITE(dbg_level_warning, "User doesn't have volume open!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//Get the pathname of the object we're working on.
-	//
+	// Get the pathname of the object we're working on.
 	afpError = afpRequest.GetString(afpPathname, sizeof(afpPathname), true, afpPathType);
 
 	if (!AFP_SUCCESS(afpError))
@@ -1767,20 +1545,16 @@ AFPERROR FPSetFileDirParms(
 		return( afpError );
 	}
 
-	//
-	//The remaining parameters for the call must start on an
-	//even boundary.
-	//
+	// The remaining parameters for the call must start on an
+	// even boundary.
 	if ((afpRequest.GetCurrentPosPtr() - afpRequest.GetBuffer()) % 2) {
 
 		afpRequest.Advance(sizeof(int8));
 	}
 
-	//
-	//Verify the bitmap contains valid settings, FPSetFileDirParms doesn't
-	//support the following bitmaps. The user is supposed to use
-	//FPSetFileParms or FPSetDirParms for these.
-	//
+	// Verify the bitmap contains valid settings, FPSetFileDirParms doesn't
+	// support the following bitmaps. The user is supposed to use
+	// FPSetFileParms or FPSetDirParms for these.
 	switch(afpCommand)
 	{
 		case afpSetFlDrParms:
@@ -1818,9 +1592,7 @@ AFPERROR FPSetFileDirParms(
 			return( afpCallNotSupported );
 	}
 
-	//
-	//Set the entry object that will point to the object we're changing.
-	//
+	// Set the entry object that will point to the object we're changing.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpDirID,
@@ -1834,9 +1606,7 @@ AFPERROR FPSetFileDirParms(
 		return( afpError );
 	}
 
-	//
-	//Check to make sure we are allowed to write on the volume.
-	//
+	// Check to make sure we are allowed to write on the volume.
 	afpError = afpCheckWriteAccess(afpSession, afpVolume, &afpEntry);
 
 	if (!AFP_SUCCESS(afpError))
@@ -1845,9 +1615,7 @@ AFPERROR FPSetFileDirParms(
 		return( afpError );
 	}
 
-	//
-	//Call the work routine to do all the work for us.
-	//
+	// Call the work routine to do all the work for us.
 	afpError = fp_objects::fp_SetFileDirParms(afpSession, &afpRequest, &afpEntry, afpBitmap);
 
 	afpVolume->MakeDirty();
@@ -1884,48 +1652,34 @@ AFPERROR FPCreateDir(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//The first word contains the afp command and padding byte.
-	//
+	// The first word contains the afp command and padding byte.
 	afpRequest.Advance(sizeof(int16));
 
-	//
-	//Extract the enumerate parameters for the API.
-	//
+	// Extract the enumerate parameters for the API.
 	afpVolumeID		= afpRequest.GetInt16();
 	afpDirID		= afpRequest.GetInt32();
 	afpPathType		= afpRequest.GetInt8();
 
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpVolumeID);
 
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpVolumeID);
 		return( afpParmErr );
 	}
 
-	//
-	//The client must have the volume open for access using
-	//FPOpenVol before making this call.
-	//
+	// The client must have the volume open for access using
+	// FPOpenVol before making this call.
 	if (!afpSession->HasVolumeOpen(afpVolume))
 	{
-		//
-		//Nope, client made a boo boo, return parm error.
-		//
+		// Nope, client made a boo boo, return parm error.
 		DBGWRITE(dbg_level_warning, "User doesn't have volume open!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//Get the pathname of the object we're working on.
-	//
+	// Get the pathname of the object we're working on.
 	afpError = afpRequest.GetString(afpPathname, sizeof(afpPathname), true, afpPathType);
 
 	if (!AFP_SUCCESS(afpError))
@@ -1933,18 +1687,14 @@ AFPERROR FPCreateDir(
 		return( afpError );
 	}
 
-	//
-	//Pathname cannot be null since it contains the new dir name.
-	//
+	// Pathname cannot be null since it contains the new dir name.
 	if (strlen(afpPathname) == 0)
 	{
 		DBGWRITE(dbg_level_warning, "Null pathname!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//Set the entry object that will point to this afp object.
-	//
+	// Set the entry object that will point to this afp object.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpDirID,
@@ -1958,9 +1708,7 @@ AFPERROR FPCreateDir(
 		return( afpError );
 	}
 
-	//
-	//Check to make sure we are allowed to write on the volume.
-	//
+	// Check to make sure we are allowed to write on the volume.
 	afpError = afpCheckWriteAccess(afpSession, afpVolume, &afpEntry);
 
 	if (!AFP_SUCCESS(afpError))
@@ -1969,10 +1717,8 @@ AFPERROR FPCreateDir(
 		return( afpError );
 	}
 
-	//
-	//Now we use the B API's to create the new directory in the
-	//filesystem.
-	//
+	// Now we use the B API's to create the new directory in the
+	// filesystem.
 	BDirectory	dir(&afpEntry);
 
 	if (dir.InitCheck() == B_OK)
@@ -2010,10 +1756,8 @@ AFPERROR FPCreateDir(
 
 		if (newEntry.InitCheck() == B_OK)
 		{
-			//
-			//If the new name is longer than kLongNames can handle, create
-			//the longname and store it.
-			//
+			// If the new name is longer than kLongNames can handle, create
+			// the longname and store it.
 			if (strlen(afpPathname) > MAX_AFP_2_NAME)
 			{
 				fp_objects::CreateLongName(
@@ -2023,20 +1767,16 @@ AFPERROR FPCreateDir(
 								);
 			}
 
-			//
-			//In Haiku, every new directory is currently being set denying
-			//write permissions to users and guests. We'll set everything to
-			//match the parent directory.
-			//
+			// In Haiku, every new directory is currently being set denying
+			// write permissions to users and guests. We'll set everything to
+			// match the parent directory.
 
 			dir.GetPermissions(&bperms);
 			newEntry.SetPermissions(bperms);
 		}
 
-		//
-		//We need to signal to all clients that their picture of this
-		//volume has changed.
-		//
+		// We need to signal to all clients that their picture of this
+		// volume has changed.
 
 		afpVolume->MakeDirty();
 	}
@@ -2073,42 +1813,31 @@ AFPERROR FPFlush(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//The first word contains the afp command and padding byte.
-	//
+	// The first word contains the afp command and padding byte.
 	afpRequest.Advance(sizeof(int16));
 
 	afpVolumeID = afpRequest.GetInt16();
 
-	//
-	//For the BeOS, we don't have anything we need to do here. So,
-	//we don't do anything other than verify that the volume is
-	//indeed open and parameters are correct.
-	//
+	// For the BeOS, we don't have anything we need to do here. So,
+	// we don't do anything other than verify that the volume is
+	// indeed open and parameters are correct.
 
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// 
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpVolumeID);
 
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpVolumeID);
 		return( afpParmErr );
 	}
 
-	//
-	//The client must have the volume open for access using
-	//FPOpenVol before making this call.
-	//
+	// The client must have the volume open for access using
+	// FPOpenVol before making this call.
 	if (!afpSession->HasVolumeOpen(afpVolume))
 	{
-		//
-		//Nope, client made a boo boo, return parm error.
-		//
+		// Nope, client made a boo boo, return parm error.
 		DBGWRITE(dbg_level_warning, "User doesn't have volume open!\n");
 		return( afpParmErr );
 	}
@@ -2143,9 +1872,7 @@ AFPERROR FPFlushFork(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//The first word contains the afp command and padding byte.
-	//
+	// The first word contains the afp command and padding byte.
 	afpRequest.Advance(sizeof(int16));
 
 	afpForkRef	= afpRequest.GetInt16();
@@ -2181,10 +1908,8 @@ AFPERROR FPFlushFork(
 
 			if (forkItem->forkopen == kDataFork || forkItem->isResFile)
 			{
-				//
-				//Sync the file using the filesystem API after making sure
-				//the file is valid and exists.
-				//
+				// Sync the file using the filesystem API after making sure
+				// the file is valid and exists.
 				if ((forkItem->file != NULL) 				&&
 					(forkItem->file->InitCheck() == B_OK)	&&
 					(forkItem->file->IsWritable())			)
@@ -2199,11 +1924,9 @@ AFPERROR FPFlushFork(
 			}
 			else
 			{
-				//
-				//We call the resource fork closing method, but we tell it not
-				//to actually delete the memory block which causes just the
-				//file on disk to be updated.
-				//
+				// We call the resource fork closing method, but we tell it not
+				// to actually delete the memory block which causes just the
+				// file on disk to be updated.
 				afpSession->CloseAndWriteOutResourceFork(forkItem, false);
 			}
 
@@ -2240,14 +1963,10 @@ AFPERROR FPCloseFork(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//The first word contains the afp command and padding byte.
-	//
+	// The first word contains the afp command and padding byte.
 	afpRequest.Advance(sizeof(int16));
 
-	//
-	//Get the file ref num we're closing down.
-	//
+	// Get the file ref num we're closing down.
 	afpRefNum 	= afpRequest.GetInt16();
 	afpError 	= afpSession->CloseFile(afpRefNum);
 
@@ -2289,14 +2008,10 @@ AFPERROR FPOpenFork(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//The first byte contains the afp command.
-	//
+	// The first byte contains the afp command.
 	afpRequest.Advance(sizeof(int8));
 
-	//
-	//Get the parameters for the file we're opening.
-	//
+	// Get the parameters for the file we're opening.
 	afpFork		= (afpRequest.GetInt8() & kResourceForkBit) ? kRsrcFork : kDataFork;
 	afpVolumeID	= afpRequest.GetInt16();
 	afpDirID	= afpRequest.GetInt32();
@@ -2304,47 +2019,35 @@ AFPERROR FPOpenFork(
 	afpMode		= afpRequest.GetInt16();
 	afpPathType	= afpRequest.GetInt8();
 
-	//
-	//The open mode must request read and/or write access. A mode with
-	//neither bit set is invalid; without this check the file would be
-	//opened read-only (O_RDONLY) below with no access check performed.
-	//
+	// The open mode must request read and/or write access. A mode with
+	// neither bit set is invalid; without this check the file would be
+	// opened read-only (O_RDONLY) below with no access check performed.
 	if ((afpMode & (kReadMode | kWriteMode)) == 0)
 	{
 		DBGWRITE(dbg_level_warning, "Invalid open mode (no read/write bits)! (0x%04x)\n", (unsigned)afpMode);
 		return( afpParmErr );
 	}
 
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpVolumeID);
 
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpVolumeID);
 		return( afpParmErr );
 	}
 
-	//
-	//The client must have the volume open for access using
-	//FPOpenVol before making this call.
-	//
+	// The client must have the volume open for access using
+	// FPOpenVol before making this call.
 	if (!afpSession->HasVolumeOpen(afpVolume))
 	{
-		//
-		//Nope, client made a boo boo, return parm error.
-		//
+		// Nope, client made a boo boo, return parm error.
 		DBGWRITE(dbg_level_warning, "User doesn't have volume open!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//Get the pathname of the object we're working on.
-	//
+	// Get the pathname of the object we're working on.
 	afpError = afpRequest.GetString(afpPathname, sizeof(afpPathname), true, afpPathType);
 
 	if (!AFP_SUCCESS(afpError))
@@ -2352,18 +2055,14 @@ AFPERROR FPOpenFork(
 		return( afpError );
 	}
 
-	//
-	//Pathname cannot be null since it contains the file to open.
-	//
+	// Pathname cannot be null since it contains the file to open.
 	if (strlen(afpPathname) == 0)
 	{
 		DBGWRITE(dbg_level_trace, "Null pathname!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//Set the entry object that will point to this afp object.
-	//
+	// Set the entry object that will point to this afp object.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpDirID,
@@ -2377,9 +2076,7 @@ AFPERROR FPOpenFork(
 		return( afpError );
 	}
 
-	//
-	//Check to make sure we are allowed to write on the volume.
-	//
+	// Check to make sure we are allowed to write on the volume.
 	if (afpMode & kWriteMode)
 	{
 		afpError = afpCheckWriteAccess(afpSession, afpVolume, &afpEntry);
@@ -2388,17 +2085,13 @@ AFPERROR FPOpenFork(
 		{
 			DBGWRITE(dbg_level_warning, "User doesn't have write access to the file! (%s)\n", afpPathname);
 
-			//
-			//If the caller is requesting write access, we deny the opening since
-			//the file cannot be written to.
-			//
+			// If the caller is requesting write access, we deny the opening since
+			// the file cannot be written to.
 			return( afpError );
 		}
 	}
 
-	//
-	//Check for read access to the file.
-	//
+	// Check for read access to the file.
 	if (afpMode & kReadMode)
 	{
 		afpError = afpCheckReadAccess(afpSession, &afpEntry);
@@ -2407,40 +2100,30 @@ AFPERROR FPOpenFork(
 		{
 			DBGWRITE(dbg_level_warning, "User doesn't have read access to the file!\n");
 
-			//
-			//If the caller is requesting read access, we deny the opening since
-			//the file cannot be written to.
-			//
+			// If the caller is requesting read access, we deny the opening since
+			// the file cannot be written to.
 			return( afpError );
 		}
 	}
 
-	//
-	//Use the session object to actually open the file. The session is
-	//the object that keeps track of open files.
-	//
+	// Use the session object to actually open the file. The session is
+	// the object that keeps track of open files.
 	afpError = afpSession->OpenFile(afpVolume, &afpEntry, afpMode, afpFork, &afpNewRefNum);
 
 	if (AFP_SUCCESS(afpError))
 	{
-		//
-		//We don't support the following bitmaps, so we clear them.
-		//
+		// We don't support the following bitmaps, so we clear them.
 		if (afpSession->GetAFPVersion() < afpVersion30)
 		{
 			if (afpBitmap & kFPProDos)		afpBitmap  &= ~kFPProDos;
 			if (afpBitmap & kFPShortName)	afpBitmap  &= ~kFPShortName;
 		}
 
-		//
-		//Add in the bitmap and new refnum id.
-		//
+		// Add in the bitmap and new refnum id.
 		afpReply.AddInt16(afpBitmap);
 		afpReply.AddInt16(afpNewRefNum);
 
-		//
-		//Now that we've opened the file, get the requested parameters.
-		//
+		// Now that we've opened the file, get the requested parameters.
 		afpError = fp_objects::fp_GetFileParms(afpSession, afpVolume, &afpEntry, afpBitmap, &afpReply);
 
 		if (AFP_SUCCESS(afpError))
@@ -2490,9 +2173,7 @@ AFPERROR FPSetForkParms(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//The first 2 bytes contain the afp command and padding.
-	//
+	// The first 2 bytes contain the afp command and padding.
 	afpRequest.Advance(sizeof(int16));
 
 	afpForkRef 	= afpRequest.GetInt16();
@@ -2504,10 +2185,8 @@ AFPERROR FPSetForkParms(
 
 	if (AFP_SUCCESS(afpError))
 	{
-		//
-		//Check to make sure this session has write access to this file
-		//or directory.
-		//
+		// Check to make sure this session has write access to this file
+		// or directory.
 		afpError = afpCheckWriteAccess(afpSession, NULL, forkItem->entry);
 
 		if (!AFP_SUCCESS(afpError))
@@ -2515,11 +2194,9 @@ AFPERROR FPSetForkParms(
 			return( afpError );
 		}
 
-		//
-		//For .res files, the resource fork data lives in the data fork.
-		//Swap the bitmap flags so the code below operates on the data fork
-		//when the client asks to resize the "resource fork".
-		//
+		// For .res files, the resource fork data lives in the data fork.
+		// Swap the bitmap flags so the code below operates on the data fork
+		// when the client asks to resize the "resource fork".
 		int16 adjustedBitmap = afpBitmap;
 		if (forkItem->isResFile)
 		{
@@ -2583,23 +2260,17 @@ AFPERROR FPSetForkParms(
 
 				forkItem->rsrcIO->SetSize(afpForkLen);
 
-				//
-				//If we set the size of the fork, we need to write out the entire
-				//fork to disk so that subsequent GetFileParms calls will return
-				//the proper RF length.
-				//
+				// If we set the size of the fork, we need to write out the entire
+				// fork to disk so that subsequent GetFileParms calls will return
+				// the proper RF length.
 				node.RemoveAttr(AFP_RSRC_ATTRIBUTE);
 
-				//
-				//06.02.09: Fixed bug where older mac clients appear to attempt to write
-				//zero bytes to the file if there is no resource fork. This, of course,
-				//returns an error that the older clients can't deal with, so they fail.
-				//
+				// 06.02.09: Fixed bug where older mac clients appear to attempt to write
+				// zero bytes to the file if there is no resource fork. This, of course,
+				// returns an error that the older clients can't deal with, so they fail.
 				if (afpForkLen > 0)
 				{
-					//
-					//Now write the data back to the resource stream of the file.
-					//
+					// Now write the data back to the resource stream of the file.
 					afpError = (node.WriteAttr(
 									AFP_RSRC_ATTRIBUTE,
 									B_RAW_TYPE,
@@ -2644,14 +2315,10 @@ AFPERROR FPGetForkParms(
 	AFPERROR		afpError		= AFP_OK;
 	OPEN_FORK_ITEM*	forkItem		= NULL;
 
-	//
-	//The first byte contains the afp command.
-	//
+	// The first byte contains the afp command.
 	afpRequest.Advance(sizeof(int16));
 
-	//
-	//Get the parameters for the file we're opening.
-	//
+	// Get the parameters for the file we're opening.
 	afpForkRef	= afpRequest.GetInt16();
 	afpBitmap	= afpRequest.GetInt16();
 
@@ -2662,19 +2329,15 @@ AFPERROR FPGetForkParms(
 
 	if (AFP_SUCCESS(afpError))
 	{
-		//
-		//We don't support the following bitmaps, so we clear them.
-		//
+		// We don't support the following bitmaps, so we clear them.
 		if (afpSession->GetAFPVersion() < afpVersion30)
 		{
 			if (afpBitmap & kFPProDos)		afpBitmap  &= ~kFPProDos;
 			if (afpBitmap & kFPShortName)	afpBitmap  &= ~kFPShortName;
 		}
 
-		//
-		//Make sure the caller is asking for the length of the fork
-		//that is actually opened. (Skip for .res files — bitmap is passed through.)
-		//
+		// Make sure the caller is asking for the length of the fork
+		// that is actually opened. (Skip for .res files — bitmap is passed through.)
 		if (!forkItem->isResFile &&
 			(((afpBitmap & kFPDFLen) && (forkItem->forkopen == kRsrcFork))	||
 			((afpBitmap & kFPRFLen) && (forkItem->forkopen == kDataFork))	))
@@ -2683,14 +2346,10 @@ AFPERROR FPGetForkParms(
 			return( afpBitmapErr );
 		}
 
-		//
-		//Add in the bitmap
-		//
+		// Add in the bitmap
 		afpReply.AddInt16(afpBitmap);
 
-		//
-		//Now that we've opened the file, get the requested parameters.
-		//
+		// Now that we've opened the file, get the requested parameters.
 		afpError = fp_objects::fp_GetFileParms(
 									afpSession,
 									forkItem->volume,
@@ -2742,9 +2401,7 @@ AFPERROR FPCreateFile(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//First byte is afp command.
-	//
+	// First byte is afp command.
 	afpRequest.Advance(sizeof(int8));
 
 	createFlag	= afpRequest.GetInt8();
@@ -2752,36 +2409,26 @@ AFPERROR FPCreateFile(
 	afpDirID	= afpRequest.GetInt32();
 	afpPathType	= afpRequest.GetInt8();
 
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpVolumeID);
 
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpVolumeID);
 		return( afpParmErr );
 	}
 
-	//
-	//The client must have the volume open for access using
-	//FPOpenVol before making this call.
-	//
+	// The client must have the volume open for access using
+	// FPOpenVol before making this call.
 	if (!afpSession->HasVolumeOpen(afpVolume))
 	{
-		//
-		//Nope, client made a boo boo, return parm error.
-		//
+		// Nope, client made a boo boo, return parm error.
 		DBGWRITE(dbg_level_warning, "User doesn't have volume open!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//Get the pathname of the object we're working on.
-	//
+	// Get the pathname of the object we're working on.
 	afpError = afpRequest.GetString(afpPathname, sizeof(afpPathname), true, afpPathType);
 
 	if (!AFP_SUCCESS(afpError))
@@ -2790,18 +2437,14 @@ AFPERROR FPCreateFile(
 		return( afpError );
 	}
 
-	//
-	//Pathname cannot be null since it contains the new file name.
-	//
+	// Pathname cannot be null since it contains the new file name.
 	if (strlen(afpPathname) == 0)
 	{
 		DBGWRITE(dbg_level_warning, "Null pathname!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//Set the entry object that will point to this afp object.
-	//
+	// Set the entry object that will point to this afp object.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpDirID,
@@ -2815,9 +2458,7 @@ AFPERROR FPCreateFile(
 		return( afpError );
 	}
 
-	//
-	//Check to make sure we are allowed to write on the volume.
-	//
+	// Check to make sure we are allowed to write on the volume.
 	afpError = afpCheckWriteAccess(afpSession, afpVolume, &afpEntry);
 
 	if (!AFP_SUCCESS(afpError))
@@ -2826,10 +2467,8 @@ AFPERROR FPCreateFile(
 		return( afpError );
 	}
 
-	//
-	//Now we use the B API's to create the new directory in the
-	//filesystem.
-	//
+	// Now we use the B API's to create the new directory in the
+	// filesystem.
 	BDirectory	dir(&afpEntry);
 
 	if (dir.InitCheck() == B_OK)
@@ -2856,9 +2495,7 @@ AFPERROR FPCreateFile(
 	}
 	else
 	{
-		//
-		//We failed to get an object for the directory.
-		//
+		// We failed to get an object for the directory.
 		DBGWRITE(dbg_level_warning, "dir.InitCheck() failed! (%s)\n", GET_BERR_STR(dir.InitCheck()));
 		afpError = afpParmErr;
 	}
@@ -2869,10 +2506,8 @@ AFPERROR FPCreateFile(
 
 		if (newEntry.InitCheck() == B_OK)
 		{
-			//
-			//If the new name is longer than kLongNames can handle, create
-			//the longname and store it.
-			//
+			// If the new name is longer than kLongNames can handle, create
+			// the longname and store it.
 			if (strlen(afpPathname) > MAX_AFP_2_NAME)
 			{
 				fp_objects::CreateLongName(
@@ -2884,17 +2519,13 @@ AFPERROR FPCreateFile(
 		}
 		else
 		{
-			//
-			//Something strange happened and we didn't actually create the file.
-			//
+			// Something strange happened and we didn't actually create the file.
 			DBGWRITE(dbg_level_error, "newEntry.InitCheck() failed! (%s)\n", GET_BERR_STR(newEntry.InitCheck()));
 			afpError = afpParmErr;
 		}
 
-		//
-		//We need to signal to all clients that their picture of this
-		//volume has changed.
-		//
+		// We need to signal to all clients that their picture of this
+		// volume has changed.
 		afpVolume->MakeDirty();
 	}
 
@@ -2934,45 +2565,33 @@ AFPERROR FPDelete(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//First word is command and padding.
-	//
+	// First word is command and padding.
 	afpRequest.Advance(sizeof(int16));
 
 	afpVolumeID	= afpRequest.GetInt16();
 	afpDirID	= afpRequest.GetInt32();
 	afpPathType	= afpRequest.GetInt8();
 
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpVolumeID);
 
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpVolumeID);
 		return( afpParmErr );
 	}
 
-	//
-	//The client must have the volume open for access using
-	//FPOpenVol before making this call.
-	//
+	// The client must have the volume open for access using
+	// FPOpenVol before making this call.
 	if (!afpSession->HasVolumeOpen(afpVolume))
 	{
-		//
-		//Nope, client made a boo boo, return parm error.
-		//
+		// Nope, client made a boo boo, return parm error.
 		DBGWRITE(dbg_level_warning, "User doesn't have volume open!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//Get the pathname of the object we're working on.
-	//
+	// Get the pathname of the object we're working on.
 	afpError = afpRequest.GetString(afpPathname, sizeof(afpPathname), true, afpPathType);
 
 	if (!AFP_SUCCESS(afpError))
@@ -2980,9 +2599,7 @@ AFPERROR FPDelete(
 		return( afpError );
 	}
 
-	//
-	//Pathname cannot be null since it contains the file/dir to delete.
-	//
+	// Pathname cannot be null since it contains the file/dir to delete.
 	if (strlen(afpPathname) == 0)
 	{
 		DBGWRITE(dbg_level_warning, "Null pathname!\n");
@@ -2991,9 +2608,7 @@ AFPERROR FPDelete(
 
 	DBGWRITE(dbg_level_trace, "Deleting '%s' in dir %lu\n", afpPathname, afpDirID);
 
-	//
-	//Set the entry object that will point to this afp object.
-	//
+	// Set the entry object that will point to this afp object.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpDirID,
@@ -3017,9 +2632,7 @@ AFPERROR FPDelete(
 		}
 	}
 
-	//
-	//We need to check write access to the parent directory.
-	//
+	// We need to check write access to the parent directory.
 	BDirectory 	parent;
 	BEntry		pEntry;
 
@@ -3034,9 +2647,7 @@ AFPERROR FPDelete(
 		return( afpError );
 	}
 
-	//
-	//Now call the object method that does all the nasty work for us.
-	//
+	// Now call the object method that does all the nasty work for us.
 	status_t status = afpEntry.Remove();
 
 	if (status != B_OK)
@@ -3045,10 +2656,8 @@ AFPERROR FPDelete(
 		afpError = afpParmErr;
 	}
 
-	//
-	//We need to signal to all clients that their picture of this
-	//volume has changed.
-	//
+	// We need to signal to all clients that their picture of this
+	// volume has changed.
 	if (AFP_SUCCESS(afpError)) {
 
 		afpVolume->MakeDirty();
@@ -3087,9 +2696,7 @@ AFPERROR FPRead(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//The first byte contains the afp command.
-	//
+	// The first byte contains the afp command.
 	afpCommand = afpRequest.GetInt8();
 	afpRequest.Advance(sizeof(int8));
 
@@ -3118,20 +2725,16 @@ AFPERROR FPRead(
 	{
 		if (afpReqCount > (size_t)afpReply.GetBufferSize())
 		{
-			//
-			//The request is too big, reduce the count to what
-			//we can hold. We'll return to the client what we
-			//actually read.
-			//
+			// The request is too big, reduce the count to what
+			// we can hold. We'll return to the client what we
+			// actually read.
 			afpReqCount = afpReply.GetBufferSize();
 
 			DBGWRITE(dbg_level_info, "Resized afpReqCount to buffer size!!\n");
 		}
 
-		//
-		//Check to see if any area in the range we're reading from is
-		//locked.
-		//
+		// Check to see if any area in the range we're reading from is
+		// locked.
 		if (fp_rangelock::RangeLocked(
 						afpOffset,
 						afpOffset + afpReqCount,
@@ -3155,46 +2758,34 @@ AFPERROR FPRead(
 
 			DBGWRITE(dbg_level_trace, "Reading (DF) %lu bytes from %lld offset\n", afpReqCount, afpOffset);
 
-			//
-			//Seek to the correct position to read from in the file.
-			//
+			// Seek to the correct position to read from in the file.
 			seekResult = forkItem->file->Seek(afpOffset, SEEK_SET);
 
 			if (seekResult == B_ERROR)
 			{
-				//
-				//We had an error seeking to the position. Probably a bad
-				//position was requested.
-				//
+				// We had an error seeking to the position. Probably a bad
+				// position was requested.
 				DBGWRITE(dbg_level_trace, "Seek() failed!\n");
 				return( afpParmErr );
 			}
 
-			//
-			//Now, perform the actual read from the file.
-			//
+			// Now, perform the actual read from the file.
 			afpActCount = forkItem->file->Read(afpReply.GetCurrentPosPtr(), afpReqCount);
 		}
-		else //Reading from resource fork
+		else // Reading from resource fork
 		{
 			DBGWRITE(dbg_level_trace, "Reading (RF) %lu bytes from %lld offset\n", afpReqCount, afpOffset);
 
-			//
-			//The resource fork should already be read in and in memory.
-			//
+			// The resource fork should already be read in and in memory.
 			if (forkItem->rsrcIO != NULL)
 			{
-				//
-				//Seek to the correct position to read from in the file.
-				//
+				// Seek to the correct position to read from in the file.
 				seekResult = forkItem->rsrcIO->Seek(afpOffset, SEEK_SET);
 
 				if (seekResult == B_ERROR)
 				{
-					//
-					//We had an error seeking to the position. Probably a bad
-					//position was requested.
-					//
+					// We had an error seeking to the position. Probably a bad
+					// position was requested.
 					DBGWRITE(dbg_level_error, "Seek() failed (RF)!\n");
 					return( afpParmErr );
 				}
@@ -3263,9 +2854,7 @@ AFPERROR FPWrite(
 	AFPERROR		afpError		= AFP_OK;
 	OPEN_FORK_ITEM*	forkItem		= NULL;
 
-	//
-	//The first byte contains the afp command.
-	//
+	// The first byte contains the afp command.
 	afpCommand = afpRequest.GetInt8();
 
 	afpFlag		= afpRequest.GetInt8();
@@ -3318,10 +2907,8 @@ AFPERROR FPWrite(
 			return( afpParmErr );
 		}
 
-		//
-		//If the bit is set, then we are calculating the offset from
-		//the end of the file.
-		//
+		// If the bit is set, then we are calculating the offset from
+		// the end of the file.
 		seekResult = forkItem->file->Seek(
 						afpOffset,
 						(afpFlag & kWriteStartEndFlag) ? SEEK_END : SEEK_SET
@@ -3329,10 +2916,8 @@ AFPERROR FPWrite(
 
 		if (seekResult == B_ERROR)
 		{
-			//
-			//We had an error seeking to the position. Probably a bad
-			//position was requested.
-			//
+			// We had an error seeking to the position. Probably a bad
+			// position was requested.
 			DBGWRITE(dbg_level_warning, "Seek() failed!\n");
 			return( afpParmErr );
 		}
@@ -3343,11 +2928,9 @@ AFPERROR FPWrite(
 				afpOffset
 				);
 
-		//
-		//Check to see if any area in the range we're writing is
-		//locked. Note that we call Position() here because we don't
-		//easily know the offset (range start).
-		//
+		// Check to see if any area in the range we're writing is
+		// locked. Note that we call Position() here because we don't
+		// easily know the offset (range start).
 		if (fp_rangelock::RangeLocked(
 						seekResult,
 						seekResult + afpReqCount,
@@ -3359,10 +2942,8 @@ AFPERROR FPWrite(
 			return( afpLockErr );
 		}
 
-		//
-		//Call on the Be file object to do the BeOS specific file
-		//system work for us.
-		//
+		// Call on the Be file object to do the BeOS specific file
+		// system work for us.
 		afpActCount = forkItem->file->Write(
 										afpRequest.GetCurrentPosPtr(),
 										afpReqCount
@@ -3391,17 +2972,15 @@ AFPERROR FPWrite(
 			*afpDataSize = afpReply.GetDataLength();
 		}
 	}
-	else //Writing to resource fork
+	else // Writing to resource fork
 	{
-		//
-		//Since the Be file system doesn't support resource forks, we have to
-		//use the file attributes stream of a file to hold the Mac resource
-		//data. Unfortunately, the WriteAttr() and ReadAttr() functions were
-		//never finished by Be and their offset parameters don't work. This
-		//means we have to read the entire contents of the stream in one shot
-		//no matter how big it is, manipulate the contents, then write the
-		//entire stream back out in one shot again. This won't scale very well.
-		//
+		// Since the Be file system doesn't support resource forks, we have to
+		// use the file attributes stream of a file to hold the Mac resource
+		// data. Unfortunately, the WriteAttr() and ReadAttr() functions were
+		// never finished by Be and their offset parameters don't work. This
+		// means we have to read the entire contents of the stream in one shot
+		// no matter how big it is, manipulate the contents, then write the
+		// entire stream back out in one shot again. This won't scale very well.
 
 		DBGWRITE(dbg_level_trace, "Writing (RF) %lu bytes from %lu offset (from %s)\n",
 				afpReqCount,
@@ -3409,11 +2988,9 @@ AFPERROR FPWrite(
 				(afpFlag & kWriteStartEndFlag) ? "END" : "START"
 				);
 
-		//
-		//Check to see if any area in the range we're writing is
-		//locked. Note that we call Position() here because we don't
-		//easily know the offset (range start).
-		//
+		// Check to see if any area in the range we're writing is
+		// locked. Note that we call Position() here because we don't
+		// easily know the offset (range start).
 		if (fp_rangelock::RangeLocked(
 						afpOffset,
 						afpOffset + afpReqCount,
@@ -3425,9 +3002,7 @@ AFPERROR FPWrite(
 			return( afpLockErr );
 		}
 
-		//
-		//Move the file pointer to the right place in the file.
-		//
+		// Move the file pointer to the right place in the file.
 		seekResult = forkItem->rsrcIO->Seek(
 								afpOffset,
 								(afpFlag & kWriteStartEndFlag) ? SEEK_END : SEEK_SET
@@ -3435,18 +3010,14 @@ AFPERROR FPWrite(
 
 		if (seekResult == B_ERROR)
 		{
-			//
-			//We had an error seeking to the position. Probably a bad
-			//position was requested.
-			//
+			// We had an error seeking to the position. Probably a bad
+			// position was requested.
 			DBGWRITE(dbg_level_warning, "Seek() failed for resource fork!\n");
 			return( afpParmErr );
 		}
 
-		//
-		//Now, do the actual "write" into the buffer that holds our current
-		//resource data.
-		//
+		// Now, do the actual "write" into the buffer that holds our current
+		// resource data.
 		afpActCount = forkItem->rsrcIO->Write(afpRequest.GetCurrentPosPtr(), afpReqCount);
 		afpError 	= (afpActCount < B_OK) ? afpParmErr : AFP_OK;
 
@@ -3508,9 +3079,7 @@ AFPERROR FPMoveAndRename(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//The first byte contains the afp command.
-	//
+	// The first byte contains the afp command.
 	afpRequest.Advance(sizeof(int16));
 
 	afpVolumeID		= afpRequest.GetInt16();
@@ -3518,40 +3087,31 @@ AFPERROR FPMoveAndRename(
 	afpDstDirID		= afpRequest.GetInt32();
 	afpPathType		= afpRequest.GetInt8();
 
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpVolumeID);
 
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpVolumeID);
 		return( afpParmErr );
 	}
 
-	//
-	//The client must have the volume open for access using
-	//FPOpenVol before making this call.
-	//
+	// The client must have the volume open for access using
+	// FPOpenVol before making this call.
 	if (!afpSession->HasVolumeOpen(afpVolume))
 	{
-		//
-		//Nope, client made a boo boo, return parm error.
-		//
+		// Nope, client made a boo boo, return parm error.
 		DBGWRITE(dbg_level_warning, "User doesn't have volume open!\n");
 		return( afpParmErr );
 	}
 
-	//*****************
-	//Beging by getting the source file/dir entry.
-	//*****************
+	// *****************
+	// Beging by getting the source file/dir entry.
+	// *****************
 
-	//
-	//Get the pathname of the object we're working on.
-	//
+	// 
+	// Get the pathname of the object we're working on.
 	afpError = afpRequest.GetString(afpPathname, sizeof(afpPathname), true, afpPathType);
 
 	if (!AFP_SUCCESS(afpError))
@@ -3559,9 +3119,7 @@ AFPERROR FPMoveAndRename(
 		return( afpError );
 	}
 
-	//
-	//Set the entry object that will point to this afp object.
-	//
+	// Set the entry object that will point to this afp object.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpSrcDirID,
@@ -3579,13 +3137,11 @@ AFPERROR FPMoveAndRename(
 		return( afpError );
 	}
 
-	//
-	//Moving an object removes it from its current directory, so we need
-	//write access to the source's PARENT directory. Checking the source
-	//object itself is the wrong bit for a directory (its own bits would be
-	//used instead of the parent's), which could allow a client to move a
-	//directory it has no right to remove.
-	//
+	// Moving an object removes it from its current directory, so we need
+	// write access to the source's PARENT directory. Checking the source
+	// object itself is the wrong bit for a directory (its own bits would be
+	// used instead of the parent's), which could allow a client to move a
+	// directory it has no right to remove.
 	{
 		BDirectory	srcParent;
 		BEntry		srcParentEntry;
@@ -3611,9 +3167,7 @@ AFPERROR FPMoveAndRename(
 		return( afpError );
 	}
 
-	//
-	//Make sure we're allowed to move/rename this object.
-	//
+	// Make sure we're allowed to move/rename this object.
 	afpError = fp_objects::GetAFPAttributes(&afpSrcEntry, &afpAttributes);
 
 	if (AFP_SUCCESS(afpError))
@@ -3624,15 +3178,13 @@ AFPERROR FPMoveAndRename(
 		}
 	}
 
-	//*****************
-	//Now get the destination BDirectory we're moving to
-	//*****************
+	// *****************
+	// Now get the destination BDirectory we're moving to
+	// *****************
 
 	afpPathType = afpRequest.GetInt8();
 
-	//
-	//Get the pathname of the object we're working on.
-	//
+	// Get the pathname of the object we're working on.
 	afpError = afpRequest.GetString(afpPathname, sizeof(afpPathname), true, afpPathType);
 
 	if (!AFP_SUCCESS(afpError))
@@ -3640,9 +3192,7 @@ AFPERROR FPMoveAndRename(
 		return( afpError );
 	}
 
-	//
-	//Set the entry object that will point to this afp object.
-	//
+	// Set the entry object that will point to this afp object.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpDstDirID,
@@ -3660,9 +3210,7 @@ AFPERROR FPMoveAndRename(
 		return( afpError );
 	}
 
-	//
-	//Check to make sure we are allowed to write on the volume.
-	//
+	// Check to make sure we are allowed to write on the volume.
 	afpError = afpCheckWriteAccess(afpSession, afpVolume, &afpDstEntry);
 
 	if (!AFP_SUCCESS(afpError))
@@ -3671,9 +3219,7 @@ AFPERROR FPMoveAndRename(
 		return( afpError );
 	}
 
-	//
-	//Create the BDirectory object.
-	//
+	// Create the BDirectory object.
 	afpMoveToDir.SetTo(&afpDstEntry);
 
 	if (afpMoveToDir.InitCheck() != B_OK)
@@ -3684,9 +3230,7 @@ AFPERROR FPMoveAndRename(
 	{
 		status_t	status;
 
-		//
-		//Get the (optionally) supplied new name after the move.
-		//
+		// Get the (optionally) supplied new name after the move.
 		afpPathType = afpRequest.GetInt8();
 
 		afpError = afpRequest.GetString(afpNewPathname, sizeof(afpNewPathname), true, afpPathType);
@@ -3696,10 +3240,8 @@ AFPERROR FPMoveAndRename(
 			return( afpError );
 		}
 
-		//
-		//If the source and destination dir ID's are the same, then we're
-		//just renaming the file.
-		//
+		// If the source and destination dir ID's are the same, then we're
+		// just renaming the file.
 		if (afpSrcDirID != afpDstDirID)
 		{
 			status = afpSrcEntry.MoveTo(&afpMoveToDir);
@@ -3724,19 +3266,15 @@ AFPERROR FPMoveAndRename(
 			}
 		}
 
-		//
-		//If the move succeeded see if we should rename the file.
-		//
+		// If the move succeeded see if we should rename the file.
 		if (AFP_SUCCESS(afpError))
 		{
 			if (strlen(afpNewPathname) > 0)
 			{
 				status = afpSrcEntry.Rename(afpNewPathname);
 
-				//
-				//The client tries to rename the moved dir to its own name, I
-				//don't know why. We'll fail here if don't ignore the error.
-				//
+				// The client tries to rename the moved dir to its own name, I
+				// don't know why. We'll fail here if don't ignore the error.
 				if ((status == B_FILE_EXISTS) || (status == B_OK)) {
 
 					afpError = AFP_OK;
@@ -3792,36 +3330,26 @@ AFPERROR FPRename(
 	afpDirID	= afpRequest.GetInt32();
 	afpPathType	= afpRequest.GetInt8();
 
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpVolumeID);
 
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpVolumeID);
 		return( afpParmErr );
 	}
 
-	//
-	//The client must have the volume open for access using
-	//FPOpenVol before making this call.
-	//
+	// The client must have the volume open for access using
+	// FPOpenVol before making this call.
 	if (!afpSession->HasVolumeOpen(afpVolume))
 	{
-		//
-		//Nope, client made a boo boo, return parm error.
-		//
+		// Nope, client made a boo boo, return parm error.
 		DBGWRITE(dbg_level_warning, "User doesn't have volume open!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//Get the pathname of the object we're working on.
-	//
+	// Get the pathname of the object we're working on.
 	afpError = afpRequest.GetString(afpPathname, sizeof(afpPathname), true, afpPathType);
 
 	if (!AFP_SUCCESS(afpError))
@@ -3829,9 +3357,7 @@ AFPERROR FPRename(
 		return( afpError );
 	}
 
-	//
-	//Set the entry object that will point to this afp object.
-	//
+	// Set the entry object that will point to this afp object.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpDirID,
@@ -3849,9 +3375,7 @@ AFPERROR FPRename(
 		return( afpError );
 	}
 
-	//
-	//Check to make sure we are allowed to write on the volume.
-	//
+	// Check to make sure we are allowed to write on the volume.
 	afpError = afpCheckWriteAccess(afpSession, afpVolume, &afpEntry);
 
 	if (!AFP_SUCCESS(afpError))
@@ -3860,9 +3384,7 @@ AFPERROR FPRename(
 		return( afpError );
 	}
 
-	//
-	//Make sure we're allowed to rename this object.
-	//
+	// Make sure we're allowed to rename this object.
 	afpError = fp_objects::GetAFPAttributes(&afpEntry, &afpAttributes);
 
 	if (AFP_SUCCESS(afpError))
@@ -3874,14 +3396,10 @@ AFPERROR FPRename(
 		}
 	}
 
-	//
-	//Get the pathtype for the new name.
-	//
+	// Get the pathtype for the new name.
 	afpPathType = afpRequest.GetInt8();
 
-	//
-	//Get the pathname of the object we're working on.
-	//
+	// Get the pathname of the object we're working on.
 	afpError = afpRequest.GetString(afpPathname, sizeof(afpPathname), true, afpPathType);
 
 	if (!AFP_SUCCESS(afpError))
@@ -3898,10 +3416,8 @@ AFPERROR FPRename(
 		afpError = afpParmErr;
 	}
 
-	//
-	//We need to signal to all clients that their picture of this
-	//volume has changed.
-	//
+	// We need to signal to all clients that their picture of this
+	// volume has changed.
 	afpVolume->MakeDirty();
 
 	return( afpError );
@@ -3938,9 +3454,7 @@ AFPERROR FPMapID(
 
 	memset(afpName, 0, sizeof(afpName));
 
-	//
-	//The first byte is padding.
-	//
+	// The first byte is padding.
 	afpRequest.Advance(sizeof(int8));
 
 	afpUserType	= afpRequest.GetInt8();
@@ -3948,13 +3462,11 @@ AFPERROR FPMapID(
 
 	DBGWRITE(dbg_level_info, "Looking for ID: [%lu] and type: [%d]\n", afpID, afpUserType);
 
-	//
-	//First, figure out what name we're supposed to return. User, or group
-	//
+	// First, figure out what name we're supposed to return. User, or group
 	switch(afpUserType)
 	{
-		case 1: //Roman user name
-		case 3: //UTF-8 user name
+		case 1: // Roman user name
+		case 3: // UTF-8 user name
 			afpError = afpGetUserDataByID(&userData, afpID);
 
 			if (AFP_SUCCESS(afpError))
@@ -3966,11 +3478,10 @@ AFPERROR FPMapID(
 				afpError = afpItemNotFound;
 			break;
 
-		case 2: //Roman group name
-		case 4: //UTF-8 group name
-			//
-			//We only support a fixed set of user groups in Haiku currently.
-			//
+		case 2: // Roman group name
+		case 4: // UTF-8 group name
+			// 
+			// We only support a fixed set of user groups in Haiku currently.
 			switch(afpID)
 			{
 				case 0:
@@ -4004,23 +3515,21 @@ AFPERROR FPMapID(
 			break;
 	}
 
-	//
-	//Now, pack the response into the reply buffer based on the type
-	//of string the client requested.
-	//
+	// Now, pack the response into the reply buffer based on the type
+	// of string the client requested.
 	if (AFP_SUCCESS(afpError))
 	{
 		DBGWRITE(dbg_level_trace, "%s\n", afpName);
 
 		switch(afpUserType)
 		{
-			case 1: //Roman user name
-			case 3: //UTF-8 user name
+			case 1: // Roman user name
+			case 3: // UTF-8 user name
 				afpReply.AddCStringAsPascal(afpName);
 				break;
 
-			case 2: //Roman group name
-			case 4: //UTF-8 group name
+			case 2: // Roman group name
+			case 4: // UTF-8 group name
 				afpReply.AddUniString(afpName, false, true);
 				break;
 
@@ -4068,13 +3577,13 @@ AFPERROR FPMapName(
 
 	switch(afpType)
 	{
-		case 1:	//UTF-8 user name
-		case 2:	//UTF-8 group name
+		case 1:	// UTF-8 user name
+		case 2:	// UTF-8 group name
 			afpError = afpRequest.GetString(afpName, sizeof(afpName), false, kUnicodeNames);
 			break;
 
-		case 3:	//Roman user name
-		case 4: //Roman group name
+		case 3:	// Roman user name
+		case 4: // Roman group name
 			afpError = afpRequest.GetString(afpName, sizeof(afpName), false, kLongNames);
 			break;
 
@@ -4235,9 +3744,7 @@ AFPERROR FPByteRangeLock(
 	AFPERROR		afpError		= AFP_OK;
 	OPEN_FORK_ITEM*	forkItem		= NULL;
 
-	//
-	//The first byte contains the afp command.
-	//
+	// The first byte contains the afp command.
 	afpCommand 	= afpRequest.GetInt8();
 	afpBRLFlags	= afpRequest.GetInt8();
 	afpForkRef	= afpRequest.GetInt16();
@@ -4258,9 +3765,7 @@ AFPERROR FPByteRangeLock(
 			return( afpParmErr );
 	}
 
-	//
-	//Get the fork structure for the opened fork.
-	//
+	// Get the fork structure for the opened fork.
 	forkItem = afpSession->GetForkItem(afpForkRef);
 	afpError = (forkItem != NULL) ? AFP_OK : afpParmErr;
 
@@ -4302,52 +3807,42 @@ AFPERROR FPByteRangeLock(
 				DBGWRITE(dbg_level_warning, "Failure unlocking range! (%lu)\n", afpError);
 			}
 		}
-		else //Locking
+		else // Locking
 		{
-			//
-			//If the user wants us to set the offset from the end of the
-			//file, then we have a lot more work to do.
-			//
+			// If the user wants us to set the offset from the end of the
+			// file, then we have a lot more work to do.
 			if (afpBRLFlags & kStartEndFlag)
 			{
 				DBGWRITE(dbg_level_trace, "Going from end of file!\n");
 				afpOffset = (afpOffset < 0) ? (afpFileSize + afpOffset) : (afpFileSize - afpOffset);
 			}
-			else //From the beginning
+			else // From the beginning
 			{
 				if (afpOffset < 0)
 				{
-					//
-					//The offset can only be negative if we are working from the
-					//end of a file.
-					//
+					// The offset can only be negative if we are working from the
+					// end of a file.
 					DBGWRITE(dbg_level_warning, "Negative offset from start!\n");
 					return( afpParmErr );
 				}
 
-				//
-				//If the length is 0xFFFFFFFF, then we have special handling to do.
-				//
+				// If the length is 0xFFFFFFFF, then we have special handling to do.
 				if (((afpCommand == afpByteRangeLock) && (afpLength == 0xFFFFFFFF))	||
 					((afpCommand == afpByteRangeLockExt) && ((uint64)afpLength == ULONGLONG_MAX)))
 				{
 					switch(afpOffset)
 					{
 						case 0:
-							//
-							//0 offset means we lock the entire range of the file.
-							//
+							// 0 offset means we lock the entire range of the file.
 							afpLength = afpFileSize;
 							break;
 						default:
-							//
-							//The user wants to lock from offset to the end of the file.
-							//
+							// The user wants to lock from offset to the end of the file.
 							afpLength = (afpFileSize - afpOffset);
 							break;
 					}
 				}
-			}//from beginning
+			}// from beginning
 
 			fp_rangelock*	afpLock = new fp_rangelock(afpSession, forkItem);
 
@@ -4361,9 +3856,7 @@ AFPERROR FPByteRangeLock(
 				}
 				else
 				{
-					//
-					//We failed to lock, free the object and return the error.
-					//
+					// We failed to lock, free the object and return the error.
 					delete afpLock;
 
 					DBGWRITE(dbg_level_warning, "Lock error when locking! (%lu)\n", afpError);
@@ -4371,9 +3864,7 @@ AFPERROR FPByteRangeLock(
 			}
 		}
 
-		//
-		//We return the first byte of the newly locked range
-		//
+		// We return the first byte of the newly locked range
 		switch (afpCommand)
 		{
 			case afpByteRangeLock:
@@ -4431,9 +3922,7 @@ AFPERROR FPCopyFile(
 
 	DBGWRITE(dbg_level_trace, "Enter...\n");
 
-	//
-	//Skip the first byte which is afp command.
-	//
+	// Skip the first byte which is afp command.
 	afpRequest.Advance(sizeof(int16));
 
 	afpSrcVolID		= afpRequest.GetInt16();
@@ -4441,9 +3930,7 @@ AFPERROR FPCopyFile(
 	afpDstVolID		= afpRequest.GetInt16();
 	afpDstDirID		= afpRequest.GetInt32();
 
-	//
-	//Get the pathname of the object we're copying.
-	//
+	// Get the pathname of the object we're copying.
 	afpPathType	= afpRequest.GetInt8();
 	afpError 	= afpRequest.GetString(
 								afpSrcPathname,
@@ -4457,9 +3944,7 @@ AFPERROR FPCopyFile(
 		return( afpError );
 	}
 
-	//
-	//Get the destination pathname we're copying to
-	//
+	// Get the destination pathname we're copying to
 	afpPathType		= afpRequest.GetInt8();
 	afpError 		= afpRequest.GetString(
 								afpDstPathname,
@@ -4473,9 +3958,7 @@ AFPERROR FPCopyFile(
 		return( afpError );
 	}
 
-	//
-	//And now the [optional] new name for the file
-	//
+	// And now the [optional] new name for the file
 	afpPathType		= afpRequest.GetInt8();
 	afpError 		= afpRequest.GetString(
 								afpNewName,
@@ -4489,41 +3972,31 @@ AFPERROR FPCopyFile(
 		return( afpError );
 	}
 
-	//
-	//Make sure the client has opened the volumes that the file copy
-	//is happening on.
-	//
+	// Make sure the client has opened the volumes that the file copy
+	// is happening on.
 
 	if ((afpSrcVolume = FindVolume(afpSrcVolID)) == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Src volume not found! (%d)\n", afpSrcVolID);
 		return( afpParmErr );
 	}
 
 	if ((afpDstVolume = FindVolume(afpDstVolID)) == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Dst volume not found! (%d)\n", afpDstVolID);
 		return( afpParmErr );
 	}
 
 	if ((!afpSession->HasVolumeOpen(afpSrcVolume)) || (!afpSession->HasVolumeOpen(afpDstVolume)))
 	{
-		//
-		//Nope, client made a boo boo, return parm error.
-		//
+		// Nope, client made a boo boo, return parm error.
 		DBGWRITE(dbg_level_warning, "User doesn't have volume(s) open!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//Set the entry object that will point to the object we're copying.
-	//
+	// Set the entry object that will point to the object we're copying.
 	afpError = fp_objects::SetAFPEntry(
 								afpSrcVolume,
 								afpSrcDirID,
@@ -4541,17 +4014,13 @@ AFPERROR FPCopyFile(
 		return( afpError );
 	}
 
-	//
-	//As per the spec, we only do copy file on files, NOT directories.
-	//
+	// As per the spec, we only do copy file on files, NOT directories.
 	if (!afpSrcEntry.IsFile()) {
 
 		return( afpObjectTypeErr );
 	}
 
-	//
-	//Get the entry object for the destination directory.
-	//
+	// Get the entry object for the destination directory.
 	afpError = fp_objects::SetAFPEntry(
 								afpDstVolume,
 								afpDstDirID,
@@ -4569,9 +4038,7 @@ AFPERROR FPCopyFile(
 		return( afpError );
 	}
 
-	//
-	//Now construct the new full pathname to what will be the newly created object.
-	//
+	// Now construct the new full pathname to what will be the newly created object.
 	BFile	destFile;
 	BFile	srcFile;
 
@@ -4584,10 +4051,8 @@ AFPERROR FPCopyFile(
 		}
 	}
 
-	//
-	//Check to make sure this session has write access to the destination
-	//directory location.
-	//
+	// Check to make sure this session has write access to the destination
+	// directory location.
 	afpError = afpCheckWriteAccess(afpSession, afpDstVolume, &afpDstEntry);
 
 	if (!AFP_SUCCESS(afpError))
@@ -4595,10 +4060,8 @@ AFPERROR FPCopyFile(
 		return( afpError );
 	}
 
-	//
-	//Now that we have the new pathname all set, we need to actually create
-	//a new file in the destination.
-	//
+	// Now that we have the new pathname all set, we need to actually create
+	// a new file in the destination.
 	BDirectory	destDir(&afpDstEntry);
 
 	if (destDir.CreateFile(afpNewName, &destFile, true) != B_OK)
@@ -4615,19 +4078,15 @@ AFPERROR FPCopyFile(
 		return( afpParmErr );
 	}
 
-	//
-	//Now finally, perform the actual copy operation.
-	//
+	// Now finally, perform the actual copy operation.
 	if (fp_objects::CopyFile(srcFile, destFile) != B_OK)
 	{
 		DBGWRITE(dbg_level_error, "CopyFile() failed!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//We need to signal to all clients that their picture of this
-	//volume has changed.
-	//
+	// We need to signal to all clients that their picture of this
+	// volume has changed.
 	afpDstVolume->MakeDirty();
 
 	return( AFP_OK );
@@ -4664,45 +4123,33 @@ AFPERROR FPCreateID(
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//First word is command the padding byte.
-	//
+	// First word is command the padding byte.
 	afpRequest.Advance(sizeof(int16));
 
 	afpVolumeID	= afpRequest.GetInt16();
 	afpDirID	= afpRequest.GetInt32();
 	afpPathType	= afpRequest.GetInt8();
 
-	//
-	//Get a pointer to the volume object we'll be working with
-	//
+	// Get a pointer to the volume object we'll be working with
 	afpVolume = FindVolume(afpVolumeID);
 
 	if (afpVolume == NULL)
 	{
-		//
-		//The volume ID is not valid, bail...
-		//
+		// The volume ID is not valid, bail...
 		DBGWRITE(dbg_level_warning, "Volume not found! (%d)\n", afpVolumeID);
 		return( afpParmErr );
 	}
 
-	//
-	//The client must have the volume open for access using
-	//FPOpenVol before making this call.
-	//
+	// The client must have the volume open for access using
+	// FPOpenVol before making this call.
 	if (!afpSession->HasVolumeOpen(afpVolume))
 	{
-		//
-		//Nope, client made a boo boo, return parm error.
-		//
+		// Nope, client made a boo boo, return parm error.
 		DBGWRITE(dbg_level_warning, "User doesn't have volume open!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//Get the pathname of the object we're working on.
-	//
+	// Get the pathname of the object we're working on.
 	afpError = afpRequest.GetString(afpPathname, sizeof(afpPathname), true, afpPathType);
 
 	if (!AFP_SUCCESS(afpError))
@@ -4710,18 +4157,14 @@ AFPERROR FPCreateID(
 		return( afpError );
 	}
 
-	//
-	//Pathname cannot be null since it contains the file to open.
-	//
+	// Pathname cannot be null since it contains the file to open.
 	if (strlen(afpPathname) == 0)
 	{
 		DBGWRITE(dbg_level_warning, "Null pathname!\n");
 		return( afpParmErr );
 	}
 
-	//
-	//Set the entry object that will point to this afp object.
-	//
+	// Set the entry object that will point to this afp object.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
 								afpDirID,
@@ -4735,10 +4178,8 @@ AFPERROR FPCreateID(
 		return( afpError );
 	}
 
-	//
-	//OK, the file exists, now get the node_ref for the file and
-	//return the node number as the file ID.
-	//
+	// OK, the file exists, now get the node_ref for the file and
+	// return the node number as the file ID.
 	if (afpEntry.GetNodeRef(&nref) == B_OK)
 	{
 		afpReply.AddInt32(nref.node);
@@ -4774,15 +4215,11 @@ AFPERROR FPZzzz(
 
 	DBGWRITE(dbg_level_trace, "Enter...\n");
 
-	//
-	//Advance beyond the afp cmd byte and the padding
-	//
+	// Advance beyond the afp cmd byte and the padding
 	afpRequest.Advance(sizeof(int16));
 
-	//
-	//The flag parameter is 1 if client is going to sleep, 2 if
-	//the client is waking from sleep.
-	//
+	// The flag parameter is 1 if client is going to sleep, 2 if
+	// the client is waking from sleep.
 	afpFlag = afpRequest.GetInt32();
 
 	switch(afpFlag)

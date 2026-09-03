@@ -16,4 +16,4 @@ void afp_Initialize(void);
 status_t afp_SetLogonMessage(const char* logonMsg);
 status_t afp_SetServerMessage(const char* serverMsg);
 
-#endif //__afpmsg__
+#endif // __afpmsg__

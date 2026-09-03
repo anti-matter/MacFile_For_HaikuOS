@@ -89,9 +89,7 @@ int32 dsi_stats::Net_BytesPerSecond()
 	int64		sendBPS		= (mBytesSent - mTimeHackSentBytes);
 	int64		recvBPS		= (mBytesReceived - mTimeHackRecvBytes);
 		
-	//
-	//Protect against divide by zero errors.
-	//
+	// Protect against divide by zero errors.
 	if (elapsedTime <= 0) {
 		
 		return( mLastBPS );
@@ -100,9 +98,7 @@ int32 dsi_stats::Net_BytesPerSecond()
 	result 		= (sendBPS + recvBPS) / elapsedTime;
 	mLastBPS	= result;
 	
-	//
-	//Reset the counters for the next time we're called.
-	//
+	// Reset the counters for the next time we're called.
 	mTimeHack 			= currentTime;
 	mTimeHackSentBytes	= mBytesSent;
 	mTimeHackRecvBytes	= mBytesReceived;

@@ -60,9 +60,7 @@ dsi_connection::~dsi_connection()
 {
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//We need to remove the dependancy on the scanvernger thread.
-	//
+	// We need to remove the dependancy on the scanvernger thread.
 	gAFPSessionMgr->StopTracking(this);
 
 	shutdown(mSocket, SHUT_RDWR);
@@ -88,7 +86,7 @@ void dsi_connection::Send(
 		int32		sendBufferSize
 		)
 {
-	//Can only send one at a time.
+	// Can only send one at a time.
 	std::lock_guard<std::mutex> guard(mSendMutex);
 
 	uint32	offset 		= 0;
@@ -97,9 +95,7 @@ void dsi_connection::Send(
 
 	if (sendBuffer == NULL)
 	{
-		//
-		//Error: the caller send us a null pointer, bail out now.
-		//
+		// Error: the caller send us a null pointer, bail out now.
 
 		return;
 	}
@@ -128,9 +124,7 @@ void dsi_connection::Send(
 
 		if (bytesSent == 0)
 		{
-			//
-			//Remote side closed the connection gracefully.
-			//
+			// Remote side closed the connection gracefully.
 			DBGWRITE(dbg_level_warning, "send() returned 0 — remote close\n");
 			break;
 		}
@@ -155,9 +149,7 @@ void dsi_connection::Send(
 		KillSession();
 	}
 
-	//
-	//Keep stats for how many bytes the server has sent.
-	//
+	// Keep stats for how many bytes the server has sent.
 	gAFPStats.Net_UpdateBytesSent(bytesSent + offset);
 }
 
@@ -177,9 +169,7 @@ status_t ServerConnection(void* data)
 	auto connection_data = (ConnectionData*)data;
 	auto connection	= std::make_unique<dsi_connection>(connection_data->socket, connection_data->threadId);
 
-	//
-	//Receive data from the client for all eternity...
-	//
+	// Receive data from the client for all eternity...
 	DBGWRITE(dbg_level_trace, "Executing receive loop for %s...\n", connection_data->thread_name);
 	connection->Receive();
 
@@ -208,9 +198,7 @@ void dsi_connection::Receive()
 
 	if ((mReceiveBuffer == NULL) || (mSession == NULL))
 	{
-		//
-		//We failed to initialize properly, bail!
-		//
+		// We failed to initialize properly, bail!
 		return;
 	}
 
@@ -224,8 +212,8 @@ void dsi_connection::Receive()
 		FD_ZERO(&fd);
 		FD_SET(mSocket, &fd);
 
-		//Give the scavenger thread enough time to dispose of lost
-		//connections gracefully.
+		// Give the scavenger thread enough time to dispose of lost
+		// connections gracefully.
 		tv.tv_usec = 0;
 		tv.tv_sec = SESSION_DEAD_INTERVAL + 10;
 
@@ -261,15 +249,11 @@ void dsi_connection::Receive()
 		{
 			if (errno != EWOULDBLOCK)
 			{
-				//
-				//We had some random error, it's likely the connection is dead,
-				//so we do the safe thing and terminate the connection.
-				//
+				// We had some random error, it's likely the connection is dead,
+				// so we do the safe thing and terminate the connection.
 				DBGWRITE(dbg_level_error, "Unexpected error from recv() (errno == %s)\n", GET_BERR_STR(errno));
 
-				//
-				//Close the socket down, returning will terminate the thread.
-				//
+				// Close the socket down, returning will terminate the thread.
 				close(mSocket);
 
 				return;
@@ -290,9 +274,7 @@ void dsi_connection::Receive()
 			return;
 		}
 
-		//
-		//Keep stats of how many bytes we've received.
-		//
+		// Keep stats of how many bytes we've received.
 		gAFPStats.Net_UpdateBytesReceived(bytesReceived);
 
 		bytesReceiveInBuffer += bytesReceived;
@@ -300,20 +282,16 @@ void dsi_connection::Receive()
 
 		if (bytesReceiveInBuffer < DSI_HEADER_SIZE)
 		{
-			//
-			//If we didn't get a full DSI header, there's nothing
-			//we can do with the data we've gotten so far.
-			//
+			// If we didn't get a full DSI header, there's nothing
+			// we can do with the data we've gotten so far.
 			continue;
 		}
 
 		afpDataLen 	= ntohl(*(int32*)&mReceiveBuffer[DSI_OFFSET_DATALEN]);
 
-		//
-		//Validate the advertised payload length before using it in arithmetic.
-		//Reject packets that would overflow the receive buffer or indicate a
-		//malformed client.
-		//
+		// Validate the advertised payload length before using it in arithmetic.
+		// Reject packets that would overflow the receive buffer or indicate a
+		// malformed client.
 		if ((uint32)afpDataLen > RECV_BUFFER_SIZE || (uint32)afpDataLen > 0x7FFFFFFF)
 		{
 			DBGWRITE(dbg_level_error, "Invalid afpDataLen: %d\n", afpDataLen);
@@ -324,24 +302,18 @@ void dsi_connection::Receive()
 
 		if (bytesReceiveInBuffer < (size_t)(DSI_HEADER_SIZE + afpDataLen))
 		{
-			//
-			//We have a full DSI header, but we don't have all the
-			//afp payload yet. Keep trying...
-			//
+			// We have a full DSI header, but we don't have all the
+			// afp payload yet. Keep trying...
 			continue;
 		}
 
 		do
 		{
-			//
-			//OK, we finally have the full DSI header and AFP payload.
-			//
+			// OK, we finally have the full DSI header and AFP payload.
 			ProcessReceivedBytes();
 
-			//
-			//There is another (or part of another) DSI request in the same buffer. Loop
-			//through to process this additional data.
-			//
+			// There is another (or part of another) DSI request in the same buffer. Loop
+			// through to process this additional data.
 			if (bytesReceiveInBuffer > (size_t)(DSI_HEADER_SIZE + afpDataLen))
 			{
 				bytesReceiveInBuffer -= (DSI_HEADER_SIZE + afpDataLen);
@@ -355,10 +327,8 @@ void dsi_connection::Receive()
 					bytesReceiveInBuffer
 					);
 
-				//
-				//If we already have a dsi header, see if we already
-				//have the entire afp packet.
-				//
+				// If we already have a dsi header, see if we already
+				// have the entire afp packet.
 				if (bytesReceiveInBuffer >= DSI_HEADER_SIZE)
 				{
 					afpDataLen 	= ntohl(*(int32*)&mReceiveBuffer[DSI_OFFSET_DATALEN]);
@@ -366,9 +336,7 @@ void dsi_connection::Receive()
 			}
 			else
 			{
-				//
-				//Zero this sucker out so we start fresh for the next receive.
-				//
+				// Zero this sucker out so we start fresh for the next receive.
 				bytesReceiveInBuffer = 0;
 			}
 		}while(bytesReceiveInBuffer >= (size_t)(DSI_HEADER_SIZE + afpDataLen));
@@ -396,39 +364,29 @@ void dsi_connection::ProcessReceivedBytes()
 
 	DBGWRITE(dbg_level_trace, "Enter\n");
 
-	//
-	//Keep track of the number of DSI packets we process.
-	//
+	// Keep track of the number of DSI packets we process.
 	gAFPStats.DSI_IncrementPacketsProcessed();
 
-	//
-	//Extract the entire 16 byte DSI header from the receive buffer.
-	//
+	// Extract the entire 16 byte DSI header from the receive buffer.
 	dsiFlags 		= *(int8*)&mReceiveBuffer[DSI_OFFSET_FLAGS];
 	dsiCommand		= *(int8*)&mReceiveBuffer[DSI_OFFSET_COMMAND];
 	dsiRequestID	= ntohs(*(uint16*)&mReceiveBuffer[DSI_OFFSET_REQUESTID]);
 	dsiDataOffset	= ntohl(*(int32*)&mReceiveBuffer[DSI_OFFSET_DATAOFFSET]);
 	dsiDataLength	= ntohl(*(int32*)&mReceiveBuffer[DSI_OFFSET_DATALEN]);
 
-	//
-	//We've heard from this client, so bump the tickle time.
-	//
+	// We've heard from this client, so bump the tickle time.
 	mSession->SetLastTickleRecvd();
 
 	if (dsiFlags == DSI_REQUEST_FLAG)
 	{
-		//
-		//We save the expected request ID in a member variable since we'll need it
-		//later for storing the reply in the replay cache.
-		//
+		// We save the expected request ID in a member variable since we'll need it
+		// later for storing the reply in the replay cache.
 		mExpectedDSIClientRequestID = mSession->GetNextClientRequestID(dsiRequestID);
 
 		if (mExpectedDSIClientRequestID != dsiRequestID)
 		{
-			//
-			//If our session is AFP3.3 or later, check the replay cache, this might be
-			//a request from the client to replay a lost reply.
-			//
+			// If our session is AFP3.3 or later, check the replay cache, this might be
+			// a request from the client to replay a lost reply.
 			if (afpVers >= afpVersion33)
 			{
 				AFPReplayCacheItem* rci = NULL;
@@ -441,15 +399,11 @@ void dsi_connection::ProcessReceivedBytes()
 
 				if (rci != NULL)
 				{
-					//
-					//We found an item in the cache, now we just resend this reply
-					//to the client and exit.
-					//
+					// We found an item in the cache, now we just resend this reply
+					// to the client and exit.
 					DBGWRITE(dbg_level_trace, "Matching reply found in the replay cache!!!\n");
 
-					//
-					//NOTE: new DSI header information will be written to the beginning of the buffer.
-					//
+					// NOTE: new DSI header information will be written to the beginning of the buffer.
 					FormatAndSendReply(
 							rci->reply,
 							dsiCommand,
@@ -462,27 +416,21 @@ void dsi_connection::ProcessReceivedBytes()
 				}
 			}
 
-			//
-			//The request ID we got from the client is not the one
-			//we were expecting. We've gotten out of sequence!
-			//
+			// The request ID we got from the client is not the one
+			// we were expecting. We've gotten out of sequence!
 			DBGWRITE(dbg_level_error, "Bad req ID, expected %d received %d\n", mExpectedDSIClientRequestID, dsiRequestID);
 
-			//
-			//Closing the endpoing will force the connection object to delete
-			//thereby closing down the sesion entirely.
-			//
+			// Closing the endpoing will force the connection object to delete
+			// thereby closing down the sesion entirely.
 			KillSession();
 			return;
 		}
 
 		std::unique_ptr<int8[]> reply_buffer;
 
-		//
-		//We need to generate the reply buffer for the afp data to
-		//be packed into. Note that we don't reply to tickle requests
-		//so we don't allocate a return buffer.
-		//
+		// We need to generate the reply buffer for the afp data to
+		// be packed into. Note that we don't reply to tickle requests
+		// so we don't allocate a return buffer.
 		if (dsiCommand != DSI_CMD_Tickle)
 		{
 			reply_buffer = std::make_unique<int8[]>(SEND_BUFFER_SIZE);
@@ -494,23 +442,17 @@ void dsi_connection::ProcessReceivedBytes()
 			}
 		}
 
-		//
-		//To prevent hacking, we make sure that DSIOpenSession has been called
-		//before processing any other AFP commands.
-		//
+		// To prevent hacking, we make sure that DSIOpenSession has been called
+		// before processing any other AFP commands.
 		if (	(!mSessionOpen) &&
 				((dsiCommand != DSI_CMD_OpenSession) && (dsiCommand != DSI_CMD_GetStatus))	)
 		{
-			//
-			//If we are in a weird situation and we received a tickle here,
-			//we must consider that we don't have a return buffer to send an
-			//error to the caller.
-			//
+			// If we are in a weird situation and we received a tickle here,
+			// we must consider that we don't have a return buffer to send an
+			// error to the caller.
 			if (dsiCommand != DSI_CMD_Tickle)
 			{
-				//
-				//No session opened, return error to the caller.
-				//
+				// No session opened, return error to the caller.
 				FormatAndSendReply(reply_buffer.get(), dsiCommand, afpParmErr, 0);
 			}
 
@@ -548,11 +490,9 @@ void dsi_connection::ProcessReceivedBytes()
 
 				switch(afpCmd)
 				{
-					//
-					//For performance reasons, we handle read calls from here
-					//in the DSI layer. This saves the overhead of the FPDispatch()
-					//routine for this high performance function.
-					//
+					// For performance reasons, we handle read calls from here
+					// in the DSI layer. This saves the overhead of the FPDispatch()
+					// routine for this high performance function.
 
 					case afpRead:
 					case afpReadExt:
@@ -590,10 +530,8 @@ void dsi_connection::ProcessReceivedBytes()
 			case DSI_CMD_GetStatus:
 				DBGWRITE(dbg_level_trace, "DSIGetStatus command received\n");
 
-				//
-				//Call the AFP function directly that packs the server
-				//info data.
-				//
+				// Call the AFP function directly that packs the server
+				// info data.
 				afpError = FPGetSrvrInfo(
 								mSession.get(),
 								&mReceiveBuffer[DSI_OFFSET_DATASTART],
@@ -603,18 +541,14 @@ void dsi_connection::ProcessReceivedBytes()
 
 				FormatAndSendReply(reply_buffer.get(), dsiCommand, afpError, afpDataSize);
 
-				//
-				//Per the AFP spec, we close the connection immediately following
-				//the GetStatus call.
-				//
+				// Per the AFP spec, we close the connection immediately following
+				// the GetStatus call.
 				KillSession();
 				break;
 
 			case DSI_CMD_Write:
-				//
-				//For performance reasons, writes are handles directly from the
-				//DSI layer. This is as per the DSI specification from Apple.
-				//
+				// For performance reasons, writes are handles directly from the
+				// DSI layer. This is as per the DSI specification from Apple.
 
 				switch((uint8)mReceiveBuffer[DSI_OFFSET_DATASTART])
 				{
@@ -652,16 +586,12 @@ void dsi_connection::ProcessReceivedBytes()
 	}
 	else if (dsiFlags == DSI_REPLY_FLAG)
 	{
-		//
-		//We have a reply to a request we sent to the client.
-		//
+		// We have a reply to a request we sent to the client.
 	}
 	else
 	{
-		//
-		//Big time problems, this isn't a request or a reply. We have
-		//no choice but to bail.
-		//
+		// Big time problems, this isn't a request or a reply. We have
+		// no choice but to bail.
 		DBGWRITE(dbg_level_trace, "Bad DSI type from client (%d)\n", dsiFlags);
 		KillSession();
 	}
@@ -728,7 +658,7 @@ void dsi_connection::FormatAndSendReply(
 			afpDataSize
 			);
 
-	//Add this reply to the replay cache for AFP3.3
+	// Add this reply to the replay cache for AFP3.3
 	if ((!fromCache) && (mSession->GetAFPVersion() >= afpVersion33) &&
 		((dsiCommand == DSI_CMD_Command) || (dsiCommand == DSI_CMD_Write)))
 	{
@@ -762,27 +692,19 @@ void dsi_connection::PrepareDSIHeaderForReply(
 	int32 			afpDataSize
 	)
 {
-	//
-	//We're replying, set the correct flag and command we're
-	//replying to.
-	//
+	// We're replying, set the correct flag and command we're
+	// replying to.
 	*((int8*)&replyBuffer[DSI_OFFSET_FLAGS])		= DSI_REPLY_FLAG;
 	*((int8*)&replyBuffer[DSI_OFFSET_COMMAND])		= dsiCommand;
 
-	//
-	//Insert the request ID and error code into the header.
-	//
+	// Insert the request ID and error code into the header.
 	*((int16*)&replyBuffer[DSI_OFFSET_REQUESTID])	= htons(mSession->GetCurrentRequestID());
 	*((int32*)&replyBuffer[DSI_OFFSET_ERRORCODE])	= htonl(afpError);
 
-	//
-	//Add the size of the AFP data we're including.
-	//
+	// Add the size of the AFP data we're including.
 	*((int32*)&replyBuffer[DSI_OFFSET_DATALEN])		= htonl(afpDataSize);
 
-	//
-	//This is the reserved field in the header, it must be zero.
-	//
+	// This is the reserved field in the header, it must be zero.
 	*((int32*)&replyBuffer[DSI_OFFSET_RESERVED])	= 0;
 
 	DBGWRITE(dbg_level_trace, "Client request id: %lu\n", htons(*((int16*)&replyBuffer[DSI_OFFSET_REQUESTID])));
@@ -805,13 +727,11 @@ void dsi_connection::KillSession()
 
 	if (mContinueRecv)
 	{
-		//
-		//Signal the connection thread to shutdown.
-		//shutdown() closes both directions of the socket; close() is
-		//avoided here to prevent a double-close race with the destructor
-		//(~dsi_connection calls shutdown again, and Receive() may call
-		//close() on its own error paths).
-		//
+		// Signal the connection thread to shutdown.
+		// shutdown() closes both directions of the socket; close() is
+		// avoided here to prevent a double-close race with the destructor
+		// (~dsi_connection calls shutdown again, and Receive() may call
+		// close() on its own error paths).
 		mContinueRecv = false;
 
 		shutdown(mSocket, SHUT_RDWR);
@@ -836,17 +756,13 @@ void dsi_connection::SendAttention(uint16 attnMessage)
 	{
 		DBGWRITE(dbg_level_info, "Sending attention (0x%x)\n", attnMessage);
 
-		//
-		//Attetion messages are simple 2 bytes parameters. We just
-		//manually blast it into our buffer at the data offset.
-		//
+		// Attetion messages are simple 2 bytes parameters. We just
+		// manually blast it into our buffer at the data offset.
 
 		*((int16*)&buffer[DSI_OFFSET_DATASTART]) = htons(attnMessage);
 
-		//
-		//Call the worker routine that will format and send off our
-		//attention message to the client.
-		//
+		// Call the worker routine that will format and send off our
+		// attention message to the client.
 
 		FormatAndSendRequest(
 				buffer.get(),

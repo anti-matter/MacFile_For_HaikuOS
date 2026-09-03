@@ -17,4 +17,4 @@ void afp_GetHostnameFromSettingsFile(char* hostname, int32 cbHostname);
 void afp_HandleGethostnameAppMsg(BMessage* message);
 void afp_HandleSethostnameAppMsg(BMessage* message);
 
-#endif //__AFPHOSTNAME__
+#endif // __AFPHOSTNAME__

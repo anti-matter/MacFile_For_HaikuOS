@@ -47,11 +47,9 @@ dsi_scavenger::dsi_scavenger()
 
 dsi_scavenger::~dsi_scavenger()
 {
-	//
-	//Nothing to do: mOpenConnections is a std::vector of raw pointers
-	//and cleans itself up automatically. The dsi_connection objects
-	//they point at are owned by the per-client threads.
-	//
+	// Nothing to do: mOpenConnections is a std::vector of raw pointers
+	// and cleans itself up automatically. The dsi_connection objects
+	// they point at are owned by the per-client threads.
 }
 
 
@@ -131,11 +129,9 @@ int32 dsi_scavenger::ScavengerThread(void* data)
 		now = real_time_clock();
 		uint32 i = 0;
 		
-		//
-		//Iterate by index against the current vector size so an entry
-		//removed via StopTracking() is simply skipped, not walked off
-		//the end of the list.
-		//
+		// Iterate by index against the current vector size so an entry
+		// removed via StopTracking() is simply skipped, not walked off
+		// the end of the list.
 		while (i < manager->mOpenConnections.size())
 		{
 			connection = manager->mOpenConnections.at(i++);
@@ -144,11 +140,9 @@ int32 dsi_scavenger::ScavengerThread(void* data)
 			
 			if (session != NULL)
 			{
-				//
-				//If we haven't sent any packets to the client for a while,
-				//we'll want to "tickle" him so he doesn't things we've
-				//forgoten all about him.
-				//
+				// If we haven't sent any packets to the client for a while,
+				// we'll want to "tickle" him so he doesn't things we've
+				// forgoten all about him.
 				sentInterval = (now - session->GetLastTickleSent());
 				
 				if ((sentInterval > SEND_TICKLE_INTERVAL) && (!session->ClientIsSleeping()))
@@ -156,10 +150,8 @@ int32 dsi_scavenger::ScavengerThread(void* data)
 					connection->SendTickle();
 				}
 				
-				//
-				//Now check to make sure we've heard from the client in
-				//in a reasonable amount of time.
-				//
+				// Now check to make sure we've heard from the client in
+				// in a reasonable amount of time.
 				recvInterval = (now - session->GetLastTickleRecvd());
 				
 				if (recvInterval > SESSION_DEAD_INTERVAL)
@@ -171,17 +163,13 @@ int32 dsi_scavenger::ScavengerThread(void* data)
 					}
 					else
 					{
-						//
-						//The client is asleep. Check to see if its been sleeping past
-						//the time we allow them to sleep before killing.
-						//
+						// The client is asleep. Check to see if its been sleeping past
+						// the time we allow them to sleep before killing.
 						DBGWRITE(dbg_level_trace, "Client is sleeping\n");
 						
 						if (recvInterval > SESSION_SLEEPING_INTERVAL)
 						{
-							//
-							//The client has been sleeping for too long. Kill it.
-							//
+							// The client has been sleeping for too long. Kill it.
 							connection->KillSession();
 							DBGWRITE(dbg_level_warning, "Killing sleeping client\n");
 						}
@@ -191,10 +179,8 @@ int32 dsi_scavenger::ScavengerThread(void* data)
 				{
 					uint32 j = 0;
 					
-					//
-					//If we're still alive, see if there are dirty volumes that
-					//need to be reported to clients via the attention mechanism.
-					//					
+					// If we're still alive, see if there are dirty volumes that
+					// need to be reported to clients via the attention mechanism.
 					std::lock_guard lock(volume_blist_mutex);
 							
 					while((volume = (fp_volume*)volume_blist->ItemAt(j++)) != NULL)
@@ -211,13 +197,11 @@ int32 dsi_scavenger::ScavengerThread(void* data)
 			}
 		}
 		
-		//
-		//We've just been through all sessions, now make sure all
-		//the volumes are marked as clean.
-		//
+		// We've just been through all sessions, now make sure all
+		// the volumes are marked as clean.
 		MarkAllVolumesClean();
 				
-	} //while(true)
+	} // while(true)
 }
 
 
@@ -238,20 +222,16 @@ void dsi_scavenger::SendGlobalAttention(uint16 attentionMsg)
 
 	std::lock_guard<std::mutex> guard(mMutex);
 	
-	//
-	//Loop through the connection objects and send them
-	//the passed attention code.
-	//
+	// Loop through the connection objects and send them
+	// the passed attention code.
 	
 	while (i < (int)mOpenConnections.size())
 	{
 		connection = mOpenConnections.at(i++);
 		DBGWRITE(dbg_level_trace, "Sending global attention (0x%x)\n", attentionMsg);
 		
-		//
-		//Call the connection object to handle the dirty work of
-		//sending the attention to this session.
-		//
+		// Call the connection object to handle the dirty work of
+		// sending the attention to this session.
 		
 		connection->SendAttention(attentionMsg);
 	}

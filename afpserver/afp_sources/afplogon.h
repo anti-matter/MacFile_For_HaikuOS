@@ -66,4 +66,4 @@ bool afpAccountEnabled(
 	const char*		userName
 	);
 	
-#endif //__afplogon__
+#endif // __afplogon__

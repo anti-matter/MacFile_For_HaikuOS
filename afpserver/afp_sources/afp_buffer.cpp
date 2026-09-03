@@ -119,25 +119,19 @@ AFPERROR afp_buffer::GetString(
 	
 	if ((AFP_SUCCESS(afpError)) && (isPath))
 	{
-		//
-		//If we're dealing with an AFP pathname, then we need to convert
-		//the path separators to Be style ones.
-		//
+		// If we're dealing with an AFP pathname, then we need to convert
+		// the path separators to Be style ones.
 		uint8	i;
 		
 		for (i = 0; i < stringLen; i++)
 		{
 			switch(string[i])
 			{
-				//
-				//If we have a slash the first time through, then this is
-				//an error and unallowed filename character.
-				//
+				// If we have a slash the first time through, then this is
+				// an error and unallowed filename character.
 				case '/': string[i] = REPLACE_SLASH_CHAR; break;
 				
-				//
-				//Convert Mac specific path separator to Be specific.
-				//
+				// Convert Mac specific path separator to Be specific.
 				case ':': string[i] = '/'; break;
 				
 				default:
@@ -177,10 +171,8 @@ AFPERROR afp_buffer::GetUnicodeString(char* string, uint16 cbstring, int16* sLen
 	
 	stringLen	= GetInt16();
 		
-	//
-	//Check to make sure we were given a big enough buffer
-	//to copy the string into.
-	//
+	// Check to make sure we were given a big enough buffer
+	// to copy the string into.
 	if ((stringLen + sizeof(char)) > cbstring)
 	{
 		DPRINT(("[afp_buffer:GetUnicodeString]String buffer too small! (%u vs %ld)\n", cbstring, stringLen));		
@@ -231,10 +223,8 @@ AFPERROR afp_buffer::GetPascalString(char* string, uint16 cbstring, int16* sLen)
 	
 	memset(string, 0, cbstring);
 	
-	//
-	//Check to make sure we were given a big enough buffer
-	//to copy the string into.
-	//
+	// Check to make sure we were given a big enough buffer
+	// to copy the string into.
 	if ((stringLen + sizeof(char)) > cbstring)
 	{
 		DPRINT(("[afp_buffer:GetPascalString]String buffer too small! (%d)\n", stringLen));		
@@ -243,14 +233,10 @@ AFPERROR afp_buffer::GetPascalString(char* string, uint16 cbstring, int16* sLen)
 	
 	if (stringLen > 0)
 	{
-		//
-		//Now copy the string into the supplied buffer.
-		//
+		// Now copy the string into the supplied buffer.
 		GetRawData(string, stringLen);
 		
-		//
-		//Add a null terminator on the end of the new string.
-		//
+		// Add a null terminator on the end of the new string.
 		string[stringLen] = '\0';
 	}
 	
@@ -276,10 +262,8 @@ AFPERROR afp_buffer::GetUniString(char* string, uint16 cbstring, uint16* sLen)
 		
 	memset(string, 0, cbstring);
 			
-	//
-	//Check to make sure we were given a big enough buffer
-	//to copy the string into.
-	//
+	// Check to make sure we were given a big enough buffer
+	// to copy the string into.
 	if ((stringLen + sizeof(char)) > cbstring)
 	{
 		DPRINT(("[afp_buffer:GetUniString]String buffer too small! (%d vs %ld)\n", cbstring, stringLen));		
@@ -387,17 +371,13 @@ AFPERROR afp_buffer::AddUniString(char* string, bool isPath, bool isAFPName)
 		{
 			if ((isPath) && (isAFPName))
 			{
-				//
-				//If its a pathname, we need to reconvert the chars back
-				//to Mac specific.
-				//
+				// If its a pathname, we need to reconvert the chars back
+				// to Mac specific.
 				ConvertIllegalCharsBackToMac((uchar*)string, cbstring);
 				
-				//
-				//This is supposed to be the encoding hint. We need to
-				//build an encoding mapping table before we can use this.
-				//for now, 0 == MAC_ROMAN encoding.
-				//
+				// This is supposed to be the encoding hint. We need to
+				// build an encoding mapping table before we can use this.
+				// for now, 0 == MAC_ROMAN encoding.
 				AddInt32(0);
 			}
 			
@@ -426,10 +406,8 @@ AFPERROR afp_buffer::AddUniString(char* string, bool isPath, bool isAFPName)
 			}
 			else
 			{
-				//
-				//If conversion failed, we want to write a 0 to the buffer
-				//to show that there is 0 sized string.
-				//
+				// If conversion failed, we want to write a 0 to the buffer
+				// to show that there is 0 sized string.
 				AddInt16(0);
 			}
 		}

@@ -40,11 +40,9 @@ static bool IsWithinVolume(
 	const char*	entry;
 	size_t		rootLen;
 
-	//
-	//Use the canonical path of the volume's root directory (not the
-	//configured path, which may contain symlinks) so it is consistent
-	//with the canonical path of the entry.
-	//
+	// Use the canonical path of the volume's root directory (not the
+	// configured path, which may contain symlinks) so it is consistent
+	// with the canonical path of the entry.
 	if (afpVolume->GetDirectory()->GetEntry(&rootEntry) != B_OK)
 	{
 		return( false );
@@ -64,17 +62,13 @@ static bool IsWithinVolume(
 	entry	= entryPath.Path();
 	rootLen	= strlen(rootPath.Path());
 
-	//
-	//A share mounted at the filesystem root contains everything.
-	//
+	// A share mounted at the filesystem root contains everything.
 	if ((rootLen == 1) && (root[0] == '/'))
 	{
 		return( true );
 	}
 
-	//
-	//The entry must be the volume root itself, or live under "root/".
-	//
+	// The entry must be the volume root itself, or live under "root/".
 	if (strncmp(entry, root, rootLen) != 0)
 	{
 		return( false );
@@ -82,9 +76,7 @@ static bool IsWithinVolume(
 
 	if (entry[rootLen] == '\0')
 	{
-		//
-		//The entry is the volume root itself.
-		//
+		// The entry is the volume root itself.
 		return( true );
 	}
 
@@ -118,30 +110,24 @@ AFPERROR fp_objects::SetAFPEntry(
 		
 	volumeDir = afpVolume->GetDirectory();
 
-	//
-	//The parent of the volume root is never accessible to a client.
-	//Allowing it would let a client reach files outside the shared
-	//volume. Every command that resolves an entry goes through here,
-	//so we reject it centrally (the enumeration command also rejects
-	//it before calling).
-	//
+	// The parent of the volume root is never accessible to a client.
+	// Allowing it would let a client reach files outside the shared
+	// volume. Every command that resolves an entry goes through here,
+	// so we reject it centrally (the enumeration command also rejects
+	// it before calling).
 	if (afpDirID == kParentOfRoot)
 	{
 		DBGWRITE(dbg_level_warning, "Access to the parent of the volume root is not allowed\n");
 		return( afpParmErr );
 	}
 	
-	//
-	//First, if we're not operating in the root directory, then
-	//we need to get a BDirectory for the directory "afpDirID".
-	//
+	// First, if we're not operating in the root directory, then
+	// we need to get a BDirectory for the directory "afpDirID".
 	switch(afpDirID)
 	{ 
-		//
-		//In the case of the root and parent dirs, we write some
-		//extra code to avoid overhead of initializing more objects
-		//than we need to for performance.
-		//
+		// In the case of the root and parent dirs, we write some
+		// extra code to avoid overhead of initializing more objects
+		// than we need to for performance.
 		case kRootDirID:
 			if ((afpPathname == NULL) || (strlen(afpPathname) == 0))
 			{
@@ -217,10 +203,8 @@ AFPERROR fp_objects::SetAFPEntry(
 			{
 				if ((status == B_NOT_A_DIRECTORY) && (afpPathname == NULL) || (strlen(afpPathname) == 0))
 				{
-					//
-					//In this case afpDirID must contain a fileId. Perform a search
-					//looking for a file with the supplied id.
-					//
+					// In this case afpDirID must contain a fileId. Perform a search
+					// looking for a file with the supplied id.
 					
 					AFPERROR error = GetEntryFromFileId(volumeDir, afpDirID, afpEntry);
 					
@@ -237,11 +221,9 @@ AFPERROR fp_objects::SetAFPEntry(
 	
 	if (AFP_SUCCESS(afpError))
 	{
-		//
-		//If we're only looking for the BDirectory for a directory
-		//and not another dir/file within that dir, then just return
-		//the entry.
-		//
+		// If we're only looking for the BDirectory for a directory
+		// and not another dir/file within that dir, then just return
+		// the entry.
 		if ((afpPathname == NULL) || (strlen(afpPathname) == 0))
 		{						
 			status = directory.GetEntry(&afpEntry);
@@ -258,10 +240,8 @@ AFPERROR fp_objects::SetAFPEntry(
 			
 			if (status != B_OK)
 			{
-				//
-				//We failed to find the object by name, perhaps the client
-				//is looking for a longname?
-				//
+				// We failed to find the object by name, perhaps the client
+				// is looking for a longname?
 				if (!AFP_SUCCESS(GetEntryByLongName(directory, afpPathname, afpEntry)))
 				{
 					DBGWRITE(dbg_level_error, "FindEntry() and GetEntryByLongName() failed for %s (%s)\n",
@@ -273,10 +253,8 @@ AFPERROR fp_objects::SetAFPEntry(
 			}
 		}
 		
-		//
-		//We have to perform this check because sometimes FindEntry()
-		//returns B_OK even though it didn't find the file!
-		//
+		// We have to perform this check because sometimes FindEntry()
+		// returns B_OK even though it didn't find the file!
 		status = afpEntry.InitCheck();
 		
 		if ((status != B_OK) || (!afpEntry.Exists()))
@@ -286,12 +264,10 @@ AFPERROR fp_objects::SetAFPEntry(
 			afpError = afpObjectNotFound;
 		}
 
-		//
-		//Verify the resolved entry is actually inside the shared
-		//volume. This stops a client from using a crafted directory
-		//ID (e.g. an arbitrary node ref on the same device) to reach
-		//files outside the share.
-		//
+		// Verify the resolved entry is actually inside the shared
+		// volume. This stops a client from using a crafted directory
+		// ID (e.g. an arbitrary node ref on the same device) to reach
+		// files outside the share.
 		if (AFP_SUCCESS(afpError) && !IsWithinVolume(afpVolume, &afpEntry))
 		{
 			DBGWRITE(dbg_level_warning, "Entry is outside the volume, denying access\n");
@@ -398,18 +374,14 @@ AFPERROR fp_objects::GetEntryByLongName(
 		
 		if (sizeRead != B_ENTRY_NOT_FOUND)
 		{
-			//
-			//We have to add the trailing null byte.
-			//
+			// We have to add the trailing null byte.
 			longName[sizeRead] = 0;
 			
 			if (!strcmp(afpPathname, longName))
 			{
 				entry_ref	ref;
 				
-				//
-				//We have a match, return this item's entry.
-				//
+				// We have a match, return this item's entry.
 				temp.GetRef(&ref);
 				afpEntry.SetTo(&ref);
 									
@@ -466,10 +438,8 @@ void fp_objects::CreateLongName(
 		afpEntry->GetName(afpNewName);
 		afpEntry->GetParent(&dir);
 		
-		//
-		//If the filename contains a file designator (dot 3 or 4 extension)
-		//then we try to preserve this.
-		//
+		// If the filename contains a file designator (dot 3 or 4 extension)
+		// then we try to preserve this.
 		nameLen = strlen(afpNewName);
 		
 		if (afpNewName[nameLen-4] == '.') {
@@ -500,9 +470,7 @@ void fp_objects::CreateLongName(
 			}
 			else
 			{
-				//
-				//We're done as an entry with this name doesn't exist.
-				//
+				// We're done as an entry with this name doesn't exist.
 				break;
 			}
 		}
@@ -515,24 +483,18 @@ void fp_objects::CreateLongName(
 			strlen(afpName)
 			);
 
-		//
-		//Only copy the new name into the buffer if provided.
-		//
+		// Only copy the new name into the buffer if provided.
 		if (afpPathname != NULL) {
 			strcpy(afpPathname, afpName);
 		}
 	}
 	else
 	{
-		//
-		//We have to add the trailing (null) byte if the read
-		//was successfull.
-		//
+		// We have to add the trailing (null) byte if the read
+		// was successfull.
 		afpNewName[sizeRead] = 0;
 
-		//
-		//Only copy the new name into the buffer if provided.
-		//
+		// Only copy the new name into the buffer if provided.
 		if (afpPathname != NULL) {
 			strcpy(afpPathname, afpNewName);
 		}
@@ -573,9 +535,7 @@ AFPERROR fp_objects::fp_GetDirParms(
 		
 		if (!AFP_SUCCESS(GetAFPAttributes(afpEntry, &afpAttributes)))
 		{
-			//
-			//If there is currently no attribute stream, create it.
-			//
+			// If there is currently no attribute stream, create it.
 			SetAFPAttributes(afpEntry, &afpAttributes);
 		}
 
@@ -584,10 +544,8 @@ AFPERROR fp_objects::fp_GetDirParms(
 
 	if (afpDirBitmap & kFPDirParentID)
 	{
-		//
-		//Check for the special case directories as we need to make adjustments
-		//to the ID's we pass back for them.
-		//
+		// Check for the special case directories as we need to make adjustments
+		// to the ID's we pass back for them.
 		dir.SetTo(afpEntry);
 		dir.GetNodeRef(&ref);
 		
@@ -609,11 +567,9 @@ AFPERROR fp_objects::fp_GetDirParms(
 			{
 				dir.GetNodeRef(&ref);
 				
-				//
-				//We check to see if the client is indeed looking at
-				//one of the pre-defined constant dirs (kRootDirID &
-				//kParentOfRoot).
-				//
+				// We check to see if the client is indeed looking at
+				// one of the pre-defined constant dirs (kRootDirID &
+				// kParentOfRoot).
 				if (ref.node == afpVolume->GetRootDirID())
 				{	
 					ref.node = kRootDirID;
@@ -656,10 +612,8 @@ AFPERROR fp_objects::fp_GetDirParms(
 
 		if (!AFP_SUCCESS(GetAFPFinderInfo(afpEntry, &finfo)))
 		{
-			//
-			//If the file info stream didn't exist, then we create a
-			//blank unitialized stream.
-			//			
+			// If the file info stream didn't exist, then we create a
+			// blank unitialized stream.
 			finfo.fdLocation.x	= 20;
 			finfo.fdLocation.y	= 20;
 			
@@ -684,11 +638,9 @@ AFPERROR fp_objects::fp_GetDirParms(
 	{
 		if (afpEntry->GetNodeRef(&ref) == B_OK)
 		{
-			//
-			//We check to see if the client is indeed looking at
-			//one of the pre-defined constant dirs (kRootDirID &
-			//kParentOfRoot).
-			//
+			// We check to see if the client is indeed looking at
+			// one of the pre-defined constant dirs (kRootDirID &
+			// kParentOfRoot).
 			if (ref.node == afpVolume->GetRootDirID())
 			{	
 				ref.node = kRootDirID;
@@ -699,10 +651,8 @@ AFPERROR fp_objects::fp_GetDirParms(
 			}
 			else if (ref.node > ULONG_MAX)
 			{
-				//
-				//AFP cannot handle node id's greater than a 4 byte
-				//number. We have no choice but to bail here.
-				//
+				// AFP cannot handle node id's greater than a 4 byte
+				// number. We have no choice but to bail here.
 				DBGWRITE(dbg_level_warning, "ref.node too big, failing...\n");
 				return( afpParmErr );
 			}
@@ -739,10 +689,8 @@ AFPERROR fp_objects::fp_GetDirParms(
 		
 		if (afpSession->IsAdmin())
 		{
-			//
-			//If the this session belongs to an admin, then return
-			//this admin as the owner of the directory.
-			//
+			// If the this session belongs to an admin, then return
+			// this admin as the owner of the directory.
 			
 			afpSession->GetUserInfo(&userData);
 			
@@ -750,9 +698,7 @@ AFPERROR fp_objects::fp_GetDirParms(
 		}
 		else
 		{
-			//
-			//Find the first admin in the list and set that as the owner.
-			//
+			// Find the first admin in the list and set that as the owner.
 			while(afpGetIndUser(&userData, index) == B_OK)
 			{
 				if (userData.flags & kIsAdmin)
@@ -770,10 +716,8 @@ AFPERROR fp_objects::fp_GetDirParms(
 	
 	if (afpDirBitmap & kFPDirGroupID)
 	{
-		//
-		//A group ID of zero means the dir is not associated with a group.
-		//Group permissions will be ignored for this directory.
-		//
+		// A group ID of zero means the dir is not associated with a group.
+		// Group permissions will be ignored for this directory.
 		uid_t group = 0;
 		
 		afpReply->push_num<uint32>(group);
@@ -810,10 +754,8 @@ AFPERROR fp_objects::fp_GetDirParms(
 	{
 		if (afpEntry->GetName(name) == B_OK)
 		{
-			//
-			//Longnames can only be up to 32 characters long. Truncate
-			//the string if necessary.
-			//
+			// Longnames can only be up to 32 characters long. Truncate
+			// the string if necessary.
 			if (strlen(name) > MAX_AFP_2_NAME)
 			{
 				CreateLongName(name, afpEntry);
@@ -872,16 +814,12 @@ AFPERROR fp_objects::fp_GetFileParms(
 		
 		if (!AFP_SUCCESS(GetAFPAttributes(afpEntry, &afpAttributes)))
 		{
-			//
-			//If there is currently no attribute stream, create it.
-			//
+			// If there is currently no attribute stream, create it.
 			SetAFPAttributes(afpEntry, &afpAttributes);
 		}
 		
-		//
-		//We need to dynamically check and set the bits that tell
-		//whether a data or resource fork is already open.
-		//
+		// We need to dynamically check and set the bits that tell
+		// whether a data or resource fork is already open.
 		if (afpVolume->IsFileOpen(afpEntry, kDataFork)) {
 			afpAttributes |= kFileDataForkOpen;
 		}
@@ -893,10 +831,8 @@ AFPERROR fp_objects::fp_GetFileParms(
 		{
 			afpAttributes 	|= kFileRsrcForkOpen;
 			
-			//
-			//If the resource fork is open, we get the ref num and get a
-			//reference to its forkItem so we can get the right fork length.
-			//
+			// If the resource fork is open, we get the ref num and get a
+			// reference to its forkItem so we can get the right fork length.
 			forkItem 		= afpSession->GetForkItem(afpForkRef);
 			afpRsrcOpen		= true;
 		}
@@ -915,11 +851,9 @@ AFPERROR fp_objects::fp_GetFileParms(
 		{
 			dir.GetNodeRef(&ref);
 				
-			//
-			//We check to see if the client is indeed looking at
-			//one of the pre-defined constant dirs (kRootDirID &
-			//kParentOfRoot).
-			//
+			// We check to see if the client is indeed looking at
+			// one of the pre-defined constant dirs (kRootDirID &
+			// kParentOfRoot).
 			if (ref.node == afpVolume->GetRootDirID())
 			{
 				afpReply->push_num<uint32>(kRootDirID);
@@ -990,10 +924,8 @@ AFPERROR fp_objects::fp_GetFileParms(
 		{
 			if (ref.node > ULONG_MAX)
 			{
-				//
-				//AFP cannot handle node id's greater than a 4 byte
-				//number. We have no choice but to bail here.
-				//
+				// AFP cannot handle node id's greater than a 4 byte
+				// number. We have no choice but to bail here.
 				DBGWRITE(dbg_level_error, "****Node ref > 4GB !!");
 				return( afpParmErr );
 			}
@@ -1029,21 +961,17 @@ AFPERROR fp_objects::fp_GetFileParms(
 	{
 		off_t fsize = 0;
 
-		//
-		//For .res files, the resource fork data lives in the data fork.
-		//Return the data fork size as the "resource fork" size.
-		//
+		// For .res files, the resource fork data lives in the data fork.
+		// Return the data fork size as the "resource fork" size.
 		if (IsResFile(afpEntry))
 		{
 			afpEntry->GetSize(&fsize);
 		}
 		else if (afpRsrcOpen)
 		{
-			//
-			//Since we always keep the resource fork in memory for perf reasons,
-			//we need to get the real size of the fork if it's open by accessing
-			//the memory I/O buffer directly.
-			//
+			// Since we always keep the resource fork in memory for perf reasons,
+			// we need to get the real size of the fork if it's open by accessing
+			// the memory I/O buffer directly.
 			fsize = forkItem->rsrcIO->BufferLength();
 		}
 		else
@@ -1055,9 +983,7 @@ AFPERROR fp_objects::fp_GetFileParms(
 			}
 		}
 
-		//
-		//AFP 2.2 can only handle file sizes of 4GB.
-		//
+		// AFP 2.2 can only handle file sizes of 4GB.
 		if (fsize > ULONG_MAX) {
 
 			fsize = ULONG_MAX;
@@ -1084,19 +1010,15 @@ AFPERROR fp_objects::fp_GetFileParms(
 	{
 		off_t fsize = 0;
 
-		//
-		//For .res files, the resource fork data lives in the data fork.
-		//Return the data fork size as the "resource fork" size.
-		//
+		// For .res files, the resource fork data lives in the data fork.
+		// Return the data fork size as the "resource fork" size.
 		if (IsResFile(afpEntry))
 		{
 			afpEntry->GetSize(&fsize);
 		}
 		else if (afpRsrcOpen)
 		{
-			//
-			//See kFPRFLen for details on why we do this.
-			//
+			// See kFPRFLen for details on why we do this.
 			fsize = forkItem->rsrcIO->BufferLength();
 		}
 		else
@@ -1108,29 +1030,25 @@ AFPERROR fp_objects::fp_GetFileParms(
 			}
 		}
 
-		//
-		//I don't know what the client is doing here, but it needs an
-		//extra 4 bytes inserted here to read the resource fork length
-		//correctly. Is it possible it's looking for the launch limit? The
-		//spec isn't clear.
-		//
+		// I don't know what the client is doing here, but it needs an
+		// extra 4 bytes inserted here to read the resource fork length
+		// correctly. Is it possible it's looking for the launch limit? The
+		// spec isn't clear.
 		afpReply->push_num<uint32>(0);
 
 		afpReply->push_num(fsize);
 	}
 	
-	//*****************************************************************
-	//Stuff in the variable length information at the end of the block.
-	//*****************************************************************
+	// *****************************************************************
+	// Stuff in the variable length information at the end of the block.
+	// *****************************************************************
 	
 	if (afpFileBitmap & kFPLongName)
 	{	
 		if (afpEntry->GetName(name) == B_OK)
 		{
-			//
-			//Longnames can only be up to 32 characters long. Truncate
-			//the string if necessary.
-			//
+			// Longnames can only be up to 32 characters long. Truncate
+			// the string if necessary.
 			if (strlen(name) > MAX_AFP_2_NAME)
 			{
 				CreateLongName(name, afpEntry);
@@ -1177,14 +1095,10 @@ AFPERROR fp_objects::fp_SetFileDirParms(
 	uint8		setClearFlag	= 0;
 	AFPERROR	afpError		= AFP_OK;
 	
-	//
-	//See if we're adjusting the file/dir attributes (AFP attributes).
-	//
+	// See if we're adjusting the file/dir attributes (AFP attributes).
 	if (afpBitmap & kFPFileAttributes)
 	{
-		//
-		//Grab the attributes from the attr stream of the file or dir.
-		//
+		// Grab the attributes from the attr stream of the file or dir.
 		afpError = GetAFPAttributes(afpEntry, &afpAttributes);
 		
 		if (AFP_SUCCESS(afpError))
@@ -1226,11 +1140,9 @@ AFPERROR fp_objects::fp_SetFileDirParms(
 		}
 	}
 	
-	//
-	//Extract the times if we're setting any now. We'll wait till
-	//later to actually set them incase anything we do resets the
-	//mod time.
-	//
+	// Extract the times if we're setting any now. We'll wait till
+	// later to actually set them incase anything we do resets the
+	// mod time.
 	if (afpBitmap & kFPCreateDate)	afpCreateTime 	= afpRequest->GetInt32();
 	if (afpBitmap & kFPModDate)		afpModTime 		= afpRequest->GetInt32();
 	if (afpBitmap & kFPBackupDate)	afpBackTime 	= afpRequest->GetInt32();
@@ -1260,16 +1172,16 @@ AFPERROR fp_objects::fp_SetFileDirParms(
 		{			
 			auto owner = afpRequest->pull_num<uint32>();
 			
-			//Not supported by Haiku-OS
-			//afpEntry->SetOwner(owner);
+			// Not supported by Haiku-OS
+			// afpEntry->SetOwner(owner);
 		}
 		
 		if (afpBitmap & kFPDirGroupID)
 		{			
 			auto group = afpRequest->pull_num<uint32>();
 
-			//Not supported by Haiku-OS
-			//afpEntry->SetGroup(group);
+			// Not supported by Haiku-OS
+			// afpEntry->SetGroup(group);
 		}
 		
 		if ((afpBitmap & kFPDirAccess) && (afpSession->IsAdmin()))
@@ -1281,17 +1193,13 @@ AFPERROR fp_objects::fp_SetFileDirParms(
 		}
 	}
 
-	//
-	//Finally, set the correct times for the file/dir.
-	//
+	// Finally, set the correct times for the file/dir.
 	if (afpBitmap & kFPCreateDate)	afpEntry->SetCreationTime(FROM_AFP_TIME(afpCreateTime));
 	if (afpBitmap & kFPModDate)		afpEntry->SetModificationTime(FROM_AFP_TIME(afpModTime));
 	
 	if (afpBitmap & kFPBackupDate)
 	{
-		//
-		//Haiku-OS doesn't support a backup time.
-		//
+		// Haiku-OS doesn't support a backup time.
 	}
 	
 	return( AFP_OK );
@@ -1353,14 +1261,13 @@ uint32 fp_objects::BtoAFPPermissions(
 	if (posixPerms & POSIX_AFP_IWOWNER)	afpPerms |= kAccess_OW;
 	if (posixPerms & POSIX_AFP_ISOWNER)	afpPerms |= kAccess_OS;
 	
-	//if (posixPerms & POSIX_AFP_IRUSER)	afpPerms |= kAccess_GR;
-	//if (posixPerms & POSIX_AFP_IWUSER)	afpPerms |= kAccess_GW;
-	//if (posixPerms & POSIX_AFP_ISUSER)	afpPerms |= kAccess_GS;
+	// if (posixPerms & POSIX_AFP_IRUSER)	afpPerms |= kAccess_GR;
+	// if (posixPerms & POSIX_AFP_IWUSER)	afpPerms |= kAccess_GW;
+	// if (posixPerms & POSIX_AFP_ISUSER)	afpPerms |= kAccess_GS;
 	
-	//
-	//User Access Rights are the rights of the logged on user
-	//we're currently getting permissions for.
-	//
+	// 
+	// User Access Rights are the rights of the logged on user
+	// we're currently getting permissions for.
 	
 	if (userType == kUserType_Guest)
 	{
@@ -1405,19 +1312,15 @@ AFPERROR fp_objects::GetAFPFinderInfo(
 	char		name[B_FILE_NAME_LENGTH];
 	ssize_t		bytesRead;
 	
-	//
-	//The object had better exit at this point or we really
-	//messed up!
-	//
+	// The object had better exit at this point or we really
+	// messed up!
 	if (node.InitCheck() != B_OK) 
 	{
 		DBGWRITE(dbg_level_error, "InitCheck() failed!\n");
 		return( afpObjectNotFound );
 	}
 	
-	//
-	//Read in the FInfo structure from the attribute stream.
-	//
+	// Read in the FInfo structure from the attribute stream.
 	bytesRead = node.ReadAttr(
 					AFP_FINFO_ATTRIBUTE,
 					B_RAW_TYPE,
@@ -1441,9 +1344,7 @@ AFPERROR fp_objects::GetAFPFinderInfo(
 		// in the return value.
 		memcpy(afpFInfo, &finfo, sizeof(finfo));
 
-		//
-		//We failed to read in the data (doesn't exist).
-		//
+		// We failed to read in the data (doesn't exist).
 		DBGWRITE(dbg_level_trace, "Failed to read FInfo (%d)\n", bytesRead);
 		return( afpObjectNotFound );
 	}
@@ -1469,10 +1370,8 @@ AFPERROR fp_objects::SetAFPFinderInfo(
 	BNode		node(afpEntry);
 	ssize_t		bytesWritten;
 	
-	//
-	//The object had better exit at this point or we really
-	//messed up!
-	//
+	// The object had better exit at this point or we really
+	// messed up!
 	if (node.InitCheck() != B_OK) {
 
 		return( afpObjectNotFound );
@@ -1488,9 +1387,7 @@ AFPERROR fp_objects::SetAFPFinderInfo(
 
 	if ((bytesWritten < B_OK) || (bytesWritten != sizeof(FINDER_INFO)))
 	{
-		//
-		//We failed to read in the data (doesn't exist).
-		//
+		// We failed to read in the data (doesn't exist).
 		DBGWRITE(dbg_level_error, "Failed to write FInfo (%lu)\n", bytesWritten);
 		return( afpMiscErr );
 	}
@@ -1516,18 +1413,14 @@ AFPERROR fp_objects::GetAFPAttributes(
 	BNode		node(afpEntry);
 	ssize_t		bytesRead;
 	
-	//
-	//The object had better exit at this point or we really
-	//messed up!
-	//
+	// The object had better exit at this point or we really
+	// messed up!
 	if (node.InitCheck() != B_OK) {
 		
 		return( afpObjectNotFound );
 	}
 	
-	//
-	//Read in the attributes from the attribute stream.
-	//
+	// Read in the attributes from the attribute stream.
 	bytesRead = node.ReadAttr(
 					AFP_ATTR_ATTRIBUTE,
 					B_INT16_TYPE,
@@ -1542,22 +1435,16 @@ AFPERROR fp_objects::GetAFPAttributes(
 		{
 			int16 newAttributes = 0;
 			
-			//
-			//There is currently no attribute stream for this
-			//file. Create one.
-			//
+			// There is currently no attribute stream for this
+			// file. Create one.
 			SetAFPAttributes(afpEntry, &newAttributes);
 			
-			//
-			//Return 0 for no attributes set.
-			//
+			// Return 0 for no attributes set.
 			*afpAttributes = 0;
 		}			
 		else
 		{
-			//
-			//We failed to read in the data (doesn't exist).
-			//
+			// We failed to read in the data (doesn't exist).
 			DBGWRITE(dbg_level_error, "Failed to read attributes (%lu)\n", bytesRead);
 			return( afpObjectNotFound );
 		}
@@ -1584,10 +1471,8 @@ AFPERROR fp_objects::SetAFPAttributes(
 	BNode		node(afpEntry);
 	ssize_t		bytesWritten;
 	
-	//
-	//The object had better exit at this point or we really
-	//messed up!
-	//
+	// The object had better exit at this point or we really
+	// messed up!
 	if (node.InitCheck() != B_OK) {
 		
 		return( afpObjectNotFound );
@@ -1603,9 +1488,7 @@ AFPERROR fp_objects::SetAFPAttributes(
 
 	if ((bytesWritten < B_OK) || (bytesWritten != sizeof(int16)))
 	{
-		//
-		//We failed to read in the data (doesn't exist).
-		//
+		// We failed to read in the data (doesn't exist).
 		DBGWRITE(dbg_level_error, "Failed to write attributes (%lu)\n", bytesWritten);
 		return( afpMiscErr );
 	}
@@ -1642,10 +1525,8 @@ status_t fp_objects::CopyAttrs(BNode& inFrom, BNode& inTo)
 
 		if (!strcmp(attrname, AFP_ATTR_LONGNAME))
 		{
-			//
-			//We don't want to copy the longname file attribute as
-			//we'll need to create a new one and we don't want dupes.
-			//
+			// We don't want to copy the longname file attribute as
+			// we'll need to create a new one and we don't want dupes.
 			continue;
 		}
 		

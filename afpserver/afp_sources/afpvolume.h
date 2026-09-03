@@ -10,12 +10,10 @@
 
 #define VOLUME_DATA_V1	0x0001
 
-//
-//This is how the volume meta data is stored on disk.
-//
+// This is how the volume meta data is stored on disk.
 typedef struct
 {
-	uint16		version;		//See defines above
+	uint16		version;		// See defines above
 	char		path[256];
 	uint32		flags;
 }VolumeStorageData, *PVolumeStorageData;
@@ -36,4 +34,4 @@ void 		WatchVolume(const char* path);
 void 		StopWatchingVolume(const char* path);
 void 		StopWatchingVolume(node_ref nref);
 
-#endif //__afpvolume__
+#endif // __afpvolume__

@@ -150,4 +150,4 @@ void hex_dump(
     }
 }
 
-#endif //DEBUG
+#endif // DEBUG
