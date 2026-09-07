@@ -6,6 +6,7 @@
 #include "afp.h"
 #include "afp_session.h"
 #include "afp_buffer.h"
+#include "ClassicMacIcon.h"
 #include "afpuser.h"
 #include "afplogon.h"
 #include "afphostname.h"
@@ -59,8 +60,9 @@ AFPERROR FPGetSrvrInfo(
 
 	*((int16*)&afpReplyBuffer[SRVRINFO_OFFSET_FLAGS]) = htons(afpFlags);
 
-	// We don't have a custom volume icon.
-	*((int16*)&afpReplyBuffer[SRVRINFO_OFFSET_VOLUMEICON]) = 0;
+	// The VolumeIconAndMask offset (SRVRINFO_OFFSET_VOLUMEICON) is filled in
+	// at the end of this routine, once we know where the 256-byte icon will
+	// be appended in the reply buffer.
 
 	// Blast in the computer name.
 	afp_GetHostname(hostname, sizeof(hostname));
@@ -129,10 +131,31 @@ AFPERROR FPGetSrvrInfo(
 	*((int16*)pAddressCountOffset) = htons(pBuffer - afpReplyBuffer);
 	*pBuffer++ = 0;
 
+	// Append the 32x32 monochrome volume icon (128-byte bitmap + 128-byte
+	// mask = 256 bytes) at the end of the reply, then point the
+	// VolumeIconAndMask offset field at it.  Appending at the end keeps every
+	// other header offset (machine type, AFP versions, UAMs, server signature,
+	// network addresses) exactly as computed above.
+	int8*		pVolumeIcon = pBuffer;
+	memcpy(pBuffer, kClassicVolumeIconBitmap, kClassicVolumeIconBitmapSize);
+	pBuffer += kClassicVolumeIconBitmapSize;
+	memcpy(pBuffer, kClassicVolumeIconMask, kClassicVolumeIconMaskSize);
+	pBuffer += kClassicVolumeIconMaskSize;
+	*((int16*)&afpReplyBuffer[SRVRINFO_OFFSET_VOLUMEICON]) =
+											htons(pVolumeIcon - afpReplyBuffer);
+
 	// This size does NOT include the size of the DSI Header.
 	*afpDataSize = (pBuffer - afpReplyBuffer);
 
-	DBGWRITE(dbg_level_trace, "FPGetSrvrInfo reply datasize (%d bytes): ", *afpDataSize);
+	// TEMPORARY debug logging added for the volume-icon work — remove once the
+	// icon is confirmed rendering correctly on a Mac OS 9.0.4 client.
+	DBGWRITE(dbg_level_trace,
+		"FPGetSrvrInfo reply datasize (%d bytes), volume icon at offset %d "
+		"(length %d bytes), AFP versions advertised: %d: ",
+		*afpDataSize,
+		ntohs(*((int16*)&afpReplyBuffer[SRVRINFO_OFFSET_VOLUMEICON])),
+		kClassicVolumeIconSize,
+		AFP_VERSION_COUNT);
 
 	return( AFP_OK );
 }
