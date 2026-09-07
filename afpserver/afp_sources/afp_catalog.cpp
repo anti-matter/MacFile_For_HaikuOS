@@ -1,26 +1,11 @@
-#include <fs_attr.h>
-#include <DataIO.h>
-
 #include "debug.h"
 
 #include "afp.h"
-#include "afpmsg.h"
-#include "afpdesk.h"
-#include "afpuser.h"
-#include "afplogon.h"
-#include "afpvolume.h"
-#include "afpaccess.h"
-#include "afpextattr.h"
-#include "afphostname.h"
-#include "afpreplay.h"
-#include "commands.h"
-#include "dsi_stats.h"
-#include "fp_rangelock.h"
-#include "afp_buffer.h"
 #include "afp_session.h"
-#include "fp_volume.h"
+#include "afp_buffer.h"
+#include "afpaccess.h"
 #include "fp_objects.h"
-#include "dsi_scavenger.h"
+#include "fp_volume.h"
 
 /*
  * FPGetFileDirParms()
