@@ -6,6 +6,8 @@
 #include "afpaccess.h"
 #include "fp_objects.h"
 #include "fp_volume.h"
+#include "afpvolume.h"
+#include "dsi_connection.h"
 
 /*
  * FPGetFileDirParms()

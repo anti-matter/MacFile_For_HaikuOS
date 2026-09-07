@@ -7,9 +7,12 @@
 #include "afp_session.h"
 #include "afp_buffer.h"
 #include "afpuser.h"
+#include "afplogon.h"
 #include "afphostname.h"
 #include "fp_objects.h"
 #include "fp_volume.h"
+#include "afpvolume.h"
+#include "dsi_connection.h"
 #include "dsi_scavenger.h"
 
 extern std::unique_ptr<BList> volume_blist;

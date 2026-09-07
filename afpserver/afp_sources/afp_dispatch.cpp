@@ -6,6 +6,7 @@
 #include "afp.h"
 #include "afp_session.h"
 #include "afpuser.h"
+#include "afplogon.h"
 #include "afpdesk.h"
 #include "afpmsg.h"
 #include "afpextattr.h"

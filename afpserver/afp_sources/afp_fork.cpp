@@ -9,6 +9,8 @@
 #include "fp_rangelock.h"
 #include "fp_objects.h"
 #include "fp_volume.h"
+#include "afpvolume.h"
+#include "dsi_connection.h"
 
 /*
  * FPFlush()
