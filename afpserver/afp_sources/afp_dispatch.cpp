@@ -114,22 +114,22 @@ AFP_TABLE afpTable[] = {
 
 // AFP timestamps count seconds from 1904-01-01.
 // Unix timestamps count seconds from 1970-01-01.
-constexpr int64_t kAFPToUnixEpochOffset = 2082844800LL;
+constexpr int64 kAFPToUnixEpochOffset = 2082844800LL;
 
 uint32 ToAFPTime(time_t unixTime)
 {
-    const int64 afpTime =
-        static_cast<int64>(unixTime) + kAFPToUnixEpochOffset;
+	const int64 afpTime =
+		static_cast<int64>(unixTime) + kAFPToUnixEpochOffset;
 
-    return static_cast<uint32>(afpTime);
+	return static_cast<uint32>(afpTime);
 }
 
 time_t FromAFPTime(uint32_t afpTime)
 {
-    const int64_t unixTime =
-        static_cast<int64_t>(afpTime) - kAFPToUnixEpochOffset;
+	const int64 unixTime =
+		static_cast<int64>(afpTime) - kAFPToUnixEpochOffset;
 
-    return static_cast<time_t>(unixTime);
+	return static_cast<time_t>(unixTime);
 }
 
 /*
