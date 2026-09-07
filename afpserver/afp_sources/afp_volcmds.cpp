@@ -9,6 +9,7 @@
 #include "afpuser.h"
 #include "afplogon.h"
 #include "afphostname.h"
+#include "commands.h"
 #include "fp_objects.h"
 #include "fp_volume.h"
 #include "afpvolume.h"
