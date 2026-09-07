@@ -319,7 +319,6 @@ AFPERROR FPDisconnectOldSession(
 	afp_buffer		afpRequest(afpReqBuffer);
 	afp_buffer		afpReply(afpReplyBuffer);
 	afp_session*	afpLostSession	= NULL;
-	int8			afpType			= 0;
 	int32			afpTokenLength	= 0;
 	int32			afpToken		= 0;
 
@@ -327,7 +326,9 @@ AFPERROR FPDisconnectOldSession(
 
 	afpRequest.Advance(sizeof(int16));
 
-	afpType			= afpRequest.GetInt8();
+	// Skip the session type field (unused by the server) so the token
+	// fields parse at the correct offset.
+	afpRequest.Advance(sizeof(int8));
 	afpTokenLength	= afpRequest.GetInt32();
 
 	if (afpTokenLength != AFP_SESSION_TOKEN_SIZE)
@@ -948,7 +949,6 @@ AFPERROR FPGetUserInfo(
 	afp_buffer		afpRequest(afpReqBuffer);
 	afp_buffer		afpReply(afpReplyBuffer);
 	AFP_USER_DATA	userData;
-	int32			afpUserID	= 0;
 	int16			afpBitmap	= 0;
 	int8			afpThisUser	= 0;
 	AFPERROR		afpError	= AFP_OK;
@@ -964,7 +964,9 @@ AFPERROR FPGetUserInfo(
 		return( afpParmErr );
 	}
 
-	afpUserID	= afpRequest.GetInt32();
+	// Skip the requested user ID field (unused — the server always reports
+	// the session's own user) so the bitmap parses at the correct offset.
+	afpRequest.Advance(sizeof(int32));
 	afpBitmap	= afpRequest.GetInt16();
 
 	afpReply.AddInt16(afpBitmap);
