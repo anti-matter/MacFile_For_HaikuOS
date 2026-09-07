@@ -15,6 +15,11 @@
  *   mask bit   = 1  if the source pixel is opaque (value != 0xff)
  *   mask bit   = 0  if the source pixel is transparent (value == 0xff)
  *
+ * The source icon is vertically centered in the 32x32 frame (its content
+ * sits on rows 1-28 of the source, so it is shifted down 3 rows).  This
+ * derivation is byte-exact: both planes reproduce exactly from the rsrc's
+ * 8-bit data under the two rules above.
+ *
  * Both planes are stored row-major, MSB-first, top row first — the
  * classic Mac 1-bit icon layout.  32 rows x 4 bytes = 128 bytes each.
  */
