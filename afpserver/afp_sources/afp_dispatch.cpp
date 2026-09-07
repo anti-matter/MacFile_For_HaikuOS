@@ -1,4 +1,3 @@
-#include <memory>
 #include <Path.h>
 
 #include "debug.h"
@@ -12,14 +11,8 @@
 #include "afpextattr.h"
 #include "afpreplay.h"
 #include "commands.h"
-#include "dsi_stats.h"
-#include "dsi_scavenger.h"
-
-extern std::unique_ptr<BList> volume_blist;
 
 int16					gMaxAFPSessions = 0;
-extern dsi_scavenger*	gAFPSessionMgr;
-extern dsi_stats		gAFPStats;
 
 typedef AFPERROR (*afp_func)(afp_session* sess, int8* reqBuf, int8* replyBuf, int32* afpDataSize);
 
