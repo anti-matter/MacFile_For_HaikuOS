@@ -24,7 +24,7 @@ enum {
 	kClassicVolumeIconSize			= 256	/* bitmap + mask */
 };
 
-extern const uint8 kClassicVolumeIconBitmap[kClassicVolumeIconBitmapSize];
-extern const uint8 kClassicVolumeIconMask[kClassicVolumeIconMaskSize];
+extern const uint8_t kClassicVolumeIconBitmap[kClassicVolumeIconBitmapSize];
+extern const uint8_t kClassicVolumeIconMask[kClassicVolumeIconMaskSize];
 
 #endif // __ClassicMacIcon_h__
