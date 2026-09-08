@@ -743,9 +743,13 @@ void afpMainWindow::RemoveShare()
 		//
 		//Initialize our alert object and setup it's parameters.
 		//
+		BString		text;
+
+		text << "Are you sure you want to stop sharing this directory?\n\n " << path.String();
+
 		alert = new BAlert(
 						"",
-						BString::Format("Are you sure you want to stop sharing this directory?\n\n %s", path.String()),
+						text.String(),
 						"Cancel",
 						"Yes"
 						);
@@ -769,11 +773,19 @@ void afpMainWindow::RemoveShare()
 					break;
 				
 				case be_afp_invalidvolume:
-					(new BAlert("", BString::Format("ERROR! The directory:\n\n %s\n\n is currently not shared by AFP!", path.String()), "OK"))->Go();
+					{
+						BString text;
+						text << "ERROR! The directory:\n\n " << path.String() << "\n\n is currently not shared by AFP!";
+						(new BAlert("", text.String(), "OK"))->Go();
+					}
 					break;
 
 				default:
-					(new BAlert("", BString::Format("ERROR: Attempt to stop sharing %s failed!", path.String()), "OK"))->Go();
+					{
+						BString text;
+						text << "ERROR: Attempt to stop sharing " << path.String() << " failed!";
+						(new BAlert("", text.String(), "OK"))->Go();
+					}
 					break;
 			}
 		}
@@ -809,7 +821,11 @@ void afpMainWindow::AddNewShare(entry_ref newRef)
 			break;
 		
 		case be_afp_sharealreadyexits:
-			(new BAlert("", BString::Format("The directory:\n\n%s\n\nis already shared out by AFP", newRef.name), "OK"))->Go();
+			{
+				BString text;
+				text << "The directory:\n\n" << newRef.name << "\n\nis already shared out by AFP";
+				(new BAlert("", text.String(), "OK"))->Go();
+			}
 			break;
 			
 		default:
