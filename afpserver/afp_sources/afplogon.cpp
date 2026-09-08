@@ -53,10 +53,16 @@ AFPERROR afpImpChangePswd(
 		
 		// We don't allow zero length passwords since this is bad security.
 		if (strlen(newPassword) == 0) {
-			
+
 			return( afpPwdTooShortErr );
 		}
-		
+
+		// The user database has a fixed length password field.
+		if (strlen(newPassword) > AFP_MAX_PASSWORD_LEN) {
+
+			return( afpPwdTooLongErr );
+		}
+
 		// Don't allow the user to reset the password to the same one again.
 		if (!strcmp(userData.password, newPassword)) {
 			
@@ -193,6 +199,16 @@ AFPERROR afpSaveNewUser(
 	AFP_USER_DATA	userData;
 	ssize_t			size 	= 0;
 	
+	// The user database has fixed length name and password fields,
+	// reject anything that won't fit. Blank passwords are allowed;
+	// the built-in Guest account uses one.
+	if ((strlen(userName) > AFP_MAX_USERNAME_LEN) ||
+		(strlen(password) > AFP_MAX_PASSWORD_LEN))
+	{
+		DPRINT(("[afpSaveNewUser]User name or password too long!\n"));
+		return( be_afp_passwordtoolong );
+	}
+
 	// Make sure the user name doesn't already exist.
 	if (afpGetUserDataByName(userName, NULL) == AFP_OK)
 	{
@@ -238,7 +254,13 @@ AFPERROR afpSaveNewUser(
 				userData.group = AFP_HAIKU_GROUP_USERS_ID;
 			
 			size = file.WriteAttr(attrName, 0, 0, &userData, sizeof(AFP_USER_DATA));
-			
+
+			if (size != sizeof(AFP_USER_DATA))
+			{
+				DPRINT(("[afpSaveNewUser]Failed to write user attribute! (%ld)\n", (long)size));
+				return( be_afp_fileoperationfailed );
+			}
+
 			// Now update the user schema version information.
 			if (strcmp(userName, AFP_GUEST_NAME) == 0)
 			{
@@ -261,7 +283,12 @@ AFPERROR afpSaveNewUser(
 			return( be_afp_fileoperationfailed );
 		}
 	}
-	
+	else
+	{
+		DPRINT(("[afpSaveNewUser]Failed to find user settings directory!\n"));
+		return( be_afp_fileoperationfailed );
+	}
+
 	return( AFP_OK );
 }
 

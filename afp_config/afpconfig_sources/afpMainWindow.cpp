@@ -730,7 +730,6 @@ void afpMainWindow::RemoveShare()
 	BAlert*		alert	= NULL;
 	int			result	= 0;
 	int32		index	= 0;
-	char		textmsg[256];
 
 	index 	= mVolumeListView->CurrentSelection();
 	
@@ -741,14 +740,12 @@ void afpMainWindow::RemoveShare()
 	
 	if (AFPGetVolumePathFromIndex(index, &path) == B_OK)
 	{
-		sprintf(textmsg, "Are you sure you want to stop sharing this directory?\n\n %s", path.String());
-
 		//
 		//Initialize our alert object and setup it's parameters.
 		//
 		alert = new BAlert(
 						"",
-						textmsg,
+						BString::Format("Are you sure you want to stop sharing this directory?\n\n %s", path.String()),
 						"Cancel",
 						"Yes"
 						);
@@ -772,13 +769,11 @@ void afpMainWindow::RemoveShare()
 					break;
 				
 				case be_afp_invalidvolume:
-					sprintf(textmsg, "ERROR! The directory:\n\n %s\n\n is currently not shared by AFP!", path.String());
-					(new BAlert("", textmsg, "OK"))->Go();
+					(new BAlert("", BString::Format("ERROR! The directory:\n\n %s\n\n is currently not shared by AFP!", path.String()), "OK"))->Go();
 					break;
-					
+
 				default:
-					sprintf(textmsg, "ERROR: Attempt to stop sharing %s failed!", path.String());
-					(new BAlert("", textmsg, "OK"))->Go();
+					(new BAlert("", BString::Format("ERROR: Attempt to stop sharing %s failed!", path.String()), "OK"))->Go();
 					break;
 			}
 		}
@@ -797,7 +792,6 @@ void afpMainWindow::RemoveShare()
 void afpMainWindow::AddNewShare(entry_ref newRef)
 {
 	BPath		path;
-	char		textmsg[256];
 	int			result;
 	
 	result = AFPAddShare(newRef, &path);
@@ -815,8 +809,7 @@ void afpMainWindow::AddNewShare(entry_ref newRef)
 			break;
 		
 		case be_afp_sharealreadyexits:
-			sprintf(textmsg, "The directory:\n\n%s\n\nis already shared out by AFP", newRef.name);
-			(new BAlert("", textmsg, "OK"))->Go();
+			(new BAlert("", BString::Format("The directory:\n\n%s\n\nis already shared out by AFP", newRef.name), "OK"))->Go();
 			break;
 			
 		default:
@@ -925,7 +918,7 @@ void afpMainWindow::UpdateThroughput()
 		
 		mBytesRecv->LockLooper();
 		
-		if (strcmp(text, mBytesSent->Text())) {
+		if (strcmp(text, mBytesRecv->Text())) {
 			mBytesRecv->SetText(text);
 		}
 		

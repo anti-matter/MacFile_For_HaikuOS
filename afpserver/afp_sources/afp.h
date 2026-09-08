@@ -58,6 +58,7 @@ enum {
 																/*  OR the folder contains a shared folder and is being moved into the descendent of a shared folder.*/
 	afpInsideTrashErr			= -5044,						/*the folder being shared is inside the trash folder */
 																/*  OR the shared folder is being moved into the trash folder OR the folder is being moved to the trash and it contains a shared folder */
+	afpPwdTooLongErr			= -5045,						/*the password being set is too long: the user database has a fixed length password field*/
 	afpBadDirIDType				= -5060,
 	afpCantMountMoreSrvre		= -5061,
 	afpAlreadyMounted			= -5062,

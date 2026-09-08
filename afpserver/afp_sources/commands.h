@@ -50,6 +50,11 @@ enum
 // like regular user accounts but hold some special properties.
 #define AFP_GUEST_NAME			"Guest"
 
+// Maximum username and password lengths accepted by the server's user
+// database (see AFP_USER_DATA in afplogon.h).
+#define AFP_MAX_USERNAME_LEN	64
+#define AFP_MAX_PASSWORD_LEN	64
+
 #define AFP_PARAM_INT64			"afp-int64"
 #define AFP_PARAM_INT32			"afp-int32"
 #define AFP_PARAM_INT16			"afp-int16"
@@ -74,6 +79,7 @@ enum {
 	be_afp_userdbnotfound		= -4011,
 	be_afp_baduserdbversion		= -4012,
 	be_afp_userdbupgraded		= -4013,
+	be_afp_passwordtoolong		= -4014,
 
 	be_afp_success				= 0,
 	be_afp_failure				= -1

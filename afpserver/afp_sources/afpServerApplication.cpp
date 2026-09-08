@@ -192,8 +192,17 @@ void afpServerApplication::MessageReceived(BMessage* message)
 						break;
 					}
 										
+					// The user database has a fixed length password field,
+					// reject anything that won't fit.
+					if (password.Length() > AFP_MAX_PASSWORD_LEN)
+					{
+						DPRINT(("[CMD_AFP_UPDATEUSERINFO]Password too long (%lu bytes)!\n", (unsigned long)password.Length()));
+						message->SendReply(be_afp_passwordtoolong);
+						break;
+					}
+
 					memset(userData.password, 0, sizeof(userData.password));
-					strcpy(userData.password, password.String());
+					strncpy(userData.password, password.String(), sizeof(userData.password) - 1);
 					
 					userData.flags	 	= flags;
 					afpError 			= afpUpdateUserInfo(userData);
@@ -231,7 +240,7 @@ void afpServerApplication::MessageReceived(BMessage* message)
 						afpError = afpSaveNewUser(string.String(), password.String(), flags);
 						if (!AFP_SUCCESS(afpError))
 						{
-							message->SendReply(be_afp_failure);
+							message->SendReply(afpError);
 						}
 						else
 						{
