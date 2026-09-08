@@ -45,7 +45,8 @@ afpUserConfig::afpUserConfig(BWindow* parent, bool inNewUser, const char* userNa
 		);
 
 	if (userName != NULL) {
-		strcpy(mUserName, userName);
+		strncpy(mUserName, userName, sizeof(mUserName) - 1);
+		mUserName[sizeof(mUserName) - 1] = '\0';
 	}
 	
 	mIsNewUser = inNewUser;
