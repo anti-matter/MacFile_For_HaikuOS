@@ -1,6 +1,6 @@
 # MacFile AFP Server
 
-An Apple Filing Protocol (AFP) file server for the Haiku operating system, designed to serve vintage Macintosh clients (MacOS 8.0 through MacOS X 10.5) over TCP/IP port 548. The server is currently at version **1.8.6** and licensed under the MIT License by Michael J. Conrad.
+An Apple Filing Protocol (AFP) file server for the Haiku operating system, designed to serve vintage Macintosh clients (MacOS 7.1 [with AppleShare Client 3.7.1 installed] through MacOS X 10.5) over TCP/IP port 548. The server is currently at version **2.0** and licensed under the MIT License by Michael J. Conrad.
 
 ## Overview
 
@@ -51,6 +51,14 @@ Three user authentication methods are advertised and supported:
 | **DHCAST128** | Diffie-Hellman key exchange with CAST encryption for secure password transmission |
 
 The server maintains its own user database (not integrated with Haiku system accounts) stored in `~/.settings/` with schema versioning and migration support. User flags include enabled, admin, must-change-password, don't-display, and can-change-password.
+
+## Custom Volume Icon
+
+The server advertises a **custom volume icon** in the `GetSrvrInfo` response (the `VolumeIconAndMask` field), so Classic Mac clients display a recognizable icon for the server in the AppleShare Chooser and the Finder instead of the generic default volume icon.
+
+- The icon is a **32×32, 1-bit-per-pixel monochrome** image: a 128-byte bitmap plus a 128-byte transparency mask (256 bytes total), stored in the classic Mac layout — row-major, MSB-first, top row first, with bitmap bit = 1 for black and mask bit = 1 for opaque.
+- The artwork is the project's own 32×32 application icon, thresholded to 1-bit and compiled into the server as static data (`ClassicMacIcon.cpp`).
+- The 256-byte icon is appended to the end of the `GetSrvrInfo` reply and the `VolumeIconAndMask` offset field is pointed at it.
 
 ## CodeWarrior Development Support
 
@@ -146,12 +154,36 @@ afp_server (BApplication)
 └── dsi_stats (network statistics collector)
 ```
 
+## Codebase Modernization (v2.0)
+
+Version 2.0 includes a broad, AI-assisted modernization and cleanup pass across the codebase, alongside a series of bug fixes:
+
+- **`afp.cpp` split into domain modules** — the 4,270-line monolithic `afp.cpp` was broken into four cohesive files by concern, moved verbatim with no logic changes:
+  - `afp_dispatch.cpp` — includes, globals, dispatch table, time helpers, `FPDispatchCommand`
+  - `afp_volcmds.cpp` — server/session/volume commands
+  - `afp_catalog.cpp` — file/directory catalog commands (enumerate, create, move)
+  - `afp_fork.cpp` — fork I/O commands (open, read, write, locks)
+- **Dead code removal** — unused externs, orphaned includes, and dead local variables were removed; per-file includes were trimmed to only what each file actually uses.
+- **Modern C++** — hand-managed arrays and lists were migrated to `std::vector`; deprecated APIs (e.g. `BTextControl::SetMaxBytes`) were replaced with current Haiku APIs, and `BString::Format` calls were replaced with `BString` appends.
+- **Bug fixes** — DHX (DHCAST128) login issues, an `FPEnumerate` bug, desktop database access for databases created before the new header format, access-check leaks, and the `FPMoveAndRename` source write check (now correctly uses the parent directory).
+- **Style normalization** — comment formatting and include style were normalized consistently across `afp_sources`.
+
 ### Build
 
 ```bash
 cd afpserver && make          # Release build
 cd afpserver && ./dbgbuild.sh # Debug build (enables DBGWRITE logging)
 ```
+
+## Installation
+
+MacFile is built and installed on Haiku (there is no Linux cross-compiler):
+
+1. **Build** — run `./build_macfile.sh` from the repository root and answer `y` to the "Build for release?" prompt. The script builds all components and creates a release archive in `distribution/`: `MacFile_x86_Release.zip` (x86) or `MacFile_x86_64_Release.zip` (x86_64).
+2. **Extract** — expand the resulting `.zip` file.
+3. **Install** — run the `install-macfile.sh` installer script from the extracted folder (double-click it, or run it from the Terminal). It places the binaries and OpenSSL libraries in `~/config/non-packaged/`, creates the deskbar menu links, links `afp_server` into `~/config/boot/launch/` for auto-start, and starts the server.
+
+To uninstall, re-run the same installer script and choose the uninstall option. Your settings are preserved.
 
 ## Distribution
 
