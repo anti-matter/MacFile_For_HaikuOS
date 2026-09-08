@@ -59,9 +59,21 @@ afpConfigApplication::afpConfigApplication()
 			//
 			
 			result = AFPLaunchServer();
-			
-			snooze(100000);
-			
+
+			//
+			//Give the server a moment to come up. Startup time varies, so
+			//poll for up to about 2 seconds instead of assuming a fixed
+			//delay is enough.
+			//
+
+			int32	tries = 0;
+
+			while ((result == B_OK) && (!AFPServerIsRunning()) && (tries < 20))
+			{
+				snooze(100000);
+				tries++;
+			}
+
 			if ((result != B_OK) || (!AFPServerIsRunning()))
 			{
 				//

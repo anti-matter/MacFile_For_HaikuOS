@@ -343,11 +343,11 @@ int AFPSaveHostnameToFile(
 	BMessenger	messenger(AFPServerSignature);
 	BMessage	message(CMD_AFP_SETHOSTNAME);
 	BPath		path;
+	BPath		fpath;
 	BDirectory	dir;
 	BFile		file;
-	char		fpath[256];
 	int			result = be_afp_failure;
-	
+
 	//
 	//The hostname cannot be null nor can it be zero length.
 	//
@@ -355,7 +355,7 @@ int AFPSaveHostnameToFile(
 	{
 		return( be_afp_invlidehostnamelen );
 	}
-	
+
 	//
 	//First, find the path to the user settings where we'll save the
 	//text message to.
@@ -363,38 +363,53 @@ int AFPSaveHostnameToFile(
 	if (find_directory(B_USER_SETTINGS_DIRECTORY, &path) == B_OK)
 	{
 		dir.SetTo(path.Path());
-				
+
 		if (dir.InitCheck() == B_OK)
 		{
-			sprintf(fpath, "%s/%s", path.Path(), AFP_HOSTNAME_FILE_NAME);
-			
+			fpath.SetTo(path.Path());
+			fpath.Append(AFP_HOSTNAME_FILE_NAME);
+
 			//
 			//Delete the file if it already exits.
 			//
-			if (dir.Contains(fpath, B_FILE_NODE))
+			if (dir.Contains(fpath.Path(), B_FILE_NODE))
 			{
-				BEntry	entry(fpath);
+				BEntry	entry(fpath.Path());
 				entry.Remove();
 			}
-						
-			if (dir.CreateFile(fpath, &file) == B_OK)
+
+			if (dir.CreateFile(fpath.Path(), &file) == B_OK)
 			{
-				file.Write(hostname, strlen(hostname));
-				result = B_OK;
+				if (file.Write(hostname, strlen(hostname)) == (ssize_t)strlen(hostname))
+				{
+					result = B_OK;
+				}
+				else
+				{
+					result = be_afp_fileoperationfailed;
+				}
 			}
 		}
 	}
-	
+
 	//
 	//Send an interapplication communication message to the afp_server
 	//notifying it of the new hostname.
 	//
-	
+
 	message.AddString(AFP_PARAM_STRING, hostname);
 	messenger.SendMessage(&message, &message);
-	
-	result = (message.what == be_afp_success) ? B_OK : message.what;
-	
+
+	//
+	//Only take the server's reply as the result if the file write
+	//succeeded, otherwise a successful reply would mask the
+	//failed write.
+	//
+	if (result == B_OK)
+	{
+		result = (message.what == be_afp_success) ? B_OK : message.what;
+	}
+
 	return( result );
 }
 
@@ -502,11 +517,11 @@ int AFPSaveLogonMessage(
 	BMessenger	messenger(AFPServerSignature);
 	BMessage	message(CMD_AFP_UPDATELOGINMSG);
 	BPath		path;
+	BPath		fpath;
 	BDirectory	dir;
 	BFile		file;
-	char		fpath[256];
 	int			result = be_afp_failure;
-	
+
 	//
 	//First, find the path to the user settings where we'll save the
 	//text message to.
@@ -514,33 +529,48 @@ int AFPSaveLogonMessage(
 	if (find_directory(B_USER_SETTINGS_DIRECTORY, &path) == B_OK)
 	{
 		dir.SetTo(path.Path());
-				
+
 		if (dir.InitCheck() == B_OK)
 		{
-			sprintf(fpath, "%s/%s", path.Path(), AFP_LOGONMSG_FILE_NAME);
-			
+			fpath.SetTo(path.Path());
+			fpath.Append(AFP_LOGONMSG_FILE_NAME);
+
 			//
 			//Delete the file if it already exits.
 			//
-			if (dir.Contains(fpath, B_FILE_NODE))
+			if (dir.Contains(fpath.Path(), B_FILE_NODE))
 			{
-				BEntry	entry(fpath);
+				BEntry	entry(fpath.Path());
 				entry.Remove();
 			}
-						
-			if (dir.CreateFile(fpath, &file) == B_OK)
+
+			if (dir.CreateFile(fpath.Path(), &file) == B_OK)
 			{
-				file.Write(messageText, messageLength);
-				result = B_OK;
+				if (file.Write(messageText, messageLength) == (ssize_t)messageLength)
+				{
+					result = B_OK;
+				}
+				else
+				{
+					result = be_afp_fileoperationfailed;
+				}
 			}
 		}
 	}
-	
+
 	message.AddString(AFP_PARAM_STRING, messageText);
 	messenger.SendMessage(&message, &message);
-	
-	result = (message.what == be_afp_success) ? B_OK : message.what;
-	
+
+	//
+	//Only take the server's reply as the result if the file write
+	//succeeded, otherwise a successful reply would mask the
+	//failed write.
+	//
+	if (result == B_OK)
+	{
+		result = (message.what == be_afp_success) ? B_OK : message.what;
+	}
+
 	return( result );
 }
 
@@ -618,20 +648,29 @@ int AFPSetGuestsAllowed(
 )
 {
 	BString		pswd;
-	uint32		flags;
-	
-	if (AFPGetUserInfo(AFP_GUEST_NAME, &pswd, &flags) == B_OK)
+	uint32		flags = 0;
+	int			result;
+
+	result = AFPGetUserInfo(AFP_GUEST_NAME, &pswd, &flags);
+
+	//
+	//If we can't read the guest account's current properties, don't
+	//try to update it with uninitialized flags.
+	//
+	if (result != B_OK)
 	{
-		if (allowed) {
-		
-			flags |= kUserEnabled;
-		}
-		else {
-		
-			flags &= ~kUserEnabled;
-		}
+		return( result );
 	}
-	
+
+	if (allowed) {
+
+		flags |= kUserEnabled;
+	}
+	else {
+
+		flags &= ~kUserEnabled;
+	}
+
 	return( AFPUpdateUserProperties(
 					AFP_GUEST_NAME,
 					pswd.String(),
@@ -668,15 +707,21 @@ int AFPGetIndUser(
 	if (result == B_OK)
 	{
 		if (userName != NULL) {
-			message.FindString(AFP_PARAM_STRING_USERNAME, userName);
+			if (message.FindString(AFP_PARAM_STRING_USERNAME, userName) != B_OK) {
+				result = be_afp_paramerr;
+			}
 		}
 		
-		if (userPassword != NULL) {
-			message.FindString(AFP_PARAM_STRING_PASSWORD, userPassword);
+		if ((result == B_OK) && (userPassword != NULL)) {
+			if (message.FindString(AFP_PARAM_STRING_PASSWORD, userPassword) != B_OK) {
+				result = be_afp_paramerr;
+			}
 		}
 		
-		if (userFlags != NULL) {
-			message.FindInt32(AFP_PARAM_INT32, (int32*)userFlags);
+		if ((result == B_OK) && (userFlags != NULL)) {
+			if (message.FindInt32(AFP_PARAM_INT32, (int32*)userFlags) != B_OK) {
+				result = be_afp_paramerr;
+			}
 		}
 	}
 	
@@ -730,18 +775,22 @@ int AFPGetUserInfo(
 	messenger.SendMessage(&message, &message);
 	
 	result = (message.what == be_afp_success) ? B_OK : message.what;
-	
+
 	if (result == B_OK)
 	{
 		if (userPassword != NULL) {
-			message.FindString(AFP_PARAM_STRING_PASSWORD, userPassword);
+			if (message.FindString(AFP_PARAM_STRING_PASSWORD, userPassword) != B_OK) {
+				result = be_afp_paramerr;
+			}
 		}
-		
-		if (userFlags != NULL) {
-			message.FindInt32(AFP_PARAM_INT32, (int32*)userFlags);
+
+		if ((result == B_OK) && (userFlags != NULL)) {
+			if (message.FindInt32(AFP_PARAM_INT32, (int32*)userFlags) != B_OK) {
+				result = be_afp_paramerr;
+			}
 		}
 	}
-	
+
 	return( result );
 }
 
@@ -765,12 +814,29 @@ int AFPUpdateUserProperties(
 	BMessage	message(CMD_AFP_UPDATEUSERINFO);
 	
 	//
+	//Both the username and password must be supplied.
+	//
+	if ((userName == NULL) || (userPassword == NULL))
+	{
+		return( be_afp_paramerr );
+	}
+
+	//
 	//Cannot have a blank username or password. Blank password is allowed
 	//only for the guest account.
 	//
 	if (((strlen(userName) == 0) || (strlen(userPassword) == 0)) && (strcmp(userName, AFP_GUEST_NAME)))
 	{
 		return( be_afp_blankentry );
+	}
+
+	//
+	//Usernames and passwords cannot exceed the maximum length the
+	//server's user database can store.
+	//
+	if ((strlen(userName) > AFP_MAX_USERNAME_LEN) || (strlen(userPassword) > AFP_MAX_PASSWORD_LEN))
+	{
+		return( be_afp_passwordtoolong );
 	}
 	
 	//
@@ -817,7 +883,32 @@ int AFPAddUser(
 {
 	BMessenger	messenger(AFPServerSignature);
 	BMessage	message(CMD_AFP_ADDUSER);
-	
+
+	//
+	//Both the username and password must be supplied.
+	//
+	if ((userName == NULL) || (userPassword == NULL))
+	{
+		return( be_afp_paramerr );
+	}
+
+	//
+	//Cannot have a blank username or password.
+	//
+	if ((strlen(userName) == 0) || (strlen(userPassword) == 0))
+	{
+		return( be_afp_blankentry );
+	}
+
+	//
+	//Usernames and passwords cannot exceed the maximum length the
+	//server's user database can store.
+	//
+	if ((strlen(userName) > AFP_MAX_USERNAME_LEN) || (strlen(userPassword) > AFP_MAX_PASSWORD_LEN))
+	{
+		return( be_afp_passwordtoolong );
+	}
+
 	//
 	//Add the username and password to the message block.
 	//
@@ -1178,6 +1269,7 @@ char* AFPGetErrorString(int32 error)
 		case be_afp_notadirectory:		strcpy(errString, "not a directory");			break;
 		case be_afp_isrootdir:			strcpy(errString, "is root directory");			break;
 		case be_afp_blankentry:			strcpy(errString, "blank entry not allowed");	break;
+		case be_afp_passwordtoolong:		strcpy(errString, "password too long");		break;
 
 		default:
 			strcpy(errString, "UNKNOWN");
