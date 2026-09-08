@@ -8,7 +8,7 @@
 
 // The server version, should be updated with each release.
 // 
-#define AFP_SERVER_VERSION		0x01080600	// version 1.8.6
+#define AFP_SERVER_VERSION		0x02000000	// version 2.0.0
 
 // 
 // This is the version of the command protocol for communicating
