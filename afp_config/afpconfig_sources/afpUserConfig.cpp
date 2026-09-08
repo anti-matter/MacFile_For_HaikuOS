@@ -92,7 +92,6 @@ void afpUserConfig::BuildWindow(void)
 	
 	rect.Set(10,30,BWindow::Bounds().right-10,45);
 	mUserNameField = new BTextControl(rect, "name","Name:", "", NULL);
-	mUserNameField->SetMaxBytes(AFP_MAX_USERNAME_LEN);
 	mUserNameField->SetDivider(90);
 	mUserNameField->SetFontSize(font_size);
 	SetTextViewFontSize(mUserNameField->TextView(), font_size);
@@ -100,7 +99,6 @@ void afpUserConfig::BuildWindow(void)
 		
 	rect.Set(10,55,BWindow::Bounds().right-10,70);
 	mPasswordField = new BTextControl(rect, "pswd","Password:", "", NULL);
-	mPasswordField->SetMaxBytes(AFP_MAX_PASSWORD_LEN);
 	mPasswordField->SetDivider(90);
 	mPasswordField->SetFontSize(font_size);
 	SetTextViewFontSize(mPasswordField->TextView(), font_size);
