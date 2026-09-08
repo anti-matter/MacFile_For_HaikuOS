@@ -8,7 +8,6 @@
 #include "commands.h"
 
 #define TITLE_STRING		"Macintosh® File Server for Haiku"
-#define AFP_VERSION_STRING	"Version 1.8"
 #define COPYRIGHT_STRING	"Copyright (c) 2002-2024, Michael J. Conrad."
 
 const float font_size = 14.0f;
