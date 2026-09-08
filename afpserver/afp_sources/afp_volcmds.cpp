@@ -147,15 +147,7 @@ AFPERROR FPGetSrvrInfo(
 	// This size does NOT include the size of the DSI Header.
 	*afpDataSize = (pBuffer - afpReplyBuffer);
 
-	// TEMPORARY debug logging added for the volume-icon work — remove once the
-	// icon is confirmed rendering correctly on a Mac OS 9.0.4 client.
-	DBGWRITE(dbg_level_trace,
-		"FPGetSrvrInfo reply datasize (%d bytes), volume icon at offset %d "
-		"(length %d bytes), AFP versions advertised: %d: ",
-		*afpDataSize,
-		ntohs(*((int16*)&afpReplyBuffer[SRVRINFO_OFFSET_VOLUMEICON])),
-		kClassicVolumeIconSize,
-		AFP_VERSION_COUNT);
+	DBGWRITE(dbg_level_trace, "FPGetSrvrInfo reply datasize (%d bytes): ", *afpDataSize);
 
 	return( AFP_OK );
 }
