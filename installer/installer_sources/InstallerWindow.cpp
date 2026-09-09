@@ -5,6 +5,7 @@
 #include <Button.h>
 #include <Entry.h>
 #include <Messenger.h>
+#include <Screen.h>
 #include <ScrollView.h>
 #include <StringView.h>
 #include <TextView.h>
@@ -37,8 +38,8 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	BWindow(
 		BRect(0, 0, 480, 540),
 		"MacFile Installer",
-		B_TITLED | B_CLOSABLE | B_NOT_RESIZABLE | B_NOT_ZOOMABLE,
-		0
+		B_TITLED_WINDOW,
+		B_NOT_RESIZABLE | B_NOT_ZOOMABLE
 		),
 	fReleaseDir(releaseDir),
 	fInstallButton(NULL),
