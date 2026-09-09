@@ -220,6 +220,42 @@ of the window completely."
   Geometry cannot be confirmed by a build alone — needs runtime verification on a real
   Haiku system.
 
+## Runtime bug fixes round 4 (2026-09-09)
+Round 3's scrollbar fix (BTextView target `BRect(0,0,446,370)` in LOCAL coords + scrollview
+`MoveTo(10,160)`/`ResizeTo(460,370)`) was still reported broken. The root cause of the
+recurring overflow was a coordinate-system mismatch: the target's frame and the scrollview's
+positioned frame were being set in two different coordinate systems, so the scrollview's
+interior did not line up with the window.
+
+**Fix (round 4) — realigned to the PROVEN `afpMsgWindow.cpp` idiom:** the `BTextView` target's
+frame is set in the PARENT (window) coordinate system and represents the scrollview's INTERIOR;
+the `BScrollView` then computes its own outer frame from that target PLUS the 14px vertical
+scrollbar (plus border insets). No `MoveTo`/`ResizeTo` is called on the scrollview. In
+`InstallerWindow.cpp`:
+```cpp
+BRect logRect(10, 160, 470 - 14, 530);   // target interior, window coords, right edge 456
+fLogView = new BTextView(logRect, "log", BRect(2, 2, 240, 150), 0, B_WILL_DRAW | B_FULL_UPDATE_ON_RESIZE);
+...
+logScroll = new BScrollView("logScroll", fLogView, B_FOLLOW_LEFT | B_FOLLOW_TOP, 0, false, true);
+mainView->AddChild(logScroll);
+```
+**Geometrically confirmed against the actual Haiku source** (`src/kits/interface/ScrollView.cpp`,
+`_ComputeFrame`): the scrollview's outer frame = target frame + vertical scrollbar preferred
+width (14px) + border insets, and the target is re-anchored to the scrollview origin and fills
+the interior. So target `(10,160)-(456,530)` → scrollview outer ≈ `(8,158)-(472,532)`; the
+scrollbar sits inside the right edge (window x≈454–468) and nothing overflows the 480×540 window.
+This matches the proven-working `afpMsgWindow.cpp` exactly.
+
+- Committed as `0ca4907` ("Fix log scrollbar geometry (round 4)"; also carried a one-line
+  `CLAUDE.md` SDK-header-path doc fix: `haiku-os-headers/` → `~/haiku-sdk/boot/system/develop/headers/`),
+  pushed to `origin/installer`, built CLEAN on the Haiku server (all 4 sources compile + link +
+  xres + mimeset OK), and re-packaged:
+  `distribution/MacFile_x86_64_Release.zip` now contains the round-4 `MacFileInstaller`
+  (49925 bytes) + install-macfile.sh + install.zip + ReadMe! (verified with `unzip -l`).
+- **PENDING: user runtime re-test of (a) Quit-button process exit (Bug 2, fixed round 3) and
+  (b) scrollbar/log-area geometry (Bug 3, fixed round 4).** Geometry cannot be confirmed by a
+  build alone — needs verification on a real Haiku system. NOT to be claimed fixed until then.
+
 ## VERIFIED release build (Haiku R1 beta6, x86_64, 2026-09-08)
 `BUILDHOME=/boot/system/develop ./build-release.sh` → all 3 components built clean
 (afp_server, MacFile, MacFileInstaller: compile + link + xres + mimeset OK), then:
