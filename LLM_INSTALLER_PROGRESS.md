@@ -330,9 +330,9 @@ wiring, and all other code are unchanged.
   xres + mimeset OK), and re-packaged: `distribution/MacFile_x86_64_Release.zip` (Sep 9 06:41)
   contains the round-6 `MacFileInstaller` (49925 bytes) + install-macfile.sh + install.zip +
   ReadMe! (verified with `unzip -l`).
-- **PENDING: user runtime re-test of the first-line offset (Bug 5, fixed round 6).** The inset
-  geometry cannot be confirmed by a build alone — needs verification on a real Haiku system. NOT
-  to be claimed fixed until then.
+- **RESOLVED: user runtime-confirmed the first line of log text now starts at the top of the
+  area** (Bug 5, fixed round 6) — "all bug fixes verified fixed on the haiku system." The inset
+  geometry is now confirmed on a real Haiku system.
 
 ## VERIFIED release build (Haiku R1 beta6, x86_64, 2026-09-08)
 `BUILDHOME=/boot/system/develop ./build-release.sh` → all 3 components built clean
@@ -342,9 +342,9 @@ wiring, and all other code are unchanged.
 Both zips verified with `unzip -l`. Release build is complete and correct.
 
 ## CURRENT STATE (2026-09-09)
-All phases (1–6) + docs + Haiku build-server test are complete. The installer is functional;
-we are in a runtime bug-fix cycle driven by the user running the built installer on a real Haiku
-system.
+All phases (1–6) + docs + Haiku build-server test are complete. The installer is functional and
+stable: the runtime bug-fix cycle (Bugs 1–5) is **complete — all five fixed and runtime-confirmed
+on a real Haiku system.**
 
 **Bug status:**
 - Bug 1 — button state after uninstall: **FIXED (round 2), runtime-confirmed.**
@@ -352,9 +352,9 @@ system.
 - Bug 3 — scrollbar/log-area geometry: **FIXED (round 4), runtime-confirmed** ("scrollbar … fixed").
 - Bug 4 — log text wraps at ~half width: **FIXED (round 5), runtime-confirmed** ("the text wraps
   properly now").
-- Bug 5 — first line of log text starts halfway down: **FIXED (round 6), built clean + re-packaged,
-  PENDING runtime verification.**
+- Bug 5 — first line of log text starts halfway down: **FIXED (round 6), runtime-confirmed**
+  ("all bug fixes verified fixed on the haiku system").
 
-**Next action:** user re-tests the log first-line offset on a real Haiku system (fresh
-`distribution/MacFile_x86_64_Release.zip`, Sep 9 06:41). Do NOT claim Bug 5 fixed until
-runtime-confirmed.
+**Status: ALL FIVE BUGS FIXED AND RUNTIME-CONFIRMED on a real Haiku system.** The installer is
+functional and stable. The current release artifact is `distribution/MacFile_x86_64_Release.zip`
+(Sep 9 06:41), containing the round-6 `MacFileInstaller`. No open bugs; no pending runtime tests.
