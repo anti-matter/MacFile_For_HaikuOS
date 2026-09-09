@@ -141,7 +141,13 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	//10px buffer as every other element. Do NOT call MoveTo/ResizeTo; the
 	//BScrollView adopts the target's frame automatically.
 	//
-	BRect logRect(10, 160, 470 - 14, 530);
+	//
+	//The log area is deliberately SHORT (half of the previous height): the
+	//window is 480x540, so this leaves the lower ~195px of the window empty
+	//below the log. Height = 345 - 160 = 185px = half of the old 370px. The
+	//width (446px) and the window itself are unchanged.
+	//
+	BRect logRect(10, 160, 470 - 14, 345);
 	//
 	//BTextView wraps text to the width of its content rect (the 3rd
 	//constructor argument), NOT its frame. _UpdateInsets() computes the
