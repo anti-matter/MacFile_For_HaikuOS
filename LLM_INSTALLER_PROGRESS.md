@@ -252,9 +252,49 @@ This matches the proven-working `afpMsgWindow.cpp` exactly.
   xres + mimeset OK), and re-packaged:
   `distribution/MacFile_x86_64_Release.zip` now contains the round-4 `MacFileInstaller`
   (49925 bytes) + install-macfile.sh + install.zip + ReadMe! (verified with `unzip -l`).
-- **PENDING: user runtime re-test of (a) Quit-button process exit (Bug 2, fixed round 3) and
-  (b) scrollbar/log-area geometry (Bug 3, fixed round 4).** Geometry cannot be confirmed by a
-  build alone — needs verification on a real Haiku system. NOT to be claimed fixed until then.
+- **RESOLVED: user runtime-confirmed both (a) Quit-button process exit (Bug 2, fixed round 3)
+  and (b) scrollbar/log-area geometry (Bug 3, fixed round 4).** User reported: "the scrollbar and
+  quit button have been fixed." Both are now closed.
+
+## ROUND 5 — Bug 4: log text wraps at ~half width (2026-09-09)
+
+**Reported (user, verbatim):** "the text in the scroll area wraps too soon. all text wraps at
+approximately halfway across the scroll area."
+
+**Root cause — CONFIRMED against the actual Haiku source** (`src/kits/interface/TextView.cpp`):
+`BTextView` wraps to the width of its **content rect** (the 3rd constructor argument), NOT its
+frame. `_InitObject` stores `fTextRect` and calls `_UpdateInsets(textRect)`; `_UpdateInsets`
+derives the left/right insets from the difference between the FRAME and the content rect
+(`rightInset = bounds.right >= rect.right ? bounds.right - rect.right : 0`), and the wrap width
+is `_ViewWidth() = Bounds().Width() - leftInset - rightInset`.
+
+Our log frame is `logRect(10, 160, 456, 530)` → width **446px**. The old content rect was the
+fixed narrow `BRect(2, 2, 240, 150)` (width 238). Because `240 < 456`, this left a
+**rightInset of 456 − 240 = 216px**, so the wrap width was `446 − 0 − 216 = 230px ≈ half` the
+frame — exactly the reported symptom. (The `afpMsgWindow.cpp` reference uses the same narrow
+content rect but with a *narrower* frame, where `textRect.right > frame.right` clamps the right
+inset to 0 — so it wraps fine there and is NOT a fix to copy.)
+
+**Fix (round 5) — span the frame with a small symmetric 2px inset** so the wrap width is the full
+interior. In `InstallerWindow.cpp`, the content rect is now computed from the frame:
+```cpp
+BRect logRect(10, 160, 470 - 14, 530);
+BRect textRect(logRect.left + 2, logRect.top + 2,
+    logRect.right - 2, logRect.bottom - 2);   // (12,162)-(454,528) → 2px symmetric insets
+fLogView = new BTextView(logRect, "log",
+    textRect, 0, B_WILL_DRAW | B_FULL_UPDATE_ON_RESIZE);
+```
+→ leftInset = 2, rightInset = 2, wrap width = `446 − 2 − 2 = 442px` (full interior). No other
+lines touched; the frame, scrollview wiring, and all other code are unchanged.
+
+- Committed as `05404eb` ("Fix log text wrapping at half width (round 5)"), pushed to
+  `origin/installer`, built CLEAN on the Haiku server (all 4 sources compile + link + xres +
+  mimeset OK), and re-packaged: `distribution/MacFile_x86_64_Release.zip` (Sep 9 06:30) contains
+  the round-5 `MacFileInstaller` (49925 bytes) + install-macfile.sh + install.zip + ReadMe!
+  (verified with `unzip -l`).
+- **PENDING: user runtime re-test of the log text wrapping (Bug 4, fixed round 5).** Wrap width
+  cannot be confirmed by a build alone — needs verification on a real Haiku system. NOT to be
+  claimed fixed until then.
 
 ## VERIFIED release build (Haiku R1 beta6, x86_64, 2026-09-08)
 `BUILDHOME=/boot/system/develop ./build-release.sh` → all 3 components built clean
@@ -263,6 +303,18 @@ This matches the proven-working `afpMsgWindow.cpp` exactly.
 - `distribution/install.zip` (payload) = afp_server + MacFile + libcrypto111v.so + libssl111v.so
 Both zips verified with `unzip -l`. Release build is complete and correct.
 
-## DONE — project complete
-All phases (1–6) + docs + Haiku build-server test are complete. The 9-point final summary
-has been written to the user.
+## CURRENT STATE (2026-09-09)
+All phases (1–6) + docs + Haiku build-server test are complete. The installer is functional;
+we are in a runtime bug-fix cycle driven by the user running the built installer on a real Haiku
+system.
+
+**Bug status:**
+- Bug 1 — button state after uninstall: **FIXED (round 2), runtime-confirmed.**
+- Bug 2 — Quit-button process lingering: **FIXED (round 3), runtime-confirmed** ("quit button … fixed").
+- Bug 3 — scrollbar/log-area geometry: **FIXED (round 4), runtime-confirmed** ("scrollbar … fixed").
+- Bug 4 — log text wraps at ~half width: **FIXED (round 5), built clean + re-packaged, PENDING
+  runtime verification.**
+
+**Next action:** user re-tests log text wrapping on a real Haiku system (fresh
+`distribution/MacFile_x86_64_Release.zip`, Sep 9 06:30). Do NOT claim Bug 4 fixed until
+runtime-confirmed.
