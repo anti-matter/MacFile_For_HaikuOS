@@ -100,7 +100,7 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	//This Haiku build has no BProgressBar, so progress is shown as a
 	//percentage in a centered string view.
 	//
-	fProgressView = new BStringView(20, 96, 460, 114, "progress", "");
+	fProgressView = new BStringView(BRect(20, 96, 460, 114), "progress", "");
 	fProgressView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	fProgressView->SetFontSize(font_size);
 	fProgressView->SetAlignment(B_ALIGN_CENTER);
@@ -130,15 +130,15 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	//
 	//*****************Log
 	//
-	fLogView = new BTextView(0, 0, 460, 360, "log", B_FOLLOW_ALL_SIDES,
-		B_AUTOUPDATE);
-	fLogView->SetReadOnly(true);
+	fLogView = new BTextView(BRect(10, 160, 470, 530), "log",
+		BRect(2, 2, 240, 150), 0, B_WILL_DRAW | B_FULL_UPDATE_ON_RESIZE);
+	fLogView->MakeEditable(false);
+	fLogView->MakeSelectable(true);
 	fLogView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	fLogView->SetFontSize(font_size);
 
 	logScroll = new BScrollView("logScroll", fLogView,
-		B_FOLLOW_LEFT | B_FOLLOW_TOP, 0, true, true);
-	logScroll->SetBounds(10, 160, 470, 530);
+		B_FOLLOW_LEFT | B_FOLLOW_TOP, 0, false, true);
 	mainView->AddChild(logScroll);
 
 	//
@@ -193,7 +193,7 @@ void InstallerWindow::AppendLog(const char* line)
 {
 	fLogView->Insert(line);
 	fLogView->Insert("\n");
-	fLogView->ScrollTo(fLogView->CountLines() - 1, 0);
+	fLogView->ScrollToSelection();
 }
 
 /*
