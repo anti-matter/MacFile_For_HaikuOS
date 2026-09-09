@@ -3,11 +3,13 @@ Copyright (c) 2002-2024, Michael J. Conrad.
 
 Installation
 
-To install MacFile, just double click the installer.sh script found in the archive you extracted, or run it from Terminal. It will place all the files in their correct locations and guide you through the installation process. A link to the server portion of MacFile (afp_server) will be placed in your home/config/boot/launch folder so it will start automatically when you reboot Haiku (don't worry, this is a background process so you won't even notice it's there).
+To install MacFile, just double click the MacFileInstaller application found in the archive you extracted and press the Install button. It will place all the files in their correct locations and show you a log of what it did. A link to the server portion of MacFile (afp_server) will be placed in your home/config/boot/launch folder so it will start automatically when you reboot Haiku (don't worry, this is a background process so you won't even notice it's there).
+
+Prefer the terminal? Run ./install-macfile.sh install instead.
 
 To Uninstall
 
-Uninstallation is easy, just run the same install.sh script from the step above and it will ask you if you want to uninstall MacFile.
+Uninstallation is easy, just open MacFileInstaller again and press the Uninstall button (or run ./install-macfile.sh uninstall from Terminal).
 
 What Next?
 

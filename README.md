@@ -179,16 +179,17 @@ cd afpserver && ./dbgbuild.sh # Debug build (enables DBGWRITE logging)
 
 MacFile is built and installed on Haiku (there is no Linux cross-compiler):
 
-1. **Build** — run `./build_macfile.sh` from the repository root and answer `y` to the "Build for release?" prompt. The script builds all components and creates a release archive in `distribution/`: `MacFile_x86_Release.zip` (x86) or `MacFile_x86_64_Release.zip` (x86_64).
+1. **Build** — run `./build-release.sh` from the repository root. The script builds all components and creates a release archive in `distribution/`: `MacFile_x86_Release.zip` (x86) or `MacFile_x86_64_Release.zip` (x86_64).
 2. **Extract** — expand the resulting `.zip` file.
-3. **Install** — run the `install-macfile.sh` installer script from the extracted folder (double-click it, or run it from the Terminal). It places the binaries and OpenSSL libraries in `~/config/non-packaged/`, creates the deskbar menu links, links `afp_server` into `~/config/boot/launch/` for auto-start, and starts the server.
+3. **Install** — double-click the `MacFileInstaller` application in the extracted folder and press **Install**. It places the binaries and OpenSSL libraries in `~/config/non-packaged/`, creates the deskbar menu links, links `afp_server` into `~/config/boot/launch/` for auto-start, and starts the server. (Prefer the terminal? Run `./install-macfile.sh install` instead.)
 
-To uninstall, re-run the same installer script and choose the uninstall option. Your settings are preserved.
+To uninstall, press the **Uninstall** button in `MacFileInstaller` (or run `./install-macfile.sh uninstall`). Your settings are preserved.
 
 ## Distribution
 
 - **afp_server** — Core AFP daemon (`afpserver/`)
 - **MacFile** — GUI configuration app (`afp_config/`)
+- **MacFileInstaller** — GUI installer/uninstaller (`installer/`)
 - **CreateAfpShare** — CLI share creation utility (`afp_createshare/`)
 - **share_volume** — Volume sharing utility with UAM support (`ShareVolume/`)
 
