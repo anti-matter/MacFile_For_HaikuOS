@@ -1,6 +1,6 @@
 # MacFile AFP Server
 
-An Apple Filing Protocol (AFP) file server for the Haiku operating system. Serves vintage Macintosh clients (MacOS 8.0 through MacOS X 10.5) over TCP/IP port 548. Currently at version **1.8.6**, licensed under the MIT License by Michael J. Conrad.
+An Apple Filing Protocol (AFP) file server for the Haiku operating system. Serves vintage Macintosh clients (MacOS 8.0 through MacOS X 10.5) over TCP/IP port 548. Currently at version **2.0**, licensed under the MIT License by Michael J. Conrad.
 
 ## SDK Headers
 
@@ -153,6 +153,18 @@ afp_server (BApplication)
 | `dsi_stats` | `dsi_stats.{cpp,h}` | Network statistics (bytes sent/received, packet counts) |
 | `afp_buffer` | `afp_buffer.{cpp,h}` | Growing reply buffer for AFP responses |
 | `finder_info` | `finder_info.{cpp,h}` | Mac file type/creator lookup by extension |
+| `ClassicMacIcon` | `ClassicMacIcon.{cpp,h}` | 1-bit 32×32 volume icon (bitmap + mask) served in `GetSrvrInfo` via the `VolumeIconAndMask` field |
+
+### AFP command handler files (formerly `afp.cpp`)
+
+The original monolithic `afp.cpp` was split into four domain files. When locating an AFP command handler, check the file that matches its concern:
+
+| File | Contains |
+|---|---|
+| `afp_dispatch.cpp` | Includes, globals, the dispatch table, time helpers, and `FPDispatchCommand()` |
+| `afp_volcmds.cpp` | Server/session/volume commands — `GetSrvrInfo`, `FPLogin`, `FPGetSrvrParms`, etc. |
+| `afp_catalog.cpp` | File/directory catalog commands — `FPEnumerate`, `FPCreate`, `FPDelete`, `FPMoveAndRename`, etc. |
+| `afp_fork.cpp` | Fork I/O commands — `FPOpenFork`, `FPRead`, `FPWrite`, `FPFlush`, byte-range locks |
 
 ## AFP Protocol Support
 
@@ -229,6 +241,7 @@ Unrecognized extensions receive default type/creator of `"???? "` / `"????"`.
 - **Preprocessor guards**: `#ifndef __name__` / `#define __name__` / `#endif //__name__` pattern
 - **AFP error codes**: negative enum values starting at -5000 (`afpAccessDenied`, etc.)
 - **BeOS/Haiku error strings**: `GET_BERR_STR(e)` macro in DEBUG builds maps `B_*` errors to string names
+- **Modern C++**: prefer `std::vector` over hand-managed arrays/lists, and use current Haiku APIs — the v2.0 pass removed deprecated calls such as `BTextControl::SetMaxBytes` and `BString::Format`, so don't reintroduce them
 
 ## Dependencies
 
