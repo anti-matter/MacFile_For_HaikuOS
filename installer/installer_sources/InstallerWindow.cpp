@@ -148,8 +148,10 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	//push the right edge to 470 + 14 = 484, past the 480-wide window.
 	//Pin the scrollview's outer frame so the scrollbar's right edge sits
 	//at 470 -- the same 10px buffer as the left side of the text area.
+	//This build's BView has no SetFrame, so use MoveTo + ResizeTo.
 	//
-	logScroll->SetFrame(BRect(10, 160, 470, 530));
+	logScroll->MoveTo(10, 160);
+	logScroll->ResizeTo(470 - 10, 530 - 160);
 	mainView->AddChild(logScroll);
 
 	//
