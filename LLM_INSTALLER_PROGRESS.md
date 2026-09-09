@@ -292,9 +292,47 @@ lines touched; the frame, scrollview wiring, and all other code are unchanged.
   mimeset OK), and re-packaged: `distribution/MacFile_x86_64_Release.zip` (Sep 9 06:30) contains
   the round-5 `MacFileInstaller` (49925 bytes) + install-macfile.sh + install.zip + ReadMe!
   (verified with `unzip -l`).
-- **PENDING: user runtime re-test of the log text wrapping (Bug 4, fixed round 5).** Wrap width
-  cannot be confirmed by a build alone — needs verification on a real Haiku system. NOT to be
-  claimed fixed until then.
+- **RESOLVED: user runtime-confirmed the log text now wraps at full width** ("the text wraps
+  properly now"). Bug 4 is closed.
+
+## ROUND 6 — Bug 5: first line of log text starts halfway down the area (2026-09-09)
+
+**Reported (user, verbatim):** "the text wraps properly now, but the first line of text output
+to the text area starts halfway down the text area. the scroll area does encompass the whole text
+area correctly, it's just that the first output text is halfway down the text area."
+
+**Root cause — round 5's fix was in the WRONG coordinate system.** Round 5 computed the content
+rect from the frame's WINDOW coordinates:
+`BRect textRect(logRect.left + 2, logRect.top + 2, logRect.right - 2, logRect.bottom - 2)` =
+`(12, 162, 454, 528)`. But `BTextView::_UpdateInsets` (confirmed in `src/kits/interface/TextView.cpp`)
+measures the content rect against `Bounds()` — which is the view's OWN coordinate system
+(`(0, 0, width, height)`, origin at the view's top-left), NOT the window. So:
+- `topInset = 162 − 0 = 162px` → the first line of text was pushed **162px down** (≈half the 370px
+  tall area) — exactly the reported symptom.
+- `rightInset = 0` (clamped, because `bounds.right` 446 < `rect.right` 454) — which is why the wrap
+  width *looked* full (round 5 fixed the wrap **by accident**, clamping the right inset to 0).
+
+**Fix (round 6) — express the content rect in the view's OWN coordinate system** (relative to the
+view origin), a small symmetric 2px inset on every side. In `InstallerWindow.cpp`:
+```cpp
+BRect logRect(10, 160, 470 - 14, 530);           // target interior, window coords (unchanged)
+BRect textRect(2, 2, logRect.Width() - 2, logRect.Height() - 2);   // (2,2)-(444,368), view coords
+fLogView = new BTextView(logRect, "log",
+    textRect, 0, B_WILL_DRAW | B_FULL_UPDATE_ON_RESIZE);
+```
+→ leftInset = 2, **topInset = 2** (first line at the top ✓), rightInset = 446 − 444 = 2,
+bottomInset = 370 − 368 = 2, wrap width = `446 − 2 − 2 = 442px` (full interior ✓). The ONLY change
+from round 5 is the `textRect` expression (plus the explanatory comment); the frame, scrollview
+wiring, and all other code are unchanged.
+
+- Committed as `89aab7c` ("Fix log first-line offset: content rect in view coords (round 6)"),
+  pushed to `origin/installer`, built CLEAN on the Haiku server (all 4 sources compile + link +
+  xres + mimeset OK), and re-packaged: `distribution/MacFile_x86_64_Release.zip` (Sep 9 06:41)
+  contains the round-6 `MacFileInstaller` (49925 bytes) + install-macfile.sh + install.zip +
+  ReadMe! (verified with `unzip -l`).
+- **PENDING: user runtime re-test of the first-line offset (Bug 5, fixed round 6).** The inset
+  geometry cannot be confirmed by a build alone — needs verification on a real Haiku system. NOT
+  to be claimed fixed until then.
 
 ## VERIFIED release build (Haiku R1 beta6, x86_64, 2026-09-08)
 `BUILDHOME=/boot/system/develop ./build-release.sh` → all 3 components built clean
@@ -312,9 +350,11 @@ system.
 - Bug 1 — button state after uninstall: **FIXED (round 2), runtime-confirmed.**
 - Bug 2 — Quit-button process lingering: **FIXED (round 3), runtime-confirmed** ("quit button … fixed").
 - Bug 3 — scrollbar/log-area geometry: **FIXED (round 4), runtime-confirmed** ("scrollbar … fixed").
-- Bug 4 — log text wraps at ~half width: **FIXED (round 5), built clean + re-packaged, PENDING
-  runtime verification.**
+- Bug 4 — log text wraps at ~half width: **FIXED (round 5), runtime-confirmed** ("the text wraps
+  properly now").
+- Bug 5 — first line of log text starts halfway down: **FIXED (round 6), built clean + re-packaged,
+  PENDING runtime verification.**
 
-**Next action:** user re-tests log text wrapping on a real Haiku system (fresh
-`distribution/MacFile_x86_64_Release.zip`, Sep 9 06:30). Do NOT claim Bug 4 fixed until
+**Next action:** user re-tests the log first-line offset on a real Haiku system (fresh
+`distribution/MacFile_x86_64_Release.zip`, Sep 9 06:41). Do NOT claim Bug 5 fixed until
 runtime-confirmed.
