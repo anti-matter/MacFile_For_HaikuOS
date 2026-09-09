@@ -132,7 +132,15 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	//
 	//*****************Log
 	//
-	fLogView = new BTextView(BRect(10, 160, 470, 530), "log",
+	//The BTextView is the scrollview's target, so its frame is in the
+	//scrollview's LOCAL coordinate system, not the window's. Anchor it at
+	//(0,0) and size it to the scrollview's INTERIOR (outer width 460 minus
+	//the 14px vertical scrollbar = 446), then position the scrollview itself
+	//in the window. (Creating the target at window coordinates, as before,
+	//made the text overflow past the right and bottom edges of the window
+	//and hid the scrollbar.)
+	//
+	fLogView = new BTextView(BRect(0, 0, 446, 370), "log",
 		BRect(2, 2, 240, 150), 0, B_WILL_DRAW | B_FULL_UPDATE_ON_RESIZE);
 	fLogView->MakeEditable(false);
 	fLogView->MakeSelectable(true);
@@ -143,12 +151,10 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 		B_FOLLOW_LEFT | B_FOLLOW_TOP, 0, false, true);
 
 	//
-	//BScrollView has no frame constructor: it computes its own frame
-	//from the target view PLUS the 14px vertical scrollbar, which would
-	//push the right edge to 470 + 14 = 484, past the 480-wide window.
-	//Pin the scrollview's outer frame so the scrollbar's right edge sits
-	//at 470 -- the same 10px buffer as the left side of the text area.
-	//This build's BView has no SetFrame, so use MoveTo + ResizeTo.
+	//Pin the scrollview's outer frame to (10,160)-(470,530) -- the same
+	//10px buffer as every other element. The 14px vertical scrollbar sits
+	//inside the right edge (x=456..470), the text fills the rest, and
+	//nothing overflows the 480x540 window.
 	//
 	logScroll->MoveTo(10, 160);
 	logScroll->ResizeTo(470 - 10, 530 - 160);
@@ -273,7 +279,14 @@ void InstallerWindow::MessageReceived(BMessage* message)
 			break;
 
 		case CMD_QUIT:
-			Quit();
+			//
+			//Quit the whole application, not just this window. BWindow::Quit()
+			//only closes the window and leaves the BApplication (and process)
+			//running; posting B_QUIT_REQUESTED to be_app exits the process.
+			//This is the same path the window close box takes via
+			//QuitRequested(), and it is the proven idiom from afp_config.
+			//
+			be_app->PostMessage(B_QUIT_REQUESTED);
 			break;
 
 		case INSTALL_M_PROGRESS:
