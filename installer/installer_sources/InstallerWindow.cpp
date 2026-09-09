@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include <Alert.h>
 #include <Button.h>
 #include <Entry.h>
@@ -203,7 +205,8 @@ void InstallerWindow::StartOperation(const char* subcommand)
 	fBusy = true;
 	RefreshState();
 	fProgressBar->SetValue(0);
-	fStatusView->SetText(subcommand == "install" ? "Starting install..." : "Starting uninstall...");
+	fStatusView->SetText(strcmp(subcommand, "install") == 0
+		? "Starting install..." : "Starting uninstall...");
 
 	BMessenger messenger(this);
 	InstallWorker::Spawn(fReleaseDir, subcommand, &messenger);

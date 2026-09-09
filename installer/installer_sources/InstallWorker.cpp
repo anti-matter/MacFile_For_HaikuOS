@@ -21,19 +21,16 @@ struct worker_args
 //
 static void post_line(BMessenger& target, const char* line)
 {
-	BString text(line);
+	const char* str = line;
 
-	if (text.BeginsWith("PROGRESS "))
+	if (strncmp(str, "PROGRESS ", 9) == 0)
 	{
-		text = text.SubString(9);
-		int32 percent = atoi(text.String());
+		str += 9;
+		int32 percent = atoi(str);
 		BString label;
-		int32 space = text.FindFirst(' ');
-		if (space >= 0)
-		{
-			label = text.SubString(space + 1);
-			text = text.SubString(0, space);
-		}
+		const char* space = strchr(str, ' ');
+		if (space != NULL)
+			label.SetTo(space + 1);
 
 		BMessage message(INSTALL_M_PROGRESS);
 		message.AddInt32("percent", percent);
@@ -42,27 +39,34 @@ static void post_line(BMessenger& target, const char* line)
 		return;
 	}
 
-	if (text.BeginsWith("STATUS "))
+	if (strncmp(str, "STATUS ", 7) == 0)
 	{
 		BMessage message(INSTALL_M_STATUS);
-		message.AddString("state", text.SubString(7).String());
+		message.AddString("state", str + 7);
 		target.SendMessage(&message);
 		return;
 	}
 
-	if (text.BeginsWith("DONE "))
+	if (strncmp(str, "DONE ", 5) == 0)
 	{
 		BMessage message(INSTALL_M_DONE);
-		message.AddString("result", text.SubString(5).String());
+		message.AddString("result", str + 5);
 		target.SendMessage(&message);
 		return;
 	}
 
-	if (text.BeginsWith("INFO ") || text.BeginsWith("ERROR "))
+	if (strncmp(str, "INFO ", 5) == 0)
 	{
-		text = text.SubString(5);
 		BMessage message(INSTALL_M_LOG);
-		message.AddString("line", text.String());
+		message.AddString("line", str + 5);
+		target.SendMessage(&message);
+		return;
+	}
+
+	if (strncmp(str, "ERROR ", 6) == 0)
+	{
+		BMessage message(INSTALL_M_LOG);
+		message.AddString("line", str + 6);
 		target.SendMessage(&message);
 		return;
 	}
@@ -84,10 +88,9 @@ static void post_failure(BMessenger& target, const char* line)
 	message.AddString("line", line);
 	target.SendMessage(&message);
 
-	message.SetTo(INSTALL_M_DONE);
-	message.RemoveString("line");
-	message.AddString("result", "failure");
-	target.SendMessage(&message);
+	BMessage done(INSTALL_M_DONE);
+	done.AddString("result", "failure");
+	target.SendMessage(&done);
 }
 
 //
