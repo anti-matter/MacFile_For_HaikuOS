@@ -188,6 +188,38 @@ Two more runtime issues reported after the round-1 fixes:
   (50261 bytes) + install-macfile.sh + install.zip + ReadMe! (verified with `unzip -l`).
   Ready for the user to re-test both the lingering-process and scrollbar issues.
 
+## Runtime bug fixes round 3 (user re-ran installer, 2026-09-08/09)
+User feedback after round 2: "The process still lingers if the quit BUTTON is used...
+The process no longer lingers if the window close box is used. The scrollbar is not
+visible at all. It looks like the text area goes off the right edge and the bottom
+of the window completely."
+- **Bug 2 (button path) — round-2 `QuitRequested()` fix covered only the close box.**
+  Root cause: the Quit BUTTON path was `case CMD_QUIT: Quit(); break;` → `BWindow::Quit()`,
+  which closes the window but does NOT quit the `BApplication`. The close box invokes
+  `QuitRequested()` directly, which is why it worked. Fix in `InstallerWindow.cpp`
+  `MessageReceived`: the `CMD_QUIT` handler now does `be_app->PostMessage(B_QUIT_REQUESTED);`
+  — the same proven idiom as `afpMainWindow.cpp:125` (button built with
+  `new BMessage(B_QUIT_REQUESTED)`) and `afpConfigApplication.cpp:93,100,113`.
+- **Bug 3 (scrollbar) — round-2 `MoveTo/ResizeTo` was right but the target width was
+  wrong.** Root cause: the `BTextView` target's frame is in the scrollview's LOCAL
+  coordinate system, not the window's. Round 2 left the target at 460 wide (the outer
+  width), so with the 14px vertical scrollbar the text + scrollbar exceeded the
+  scrollview interior and the scrollbar was pushed off-window. Fix: the `BTextView`
+  target is now `BRect(0, 0, 446, 370)` (anchored at local (0,0), width 446 = outer 460
+  minus the 14px scrollbar); the scrollview itself is positioned in the window via
+  `logScroll->MoveTo(10, 160); logScroll->ResizeTo(470 - 10, 530 - 160);` so its outer
+  frame is (10,160)-(470,530) — the same 10px buffer as every other element. The
+  scrollbar now sits inside the right edge (x=456..470) and nothing overflows the
+  480x540 window.
+- Both fixes committed as `27a933e` ("Fix Quit-button process exit and log scrollbar
+  geometry"), pushed to `origin/installer`, built CLEAN on the Haiku server (all 4
+  sources compile + link + xres + mimeset OK), and re-packaged:
+  `distribution/MacFile_x86_64_Release.zip` now contains the fixed `MacFileInstaller`
+  (50277 bytes) + install-macfile.sh + install.zip + ReadMe! (verified with `unzip -l`).
+  **PENDING: user re-test of (a) Quit-button process exit and (b) scrollbar/log geometry.**
+  Geometry cannot be confirmed by a build alone — needs runtime verification on a real
+  Haiku system.
+
 ## VERIFIED release build (Haiku R1 beta6, x86_64, 2026-09-08)
 `BUILDHOME=/boot/system/develop ./build-release.sh` → all 3 components built clean
 (afp_server, MacFile, MacFileInstaller: compile + link + xres + mimeset OK), then:
