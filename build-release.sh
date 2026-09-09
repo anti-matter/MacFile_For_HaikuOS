@@ -15,6 +15,7 @@
 set -euo pipefail
 
 cd "$(dirname "$0")"
+REPO_ROOT="$(pwd)"
 
 X86=objects.x86-cc2-release
 X64=objects.x86_64-cc13-release
@@ -88,7 +89,7 @@ cp distribution/install.zip "$STAGE/$RELEASE_FOLDER/"
 cp "distribution/ReadMe!" "$STAGE/$RELEASE_FOLDER/"
 
 rm -f "$RELEASE_ARCHIVE"
-( cd "$STAGE" && zip -r "../../$RELEASE_ARCHIVE" "$RELEASE_FOLDER" )
+( cd "$STAGE" && zip -r "$REPO_ROOT/$RELEASE_ARCHIVE" "$RELEASE_FOLDER" )
 
 [ -f "$RELEASE_ARCHIVE" ] || fail "failed to create $RELEASE_ARCHIVE"
 
