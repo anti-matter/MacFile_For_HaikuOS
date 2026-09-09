@@ -142,8 +142,20 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	//BScrollView adopts the target's frame automatically.
 	//
 	BRect logRect(10, 160, 470 - 14, 530);
+	//
+	//BTextView wraps text to the width of its content rect (the 3rd
+	//constructor argument), NOT its frame. _UpdateInsets() derives the
+	//left/right insets from the difference between the frame and this
+	//content rect, so the content rect must span nearly the full frame
+	//width or the text wraps early. A fixed narrow rect (e.g. 240 wide)
+	//left a ~216px right inset in our 446px frame, wrapping at ~half.
+	//Span the frame with a small symmetric 2px inset on every side so the
+	//log text uses the full interior width of the scroll view.
+	//
+	BRect textRect(logRect.left + 2, logRect.top + 2,
+		logRect.right - 2, logRect.bottom - 2);
 	fLogView = new BTextView(logRect, "log",
-		BRect(2, 2, 240, 150), 0, B_WILL_DRAW | B_FULL_UPDATE_ON_RESIZE);
+		textRect, 0, B_WILL_DRAW | B_FULL_UPDATE_ON_RESIZE);
 	fLogView->MakeEditable(false);
 	fLogView->MakeSelectable(true);
 	fLogView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
