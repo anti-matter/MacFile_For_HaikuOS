@@ -372,8 +372,8 @@ match.
   mimeset OK), and re-packaged: `distribution/MacFile_x86_64_Release.zip` (Sep 9 **07:02**)
   contains the round-8 `MacFileInstaller` (49925 bytes) + install-macfile.sh + install.zip +
   ReadMe! (verified with `unzip -l`).
-- **PENDING: user runtime re-test** of the reduced window height on a real Haiku system (fresh zip,
-  Sep 9 07:02). NOT to be claimed correct until then.
+- **RUNTIME-CONFIRMED:** user tested the round-8 zip on a real Haiku system — "new height is
+  correct."
 
 ## VERIFIED release build (Haiku R1 beta6, x86_64, 2026-09-08)
 `BUILDHOME=/boot/system/develop ./build-release.sh` → all 3 components built clean
@@ -382,13 +382,14 @@ match.
 - `distribution/install.zip` (payload) = afp_server + MacFile + libcrypto111v.so + libssl111v.so
 Both zips verified with `unzip -l`. Release build is complete and correct.
 
-## CURRENT STATE (2026-09-09)
+## CURRENT STATE (2026-09-09) — **PROJECT COMPLETE**
 All phases (1–6) + docs + Haiku build-server test are complete. The installer is functional and
 stable: the runtime bug-fix cycle (Bugs 1–5) is **complete — all five fixed and runtime-confirmed
 on a real Haiku system.** Round 7 (log-area height cut by 50%) is **runtime-confirmed** ("the new
 height of the text output area is perfect"). Round 8 (window height reduced to match the log area,
-540 → 355px) is code-complete and build-verified on the Haiku server; it is awaiting a runtime
-re-test.
+540 → 355px) is **runtime-confirmed** ("new height is correct").
+
+**The user has declared the project complete.** No open bugs, no pending runtime tests.
 
 **Bug status:**
 - Bug 1 — button state after uninstall: **FIXED (round 2), runtime-confirmed.**
@@ -400,9 +401,7 @@ re-test.
   ("all bug fixes verified fixed on the haiku system").
 
 **Status: ALL FIVE BUGS FIXED AND RUNTIME-CONFIRMED on a real Haiku system; ROUND 7 (log-area
-height) RUNTIME-CONFIRMED; ROUND 8 (window height) build-verified and awaiting runtime re-test.**
+height) RUNTIME-CONFIRMED; ROUND 8 (window height) RUNTIME-CONFIRMED. PROJECT COMPLETE.**
 The installer is functional and stable. The current release artifact is
 `distribution/MacFile_x86_64_Release.zip` (Sep 9 **07:02**, verified with `unzip -l`), containing
-the round-8 `MacFileInstaller` (49925 bytes). **Pending:** user runtime re-test of the round-8
-window height on a real Haiku system. Do NOT claim the window height looks right until
-runtime-confirmed.
+the round-8 `MacFileInstaller` (49925 bytes). No pending work.
