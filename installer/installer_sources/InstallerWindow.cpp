@@ -164,6 +164,22 @@ InstallerWindow::~InstallerWindow()
 }
 
 /*
+ * WindowClosed()
+ *
+ * Description:
+ *		A BApplication does not quit when its last window closes, so
+ *		closing this window would leave the MacFileInstaller process
+ *		running. Quit the app here so the process exits with the window.
+ *
+ * Returns:
+ */
+
+void InstallerWindow::WindowClosed(bool wasCanceled)
+{
+	Quit();
+}
+
+/*
  * RefreshState()
  *
  * Description:
@@ -287,6 +303,16 @@ void InstallerWindow::MessageReceived(BMessage* message)
 				bool success = (result != NULL) && (strcmp(result, "success") == 0);
 
 				fBusy = false;
+
+				//
+				//The install/uninstall paths do not emit a STATUS line, so
+				//re-detect the real install state from disk before refreshing
+				//the buttons. This is what flips Uninstall off / Install on
+				//after an uninstall (and the reverse after an install).
+				//
+				BEntry serverEntry(SERVER_PATH);
+				fInstalled = serverEntry.Exists() && serverEntry.IsFile();
+
 				RefreshState();
 
 				BAlert* alert = new BAlert("",
