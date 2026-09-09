@@ -1,5 +1,5 @@
-#include <FindDirectory.h>
 #include <Path.h>
+#include <private/app/AppMisc.h>
 
 #include "InstallerApp.h"
 #include "InstallerWindow.h"
@@ -48,7 +48,24 @@ void InstallerApp::ReadyToRun()
 {
 	BPath appDir;
 
-	if (find_directory(B_APP_DIRECTORY, &appDir) != B_OK)
+	//
+	//Resolve the directory containing this application's binary. The
+	//backend script (install-macfile.sh) and the payload archive
+	//(install.zip) live alongside it, so this is the release directory
+	//the worker needs.
+	//
+	char appPath[B_PATH_NAME_LENGTH];
+	if (BPrivate::get_app_path(appPath) == B_OK)
+	{
+		appDir.SetTo(appPath);
+		appDir.GetParent(&appDir);
+	}
+
+	//
+	//Fall back to the default install location if the release directory
+	//could not be resolved.
+	//
+	if (appDir.Path()[0] == '\0')
 		appDir.SetTo("/boot/home/config/non-packaged/apps");
 
 	fWindow = new InstallerWindow(appDir.Path());
