@@ -37,7 +37,7 @@ enum
 
 InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	BWindow(
-		BRect(0, 0, 480, 540),
+		BRect(0, 0, 480, 355),
 		"MacFile Installer",
 		B_TITLED_WINDOW,
 		B_NOT_RESIZABLE | B_NOT_ZOOMABLE
@@ -142,10 +142,11 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	//BScrollView adopts the target's frame automatically.
 	//
 	//
-	//The log area is deliberately SHORT (half of the previous height): the
-	//window is 480x540, so this leaves the lower ~195px of the window empty
-	//below the log. Height = 345 - 160 = 185px = half of the old 370px. The
-	//width (446px) and the window itself are unchanged.
+	//The log area is deliberately SHORT (half of the previous height):
+	//Height = 345 - 160 = 185px = half of the old 370px. The width (446px)
+	//is unchanged. The window height was reduced to match (540 -> 355 = the
+	//log's bottom at y=345 plus the standard 10px buffer), so there is no
+	//empty space left below the log.
 	//
 	BRect logRect(10, 160, 470 - 14, 345);
 	//
