@@ -102,7 +102,7 @@ static void post_failure(BMessenger& target, const char* line)
 //
 //Returns:
 //
-static int32 worker_loop(void* arg)
+int32 InstallWorker::worker_loop(void* arg)
 {
 	worker_args* wargs = (worker_args*)arg;
 	BMessenger target = wargs->target;
