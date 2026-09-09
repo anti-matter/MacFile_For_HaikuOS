@@ -350,8 +350,30 @@ of the window is now empty below the log. `textRect` is derived from `logRect.Wi
   mimeset OK), and re-packaged: `distribution/MacFile_x86_64_Release.zip` (Sep 9 **06:54**)
   contains the round-7 `MacFileInstaller` (49925 bytes) + install-macfile.sh + install.zip +
   ReadMe! (verified with `unzip -l`).
-- **PENDING: user runtime re-test** of the log-area height on a real Haiku system (fresh zip,
-  Sep 9 06:54). NOT to be claimed correct until then.
+- **RUNTIME-CONFIRMED:** user tested the round-7 zip on a real Haiku system — "the new height of
+  the text output area is perfect." (The window-height follow-up is ROUND 8 below.)
+
+## ROUND 8 — reduce window height to match the log area (2026-09-09)
+
+**Request (user, verbatim):** "the new height of the text output area is perfect. however, the
+height of the window has not changed. the window height needs to be modified to accomodate the new
+height of the text output area."
+
+**Change** — one line in `InstallerWindow.cpp`: window rect `BRect(0, 0, 480, 540);` →
+`BRect(0, 0, 480, 355);`. New height = the log area's bottom (y=345) + the standard 10px buffer
+(same 10px margin the original design used: old log bottom 530, old window 540). The log area
+(185px tall, y=160→345), its width (446px), and the window width (480) are all unchanged; the
+~195px of empty space below the log is gone. The centering code uses `Bounds()`, so it
+auto-adjusts to the new size. The stale "window unchanged / ~195px empty" comment was updated to
+match.
+
+- Committed as `0a18530` ("Reduce window height to match log area (540 -> 355)"), pushed to
+  `origin/installer`, built CLEAN on the Haiku server (all 3 components compile + link + xres +
+  mimeset OK), and re-packaged: `distribution/MacFile_x86_64_Release.zip` (Sep 9 **07:02**)
+  contains the round-8 `MacFileInstaller` (49925 bytes) + install-macfile.sh + install.zip +
+  ReadMe! (verified with `unzip -l`).
+- **PENDING: user runtime re-test** of the reduced window height on a real Haiku system (fresh zip,
+  Sep 9 07:02). NOT to be claimed correct until then.
 
 ## VERIFIED release build (Haiku R1 beta6, x86_64, 2026-09-08)
 `BUILDHOME=/boot/system/develop ./build-release.sh` → all 3 components built clean
@@ -363,8 +385,10 @@ Both zips verified with `unzip -l`. Release build is complete and correct.
 ## CURRENT STATE (2026-09-09)
 All phases (1–6) + docs + Haiku build-server test are complete. The installer is functional and
 stable: the runtime bug-fix cycle (Bugs 1–5) is **complete — all five fixed and runtime-confirmed
-on a real Haiku system.** Round 7 (log-area height cut by 50%) is code-complete and build-verified
-on the Haiku server; it is awaiting a runtime re-test.
+on a real Haiku system.** Round 7 (log-area height cut by 50%) is **runtime-confirmed** ("the new
+height of the text output area is perfect"). Round 8 (window height reduced to match the log area,
+540 → 355px) is code-complete and build-verified on the Haiku server; it is awaiting a runtime
+re-test.
 
 **Bug status:**
 - Bug 1 — button state after uninstall: **FIXED (round 2), runtime-confirmed.**
@@ -375,8 +399,10 @@ on the Haiku server; it is awaiting a runtime re-test.
 - Bug 5 — first line of log text starts halfway down: **FIXED (round 6), runtime-confirmed**
   ("all bug fixes verified fixed on the haiku system").
 
-**Status: ALL FIVE BUGS FIXED AND RUNTIME-CONFIRMED on a real Haiku system.** The installer is
-functional and stable. The current release artifact is `distribution/MacFile_x86_64_Release.zip`
-(Sep 9 **06:54**, verified with `unzip -l`), containing the round-7 `MacFileInstaller` (49925
-bytes). **Pending:** user runtime re-test of the round-7 log-area height on a real Haiku system.
-Do NOT claim the height looks right until runtime-confirmed.
+**Status: ALL FIVE BUGS FIXED AND RUNTIME-CONFIRMED on a real Haiku system; ROUND 7 (log-area
+height) RUNTIME-CONFIRMED; ROUND 8 (window height) build-verified and awaiting runtime re-test.**
+The installer is functional and stable. The current release artifact is
+`distribution/MacFile_x86_64_Release.zip` (Sep 9 **07:02**, verified with `unzip -l`), containing
+the round-8 `MacFileInstaller` (49925 bytes). **Pending:** user runtime re-test of the round-8
+window height on a real Haiku system. Do NOT claim the window height looks right until
+runtime-confirmed.
