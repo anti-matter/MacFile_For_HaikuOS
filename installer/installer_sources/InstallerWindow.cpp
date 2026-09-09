@@ -1,11 +1,12 @@
+#include <stdio.h>
 #include <string.h>
 
 #include <Alert.h>
 #include <Button.h>
 #include <Entry.h>
 #include <Messenger.h>
-#include <ProgressBar.h>
 #include <ScrollView.h>
+#include <StringView.h>
 #include <TextView.h>
 
 #include "InstallerWindow.h"
@@ -42,7 +43,7 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	fReleaseDir(releaseDir),
 	fInstallButton(NULL),
 	fUninstallButton(NULL),
-	fProgressBar(NULL),
+	fProgressView(NULL),
 	fStatusView(NULL),
 	fLogView(NULL),
 	fBusy(false),
@@ -95,11 +96,15 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	fStatusView->SetAlignment(B_ALIGN_CENTER);
 	mainView->AddChild(fStatusView);
 
-	fProgressBar = new BProgressBar(20, 96, 460, 114, "Progress", NULL, NULL,
-		B_HORIZONTAL | B_NO_FRAME);
-	fProgressBar->SetRange(0, 100);
-	fProgressBar->SetValue(0);
-	mainView->AddChild(fProgressBar);
+	//
+	//This Haiku build has no BProgressBar, so progress is shown as a
+	//percentage in a centered string view.
+	//
+	fProgressView = new BStringView(20, 96, 460, 114, "progress", "");
+	fProgressView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
+	fProgressView->SetFontSize(font_size);
+	fProgressView->SetAlignment(B_ALIGN_CENTER);
+	mainView->AddChild(fProgressView);
 
 	//
 	//*****************Buttons
@@ -204,7 +209,7 @@ void InstallerWindow::StartOperation(const char* subcommand)
 {
 	fBusy = true;
 	RefreshState();
-	fProgressBar->SetValue(0);
+	fProgressView->SetText("");
 	fStatusView->SetText(strcmp(subcommand, "install") == 0
 		? "Starting install..." : "Starting uninstall...");
 
@@ -242,7 +247,10 @@ void InstallerWindow::MessageReceived(BMessage* message)
 		{
 			int32 percent = 0;
 			message->FindInt32("percent", &percent);
-			fProgressBar->SetValue(percent);
+
+			char progressText[16];
+			snprintf(progressText, sizeof(progressText), "%d%%", (int)percent);
+			fProgressView->SetText(progressText);
 
 			const char* label = message->FindString("label");
 			if (label != NULL)

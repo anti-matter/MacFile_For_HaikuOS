@@ -5,7 +5,6 @@
 #include <String.h>
 
 class BButton;
-class BProgressBar;
 class BStringView;
 class BTextView;
 
@@ -25,7 +24,7 @@ private:
 	BString		fReleaseDir;
 	BButton*	fInstallButton;
 	BButton*	fUninstallButton;
-	BProgressBar*	fProgressBar;
+	BStringView*	fProgressView;
 	BStringView*	fStatusView;
 	BTextView*	fLogView;
 	bool		fBusy;
