@@ -26,13 +26,21 @@ afp_createshare/    CLI utility to create shared AFP volumes
 ShareVolume/        Volume sharing utility with UAM (User Authentication Method) support
   ShareUAM.cpp      User authentication handler
 
+installer/          GUI installer/uninstaller application ("MacFileInstaller")
+  installer_sources/ Installer UI + worker (spawns install-macfile.sh, parses its output)
+  Resource.rdef     Resource definition
+  makefile          Build configuration
+
 deps/openssl/       Vendored OpenSSL 1.1.1
   lib/              Prebuilt .so libraries for x86_64 (libcrypto111v, libssl111v)
   headers/          OpenSSL C headers
 
 distribution/       Release artifacts and install scripts
-  install-macfile.sh  Installer/uninstaller script
+  install-macfile.sh  Installer/uninstaller script (authoritative install backend)
   ReadMe!           Release notes
+
+build-release.sh    Single-command release build (server + config + installer)
+build_macfile.sh    Legacy release build (server + config only, no installer)
 
 ref/                Reference documents
   afp3XX.pdf        AFP 3.x protocol specification
@@ -69,15 +77,27 @@ cd afp_createshare && make
 
 # Volume sharing tool
 cd ShareVolume && make
+
+# GUI installer/uninstaller
+cd installer && make
 ```
 
 ### Full release build
 
 ```bash
-./build_macfile.sh    # Builds all components, creates install.zip archives
+./build-release.sh    # Builds server + config + installer, creates install.zip + release archive
 ```
 
-Output: `MacFile_x86_Release.zip` or `MacFile_x86_64_Release.zip` in `distribution/`.
+`build-release.sh` is the current single-command release build. It builds all three
+BApplication components (`afpserver`, `afp_config`, `installer`), packages
+`distribution/install.zip` (the server + config binaries, plus the OpenSSL libs on
+x86_64), and stages a `MacFile_<arch>_Release/` directory containing the
+`MacFileInstaller` binary, `install-macfile.sh`, `install.zip`, and `ReadMe!` — zipped
+to `distribution/MacFile_<arch>_Release.zip`.
+
+> `build_macfile.sh` is the older, interactive script. It builds only `afpserver` and
+> `afp_config` (not the installer) and does not produce the release archive; use
+> `build-release.sh` for a full release.
 
 ### Remote build server (HaikuOS)
 
@@ -125,6 +145,7 @@ Notes:
 | **MacFile** | `MacFile` | `afp_config/` | GUI for configuring shares, users, and server settings |
 | **CreateAfpShare** | `CreateAfpShare` | `afp_createshare/` | CLI tool to create a new shared volume from the terminal |
 | **share_volume** | — | `ShareVolume/` | Volume sharing utility with UAM support (linked into afp_server) |
+| **MacFileInstaller** | `MacFileInstaller` | `installer/` | GUI to install/uninstall MacFile — thin frontend that runs `distribution/install-macfile.sh` |
 
 ## Architecture
 
@@ -165,6 +186,23 @@ The original monolithic `afp.cpp` was split into four domain files. When locatin
 | `afp_volcmds.cpp` | Server/session/volume commands — `GetSrvrInfo`, `FPLogin`, `FPGetSrvrParms`, etc. |
 | `afp_catalog.cpp` | File/directory catalog commands — `FPEnumerate`, `FPCreate`, `FPDelete`, `FPMoveAndRename`, etc. |
 | `afp_fork.cpp` | Fork I/O commands — `FPOpenFork`, `FPRead`, `FPWrite`, `FPFlush`, byte-range locks |
+
+## GUI Installer (`MacFileInstaller`)
+
+A native Haiku C++ BApplication that installs/uninstalls MacFile from a window. It is a **thin frontend**: it contains no install logic of its own and delegates all filesystem work to `distribution/install-macfile.sh`, which remains the single authoritative install/uninstall backend.
+
+```
+MacFileInstaller (BApplication)
+└── InstallerWindow (window, buttons, status/progress, log)
+    └── InstallWorker (worker thread)
+        └── fork() + execl("/bin/sh", install-macfile.sh, <subcommand>)
+            └── reads the script's stdout line-by-line, posts BMessages to the window
+```
+
+- **`InstallerWindow.{cpp,h}`** — the UI: Install / Uninstall / Quit buttons, a status line, a percentage progress line (no `BProgressBar` in this Haiku build), and a read-only log in a `BScrollView`. Detects installed state from `/boot/home/config/non-packaged/apps/afp_server`.
+- **`InstallWorker.{cpp,h}`** — spawns the script in a worker thread over a pipe and parses its output, posting `INSTALL_M_PROGRESS` / `INSTALL_M_STATUS` / `INSTALL_M_LOG` / `INSTALL_M_DONE` messages back to the window.
+- **Line protocol** (emitted by `install-macfile.sh`, parsed by the worker): `PROGRESS <0-100> <label>`, `INFO <msg>`, `ERROR <msg>`, `STATUS installed|not_installed`, `DONE success|failure`. Exit status 0 = success. The `install`/`uninstall` paths do not emit a `STATUS` line (only `status` does), so the window re-detects installed state from disk on `DONE`.
+- **Subcommands** (run by the worker, dispatched in `install-macfile.sh`): `install`, `uninstall`, `status`, `help`; no argument = interactive mode.
 
 ## AFP Protocol Support
 
@@ -250,13 +288,20 @@ Unrecognized extensions receive default type/creator of `"???? "` / `"????"`.
 
 ## Installation
 
-Run `distribution/install-macfile.sh` on a Haiku system. The script:
+Two entry points, both backed by the same `distribution/install-macfile.sh` script:
+
+- **GUI installer** — run the `MacFileInstaller` binary (from the release archive). It offers Install / Uninstall buttons and shows progress and a log. This is the recommended path for end users.
+- **Command line** — run `distribution/install-macfile.sh` on a Haiku system. Subcommands: `install`, `uninstall`, `status`, `help`; no argument runs interactive mode.
+
+The `install` subcommand:
 
 1. Extracts binaries to `~/config/non-packaged/apps/`
 2. Installs OpenSSL libs to `~/config/non-packaged/lib/`
 3. Creates deskbar menu links (Preferences → MacFile, Applications → afp_server)
 4. Links afp_server into `~/config/boot/launch/` for auto-start
 5. Starts the server and optionally opens the config tool
+
+Neither install nor uninstall touches the user's configuration in `~/.settings/`.
 
 ## Reference
 

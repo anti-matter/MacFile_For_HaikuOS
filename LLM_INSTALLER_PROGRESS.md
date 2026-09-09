@@ -405,3 +405,11 @@ height) RUNTIME-CONFIRMED; ROUND 8 (window height) RUNTIME-CONFIRMED. PROJECT CO
 The installer is functional and stable. The current release artifact is
 `distribution/MacFile_x86_64_Release.zip` (Sep 9 **07:02**, verified with `unzip -l`), containing
 the round-8 `MacFileInstaller` (49925 bytes). No pending work.
+
+**Post-completion doc pass (2026-09-09):** `CLAUDE.md` updated to document the new installer
+component and release tooling — added the `installer/` directory + `MacFileInstaller` component
+(Components table, Project Structure, build command), a dedicated "GUI Installer" architecture
+section (thin frontend → `install-macfile.sh` line protocol + subcommands), `build-release.sh` as
+the current full release build (with `build_macfile.sh` noted as the legacy non-installer script),
+and the Installation section now lists both the GUI and CLI entry points plus the
+`install`/`uninstall`/`status`/`help` subcommands. Docs-only change; no code touched.
