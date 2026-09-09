@@ -15,7 +15,7 @@ public:
 	virtual ~InstallerWindow();
 
 	virtual void MessageReceived(BMessage* message);
-	virtual void WindowClosed(bool wasCanceled);
+	virtual bool QuitRequested();
 
 private:
 	void RefreshState();

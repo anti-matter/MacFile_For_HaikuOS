@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include <Alert.h>
+#include <Application.h>
 #include <Button.h>
 #include <Entry.h>
 #include <Messenger.h>
@@ -140,6 +141,15 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 
 	logScroll = new BScrollView("logScroll", fLogView,
 		B_FOLLOW_LEFT | B_FOLLOW_TOP, 0, false, true);
+
+	//
+	//BScrollView has no frame constructor: it computes its own frame
+	//from the target view PLUS the 14px vertical scrollbar, which would
+	//push the right edge to 470 + 14 = 484, past the 480-wide window.
+	//Pin the scrollview's outer frame so the scrollbar's right edge sits
+	//at 470 -- the same 10px buffer as the left side of the text area.
+	//
+	logScroll->SetFrame(BRect(10, 160, 470, 530));
 	mainView->AddChild(logScroll);
 
 	//
@@ -164,19 +174,23 @@ InstallerWindow::~InstallerWindow()
 }
 
 /*
- * WindowClosed()
+ * QuitRequested()
  *
  * Description:
- *		A BApplication does not quit when its last window closes, so
- *		closing this window would leave the MacFileInstaller process
- *		running. Quit the app here so the process exits with the window.
+ *		Quit the whole application (not just this window) so the
+ *		MacFileInstaller process exits. A BApplication does not quit
+ *		when its last window closes on its own. This fires both when
+ *		the user clicks the Quit button and when the window's close
+ *		box is clicked, since both call BWindow::Quit().
  *
  * Returns:
+ *		true, so the window closes as normal.
  */
 
-void InstallerWindow::WindowClosed(bool wasCanceled)
+bool InstallerWindow::QuitRequested()
 {
-	Quit();
+	be_app->PostMessage(B_QUIT_REQUESTED);
+	return BWindow::QuitRequested();
 }
 
 /*
