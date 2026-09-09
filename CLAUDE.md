@@ -4,7 +4,7 @@ An Apple Filing Protocol (AFP) file server for the Haiku operating system. Serve
 
 ## SDK Headers
 
-The HaikuOS SDK headers are located at `haiku-os-headers/` (relative to repo root). When writing or reviewing code that includes Haiku system headers, use this path as the base — e.g., `#include <haiku-os-headers/kernel/OS.h>` instead of `<kernel/OS.h>`.
+The HaikuOS SDK headers are located at `~/haiku-sdk/boot/system/develop/headers/` (relative to repo root). When writing or reviewing code that includes Haiku system headers, use this path as the base — e.g., `#include <~/haiku-sdk/boot/system/develop/headers/kernel/OS.h>` instead of `<kernel/OS.h>`.
 
 ## Project Structure
 

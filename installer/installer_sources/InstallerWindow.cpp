@@ -132,15 +132,17 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	//
 	//*****************Log
 	//
-	//The BTextView is the scrollview's target, so its frame is in the
-	//scrollview's LOCAL coordinate system, not the window's. Anchor it at
-	//(0,0) and size it to the scrollview's INTERIOR (outer width 460 minus
-	//the 14px vertical scrollbar = 446), then position the scrollview itself
-	//in the window. (Creating the target at window coordinates, as before,
-	//made the text overflow past the right and bottom edges of the window
-	//and hid the scrollbar.)
+	//The BTextView is the scrollview's target. Per the proven pattern in
+	//afpMsgWindow.cpp, the target's frame is in the PARENT (window)
+	//coordinate system and represents the scrollview's INTERIOR. The
+	//BScrollView then sizes its outer frame to the target's frame PLUS the
+	//14px vertical scrollbar. So set the target's right edge to 470 - 14 =
+	//456, and the scrollview's outer right edge lands at 470 -- the same
+	//10px buffer as every other element. Do NOT call MoveTo/ResizeTo; the
+	//BScrollView adopts the target's frame automatically.
 	//
-	fLogView = new BTextView(BRect(0, 0, 446, 370), "log",
+	BRect logRect(10, 160, 470 - 14, 530);
+	fLogView = new BTextView(logRect, "log",
 		BRect(2, 2, 240, 150), 0, B_WILL_DRAW | B_FULL_UPDATE_ON_RESIZE);
 	fLogView->MakeEditable(false);
 	fLogView->MakeSelectable(true);
@@ -149,15 +151,6 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 
 	logScroll = new BScrollView("logScroll", fLogView,
 		B_FOLLOW_LEFT | B_FOLLOW_TOP, 0, false, true);
-
-	//
-	//Pin the scrollview's outer frame to (10,160)-(470,530) -- the same
-	//10px buffer as every other element. The 14px vertical scrollbar sits
-	//inside the right edge (x=456..470), the text fills the rest, and
-	//nothing overflows the 480x540 window.
-	//
-	logScroll->MoveTo(10, 160);
-	logScroll->ResizeTo(470 - 10, 530 - 160);
 	mainView->AddChild(logScroll);
 
 	//
