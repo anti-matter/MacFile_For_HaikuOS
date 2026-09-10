@@ -181,7 +181,7 @@ MacFile is built and installed on Haiku (there is no Linux cross-compiler):
 
 1. **Build** — run `./build-release.sh` from the repository root. The script builds all components and creates a release archive in `distribution/`: `MacFile_x86_Release.zip` (x86) or `MacFile_x86_64_Release.zip` (x86_64).
 2. **Extract** — expand the resulting `.zip` file.
-3. **Install** — double-click the `MacFileInstaller` application in the extracted folder and press **Install**. It places the binaries and OpenSSL libraries in `~/config/non-packaged/`, creates the deskbar menu links, links `afp_server` into `~/config/boot/launch/` for auto-start, and starts the server. (Prefer the terminal? Run `./install-macfile.sh install` instead.)
+3. **Install** — double-click the `MacFileInstaller` application in the extracted folder and press **Install**. It places the binaries and OpenSSL libraries in `~/config/non-packaged/`, installs the "Share with Macs (AppleShare)" tracker add-on into `~/config/non-packaged/add-ons/Tracker/`, creates the deskbar menu links, links `afp_server` into `~/config/boot/launch/` for auto-start, and starts the server. (Prefer the terminal? Run `./install-macfile.sh install` instead.)
 
 To uninstall, press the **Uninstall** button in `MacFileInstaller` (or run `./install-macfile.sh uninstall`). Your settings are preserved.
 
@@ -190,7 +190,7 @@ To uninstall, press the **Uninstall** button in `MacFileInstaller` (or run `./in
 - **afp_server** — Core AFP daemon (`afpserver/`)
 - **MacFile** — GUI configuration app (`afp_config/`)
 - **MacFileInstaller** — GUI installer/uninstaller (`installer/`)
-- **CreateAfpShare** — CLI share creation utility (`afp_createshare/`)
+- **Share with Macs (AppleShare)** — tracker add-on to share a directory over AFP; right-click a folder in the tracker and choose Add-ons → Share with Macs (AppleShare) (`afp_createshare/`, built as `CreateAfpShare` and renamed at release build time)
 - **share_volume** — Volume sharing utility with UAM support (`ShareVolume/`)
 
 ## License

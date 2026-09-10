@@ -14,12 +14,14 @@
 #include <stdio.h>
 
 #include "afpMainWindow.h"
+#include "afpRefreshIcon.h"
 #include "afpUserConfig.h"
 #include "afpConfigUtils.h"
 #include "afpMsgWindow.h"
 #include "afpAboutWindow.h"
 #include "afpSetHostWin.h"
 #include "afpLaunch.h"
+#include "RefreshButton.h"
 #include "commands.h"
 
 #define AFP_WINDOW_TITLE		"MacFile Server"
@@ -215,7 +217,20 @@ void afpMainWindow::BuildWindow(void)
 	mRemoveButton = new BButton(rect, "b2", "Remove", new BMessage(CMD_APP_REMOVEVOL));
 	mRemoveButton->SetFontSize(button_font_size);
 	bbox->AddChild(mRemoveButton);
-	
+
+	//
+	//Refresh button: re-query the server for the current shared folders.
+	//Needed when a share is added out-of-band (e.g. via the tracker add-on)
+	//while the configuration window is open. Placed below the list, flush
+	//with its right edge.
+	//
+	rect.Set(240, 135, 270, 155);
+	RefreshButton* mRefreshButton = new RefreshButton(
+		rect,
+		"refresh",
+		new BMessage(CMD_APP_REFRESHVOLS));
+	bbox->AddChild(mRefreshButton);
+
 	rect.Set(8, 180, 105, 180+15);
 	mReadOnlyBox = new BCheckBox(rect, "ro", "Read Only", new BMessage(CMD_APP_ROCHECKBOX));
 	mReadOnlyBox->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
@@ -524,6 +539,11 @@ void afpMainWindow::MessageReceived(BMessage * Message)
 			break;
 		
 		case CMD_APP_VOLLISTCHANGED:
+			SetControlsState();
+			break;
+
+		case CMD_APP_REFRESHVOLS:
+			PopulateVolumeList();
 			SetControlsState();
 			break;
 			

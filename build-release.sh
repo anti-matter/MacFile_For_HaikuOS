@@ -2,10 +2,11 @@
 #
 # build-release.sh — single-command release build for MacFile.
 #
-# Builds the AFP server, the MacFile configuration app, and the
-# MacFileInstaller GUI app, then assembles:
+# Builds the AFP server, the MacFile configuration app, the CreateAfpShare
+# tracker add-on, and the MacFileInstaller GUI app, then assembles:
 #
-#	distribution/install.zip            (payload: afp_server, MacFile, OpenSSL libs)
+#	distribution/install.zip            (payload: afp_server, MacFile,
+#	                                       CreateAfpShare, OpenSSL libs)
 #	distribution/MacFile_<arch>_Release.zip
 #	                                     (MacFileInstaller, install-macfile.sh,
 #	                                       install.zip, ReadMe!)
@@ -26,9 +27,18 @@ fail() {
 }
 
 #
-# 1. Clean and build all three components.
+# The makefiles include $(BUILDHOME)/etc/makefile-engine. In a non-interactive
+# shell (e.g. over SSH) BUILDHOME is not set, which makes that resolve to
+# /etc/makefile-engine and fail obscurely. Fail early with a clear message.
 #
-for dir in afpserver afp_config installer; do
+if [ -z "${BUILDHOME:-}" ]; then
+	fail "BUILDHOME is not set. Export it (e.g. export BUILDHOME=/boot/system/develop) and re-run."
+fi
+
+#
+# 1. Clean and build all components.
+#
+for dir in afpserver afp_config afp_createshare installer; do
 	rm -rf "$dir/$X86" "$dir/$X64"
 	( cd "$dir" && make )
 done
@@ -47,14 +57,24 @@ else
 fi
 
 #
-# 3. Verify all three binaries exist before packaging.
+# The tracker labels add-ons by their file name, so the add-on must carry its
+# user-facing name. The makefile builds it as "CreateAfpShare" (the makefile
+# engine cannot handle a spaced NAME in its xres step), so rename the output
+# here, before packaging.
+#
+( cd "afp_createshare/$OBJECTS" && mv -f CreateAfpShare "Share with Macs (AppleShare)" )
+
+#
+# 3. Verify all binaries exist before packaging.
 #
 SERVER_BIN="afpserver/$OBJECTS/afp_server"
 CONFIG_BIN="afp_config/$OBJECTS/MacFile"
+SHARE_BIN="afp_createshare/$OBJECTS/Share with Macs (AppleShare)"
 INSTALLER_BIN="installer/$OBJECTS/MacFileInstaller"
 
 [ -f "$SERVER_BIN" ] || fail "missing $SERVER_BIN"
 [ -f "$CONFIG_BIN" ] || fail "missing $CONFIG_BIN"
+[ -f "$SHARE_BIN" ] || fail "missing $SHARE_BIN"
 [ -f "$INSTALLER_BIN" ] || fail "missing $INSTALLER_BIN"
 
 #
@@ -63,6 +83,7 @@ INSTALLER_BIN="installer/$OBJECTS/MacFileInstaller"
 rm -f distribution/install.zip
 ( cd "afpserver/$OBJECTS" && zip ../../distribution/install.zip afp_server )
 ( cd "afp_config/$OBJECTS" && zip ../../distribution/install.zip MacFile )
+( cd "afp_createshare/$OBJECTS" && zip ../../distribution/install.zip "Share with Macs (AppleShare)" )
 
 if [ "$ARCH" = "x86_64" ]; then
 	for lib in libcrypto111v.so libssl111v.so; do

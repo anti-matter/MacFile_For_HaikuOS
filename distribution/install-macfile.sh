@@ -44,6 +44,7 @@ LINK_PREF_DIRECTORY=/boot/home/config/non-packaged/data/deskbar/menu/Preferences
 LINK_APPL_DIRECTORY=/boot/home/config/non-packaged/data/deskbar/menu/Applications
 BIN_DIRECTORY=/boot/home/config/non-packaged/apps
 LIB_DIRECTORY=/boot/home/config/non-packaged/lib
+ADDON_DIRECTORY=/boot/home/config/non-packaged/add-ons/Tracker
 LAUNCH_DIRECTORY=/boot/home/config/settings/boot/launch
 
 ARCHIVEDIR=`dirname "$0"`
@@ -128,6 +129,15 @@ function installFiles {
 	mv -f $BIN_DIRECTORY/libcrypto111v.so $LIB_DIRECTORY/libcrypto.so.1.1
 	mv -f $BIN_DIRECTORY/libssl111v.so $LIB_DIRECTORY/libssl.so.1.1
 
+	#
+	#CreateAfpShare is a tracker add-on (a shared library the tracker loads
+	#and calls process_refs() on), not an application, so it goes in the
+	#add-ons directory, not the apps directory.
+	#
+	emit_progress 35 "Installing the 'Share with Macs (AppleShare)' add-on..."
+	mkdir -p $ADDON_DIRECTORY
+	mv -f "$BIN_DIRECTORY/Share with Macs (AppleShare)" "$ADDON_DIRECTORY/Share with Macs (AppleShare)"
+
 	emit_progress 40 "Verifying installed files..."
 	#make sure the files got installed properly
 	if [ ! -e "$BIN_DIRECTORY/MacFile" ]; then
@@ -136,6 +146,10 @@ function installFiles {
 
 	if [ ! -e "$BIN_DIRECTORY/afp_server" ]; then
 		fail "Installation failed, afp_server failed to install!!"
+	fi
+
+	if [ ! -e "$ADDON_DIRECTORY/Share with Macs (AppleShare)" ]; then
+		fail "Installation failed, the CreateAfpShare add-on failed to install!!"
 	fi
 
 	emit_progress 55 "Configuring menu links and startup..."
@@ -155,6 +169,7 @@ function removeFiles {
 	#remove old afp_server application
 	rm -fv $BIN_DIRECTORY/afp_server
 	rm -fv $BIN_DIRECTORY/MacFile
+	rm -fv "$ADDON_DIRECTORY/Share with Macs (AppleShare)"
 	rm -fv $LIB_DIRECTORY/libcrypto.so.1.1
 	rm -fv $LIB_DIRECTORY/libssl.so.1.1
 
