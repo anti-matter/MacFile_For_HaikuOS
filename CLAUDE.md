@@ -19,7 +19,7 @@ afp_config/         GUI configuration application ("MacFile")
   afpconfig.rsrc    Mac resource fork for the config app
   makefile          Build configuration
 
-afp_createshare/    CLI utility to create shared AFP volumes
+afp_createshare/    Tracker add-on to share a directory over AFP
   afp_sources/      Share creation implementation
   afpcreate.rsrc    Mac resource fork
 
@@ -39,7 +39,7 @@ distribution/       Release artifacts and install scripts
   install-macfile.sh  Installer/uninstaller script (authoritative install backend)
   ReadMe!           Release notes
 
-build-release.sh    Single-command release build (server + config + installer)
+build-release.sh    Single-command release build (server + config + tracker add-on + installer)
 build_macfile.sh    Legacy release build (server + config only, no installer)
 
 ref/                Reference documents
@@ -54,7 +54,7 @@ README.md           User-facing documentation
 Each component builds independently using Haiku's **BeOS Generic Makefile v2.2** engine (`$(BUILDHOME)/etc/makefile-engine`). All makefiles share the same structure:
 
 - `NAME` — output binary name
-- `TYPE= APP` — all components are BApplication apps
+- `TYPE` — `APP` for the BApplication components; `SHARED` for the `afp_createshare` tracker add-on
 - `SRCS` — wildcard over source subdirectory
 - `RSRCS` / `RDEFS` — Mac resource fork and resource definition files
 - `LIBS` — linked libraries (be, network, textencoding, etc.)
@@ -72,7 +72,7 @@ cd afpserver && ./dbgbuild.sh
 # GUI config app
 cd afp_config && make
 
-# CLI share utility
+# Tracker add-on (shared library)
 cd afp_createshare && make
 
 # Volume sharing tool
@@ -85,13 +85,14 @@ cd installer && make
 ### Full release build
 
 ```bash
-./build-release.sh    # Builds server + config + installer, creates install.zip + release archive
+./build-release.sh    # Builds server + config + tracker add-on + installer, creates install.zip + release archive
 ```
 
-`build-release.sh` is the current single-command release build. It builds all three
-BApplication components (`afpserver`, `afp_config`, `installer`), packages
-`distribution/install.zip` (the server + config binaries, plus the OpenSSL libs on
-x86_64), and stages a `MacFile_<arch>_Release/` directory containing the
+`build-release.sh` is the current single-command release build. It builds all four
+components (`afpserver`, `afp_config`, `afp_createshare`, `installer`),
+packages
+`distribution/install.zip` (the server + config + tracker add-on binaries, plus the
+OpenSSL libs on x86_64), and stages a `MacFile_<arch>_Release/` directory containing the
 `MacFileInstaller` binary, `install-macfile.sh`, `install.zip`, and `ReadMe!` — zipped
 to `distribution/MacFile_<arch>_Release.zip`.
 
@@ -143,7 +144,7 @@ Notes:
 |---|---|---|---|
 | **afp_server** | `afp_server` | `afpserver/` | Core AFP daemon — runs as a Haiku BApplication background process |
 | **MacFile** | `MacFile` | `afp_config/` | GUI for configuring shares, users, and server settings |
-| **CreateAfpShare** | `CreateAfpShare` | `afp_createshare/` | CLI tool to create a new shared volume from the terminal |
+| **CreateAfpShare** | `Share with Macs (AppleShare)` | `afp_createshare/` | Tracker add-on (shared library) — share a directory over AFP from the tracker's Add-ons menu. The makefile builds it as `CreateAfpShare` (the makefile engine can't handle a spaced NAME in its xres step); `build-release.sh` renames the output to `Share with Macs (AppleShare)`, and the tracker labels add-ons by file name |
 | **share_volume** | — | `ShareVolume/` | Volume sharing utility with UAM support (linked into afp_server) |
 | **MacFileInstaller** | `MacFileInstaller` | `installer/` | GUI to install/uninstall MacFile — thin frontend that runs `distribution/install-macfile.sh` |
 
@@ -297,9 +298,10 @@ The `install` subcommand:
 
 1. Extracts binaries to `~/config/non-packaged/apps/`
 2. Installs OpenSSL libs to `~/config/non-packaged/lib/`
-3. Creates deskbar menu links (Preferences → MacFile, Applications → afp_server)
-4. Links afp_server into `~/config/boot/launch/` for auto-start
-5. Starts the server and optionally opens the config tool
+3. Installs the "Share with Macs (AppleShare)" tracker add-on to `~/config/non-packaged/add-ons/Tracker/`
+4. Creates deskbar menu links (Preferences → MacFile, Applications → afp_server)
+5. Links afp_server into `~/config/boot/launch/` for auto-start
+6. Starts the server and optionally opens the config tool
 
 Neither install nor uninstall touches the user's configuration in `~/.settings/`.
 

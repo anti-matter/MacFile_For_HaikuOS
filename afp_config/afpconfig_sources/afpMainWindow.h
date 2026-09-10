@@ -25,6 +25,7 @@
 #define CMD_APP_SENDMSG				'sndm'
 #define CMD_APP_ROCHECKBOX			'mkro'
 #define CMD_APP_VOLLISTCHANGED		'vchg'
+#define CMD_APP_REFRESHVOLS			'refv'
 #define CMD_AFP_USERLISTCHANGED		'uchg'
 
 #define CMD_MENU_ABOUT				'abot'
@@ -97,6 +98,32 @@ private:
 };
 
 
+/*
+ * afpIconButton
+ *
+ * A small icon-only BButton (no label). It draws the 1-bit refresh glyph
+ * from afpRefreshIcon.h in the button's label color, centered in the
+ * button, so the button background shows through the transparent pixels —
+ * the same look as a browser's reload button. Drawing the icon ourselves
+ * (rather than handing a BBitmap to SetIcon) keeps the result independent
+ * of how the button renders 1-bit bitmaps.
+ */
+class afpIconButton : public BButton
+{
+public:
+	afpIconButton(BRect frame, const char* name, BMessage* message,
+		const char* tooltip)
+		: BButton(frame, name, "", message, B_FOLLOW_LEFT | B_FOLLOW_TOP)
+	{
+		if (tooltip != NULL)
+			SetToolTip(tooltip);
+	}
+
+protected:
+	virtual void Draw(BRect updateRect);
+};
+
+
 class afpMainWindow : public BWindow
 {
 public:
@@ -126,6 +153,7 @@ private:
 		afpListView*	mVolumeListView;
 		BCheckBox*		mReadOnlyBox;
 		BButton*		mRemoveButton;
+		afpIconButton*	mRefreshButton;
 		afpListView*	mUserListView;
 		BStringView*	mServerStatus;
 		BButton*		mRemoveUserButton;

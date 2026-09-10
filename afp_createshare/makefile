@@ -7,6 +7,10 @@
 ## Application Specific Settings ---------------------------------------------
 
 # specify the name of the binary
+# The release build (build-release.sh) renames this to "Share with Macs
+# (AppleShare)" — the tracker labels add-ons by file name. It is built under
+# this simple name because the makefile engine cannot handle a spaced NAME in
+# its xres step.
 NAME=CreateAfpShare
 
 # specify the type of binary
@@ -14,7 +18,10 @@ NAME=CreateAfpShare
 #	SHARED:	Shared library or add-on
 #	STATIC:	Static library archive
 #	DRIVER: Kernel Driver
-TYPE=APP
+#
+# This is a tracker add-on: a shared library the tracker loads and calls
+# process_refs() on. It is not a standalone application.
+TYPE=SHARED
 
 #	add support for new Pe and Eddie features
 #	to fill in generic makefile
@@ -69,7 +76,7 @@ SYSTEM_INCLUDE_PATHS =
 #	additional paths to look for local headers
 #	thes use the form: #include "header"
 #	source file directories are automatically included
-LOCAL_INCLUDE_PATHS = afp_headers/ ../afpserver/afp_headers/ ../afp_config/afpconfig_headers
+LOCAL_INCLUDE_PATHS = ../afpserver/afp_sources ../afp_config/afpconfig_sources
 
 #	specify the level of optimization that you desire
 #	NONE, SOME, FULL

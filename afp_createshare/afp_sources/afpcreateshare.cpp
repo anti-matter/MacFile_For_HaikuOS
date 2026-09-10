@@ -1,19 +1,31 @@
 /*
  *	afpcreateshare.cpp
  *
- *	AFP Server add-on to share directories.
+ *	AFP Server tracker add-on to share directories.
+ *
+ *	This is a tracker add-on: the tracker loads it as a shared library and
+ *	calls process_refs() when the user picks it from the Add-ons menu after
+ *	selecting one or more items. It is not a standalone application.
+ *
+ *	Note on the dialogs: process_refs() runs on the tracker's private
+ *	"Add-on" thread, which is a plain thread and NOT a BLooper. Destroying a
+ *	BWindow (such as a BAlert) after its Go() call has returned double-frees
+ *	in the BLooper destructor (the window's own message queue is freed twice)
+ *	and crashes the tracker. Go() has already closed the window, so we let
+ *	each BAlert leak rather than delete it — a small, bounded leak in a
+ *	rarely-invoked add-on is the safe trade-off for not crashing the tracker.
  */
+
+#include <stdio.h>
 
 #include <Alert.h>
 #include <Entry.h>
 #include <Message.h>
-#include <Debug.h>
 #include <StorageKit.h>
 #include <TrackerAddOn.h>
 
 #include "commands.h"
 #include "afpConfigUtils.h"
-#include "afpcreateshare.h"
 
 
 /*
@@ -21,7 +33,8 @@
  *
  * Description:
  *		This function is called by the tracker when a user selects
- *		this add-on.
+ *		this add-on from the Add-ons menu. Each selected directory is
+ *		offered up as a new AFP volume.
  *
  * Returns:
  */
@@ -35,19 +48,18 @@ process_refs(entry_ref dir_ref, BMessage* msg, void*)
 	entry_ref	ref;
 	BEntry		entry;
 	BPath		path;
-	char		textmsg[256];
-	
+	char		textmsg[B_PATH_NAME_LENGTH + 128];
+
 	msg->GetInfo("refs", &type, &count);
-	
-	if (type != B_REF_TYPE)
-	{
+
+	if (type != B_REF_TYPE) {
 		//
 		//We were not given a type of entry_ref, there's nothing
 		//for us to do here.
 		//
 		return;
 	}
-	
+
 	//
 	//Cycle through each directory we've been handed and tell the AFP
 	//server to serve it up as a volume.
@@ -57,9 +69,8 @@ process_refs(entry_ref dir_ref, BMessage* msg, void*)
 			count++ )
 	{
 		entry.SetTo(&ref);
-		
-		if (entry.InitCheck() == B_OK)
-		{
+
+		if (entry.InitCheck() == B_OK) {
 			BDirectory	dir(&entry);
 			entry.GetPath(&path);
 
@@ -67,27 +78,30 @@ process_refs(entry_ref dir_ref, BMessage* msg, void*)
 			//AFP can only share directories, files and links will not be
 			//and cannot be shared.
 			//
-			if (!entry.IsDirectory())
-			{
-				sprintf(textmsg, "%s is not a directory and cannot be shared", path.Path());
-				
+			if (!entry.IsDirectory()) {
+				snprintf(textmsg, sizeof(textmsg),
+					"%s is not a directory and cannot be shared",
+					path.Path());
+
 				(new BAlert("", textmsg, "OK"))->Go();
 				continue;
 			}
-			
+
 			//
 			//We do not allow sharing of the root directory, this causes
 			//many, many problems.
 			//
-			if (dir.IsRootDirectory())
-			{
-				sprintf(textmsg, "Sorry, sharing of an entire volume is not permitted.");
-				
+			if (dir.IsRootDirectory()) {
+				snprintf(textmsg, sizeof(textmsg),
+					"Sorry, sharing of an entire volume is not permitted.");
+
 				(new BAlert("", textmsg, "OK"))->Go();
 				continue;
 			}
-			
-			sprintf(textmsg, "Are you sure you want to share this directory?\n\n %s", path.Path());
+
+			snprintf(textmsg, sizeof(textmsg),
+				"Are you sure you want to share this directory?\n\n %s",
+				path.Path());
 
 			//
 			//Initialize our alert object and setup it's parameters.
@@ -98,28 +112,39 @@ process_refs(entry_ref dir_ref, BMessage* msg, void*)
 							"Cancel",
 							"Yes"
 							);
-			
+
 			alert->SetShortcut(0, B_ESCAPE);
 			result = alert->Go();
-			
-			if (result == 1)
-			{
+
+			//
+			//Deliberately NOT deleted: see the note at the top of this
+			//file. Deleting the BAlert here (on the non-looper add-on
+			//thread) double-frees and crashes the tracker.
+			//
+
+			if (result == 1) {
 				result = AFPAddShare(ref, &path);
-				
+
 				switch(result)
 				{
 					case be_afp_success:
-						sprintf(textmsg, "AFP share\n\n%s\n\ncreated successfully!", path.Path());
+						snprintf(textmsg, sizeof(textmsg),
+							"AFP share\n\n%s\n\ncreated successfully!",
+							path.Path());
 						(new BAlert("", textmsg, "OK"))->Go();
 						break;
-					
+
 					case be_afp_sharealreadyexits:
-						sprintf(textmsg, "The directory:\n\n%s\n\nis already shared out by AFP", path.Path());
+						snprintf(textmsg, sizeof(textmsg),
+							"The directory:\n\n%s\n\nis already shared out by AFP",
+							path.Path());
 						(new BAlert("", textmsg, "OK"))->Go();
 						break;
-						
+
 					default:
-						sprintf(textmsg, "Error sharing the directory %s!\n\nError code: %d", path.Path(), result);
+						snprintf(textmsg, sizeof(textmsg),
+							"Error sharing the directory %s!\n\nError code: %d",
+							path.Path(), result);
 						(new BAlert("", textmsg, "OK"))->Go();
 						break;
 				}
@@ -127,55 +152,3 @@ process_refs(entry_ref dir_ref, BMessage* msg, void*)
 		}
 	}
 }
-
-
-/*
- * AFPCreateShare()
- *
- * Description:
- *
- * Returns:
- */
-
-AFPCreateShare::AFPCreateShare() : BApplication("application/x-vnd.afpcreate")
-{
-	return;
-}
-
-AFPCreateShare::~AFPCreateShare()
-{
-	return;
-}
-
-
-/*
- * main()
- *
- * Description:
- *
- * Returns:
- */
-
-int main()
-{
-	new AFPCreateShare();
-	
-	(new BAlert("", "AFP Create Share Add-on.\n\nSelect a directory, then select this add-on.", "OK"))->Go();
-	
-	delete be_app;
-
-	return( 0 );
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
