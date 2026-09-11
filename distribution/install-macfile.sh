@@ -22,6 +22,8 @@
 #
 #	install-macfile.sh              Interactive mode (GUI alerts; the original behavior).
 #	install-macfile.sh install      Non-interactive install, machine-readable output.
+#	install-macfile.sh upgrade      Non-interactive upgrade: replace an existing
+#	                                install, preserving your configuration.
 #	install-macfile.sh uninstall    Non-interactive uninstall, machine-readable output.
 #	install-macfile.sh status       Report whether MacFile is currently installed.
 #	install-macfile.sh help         Print this usage text.
@@ -195,21 +197,54 @@ function uninstall {
 # Non-interactive backend entry points (driven by the MacFileInstaller GUI).
 # ---------------------------------------------------------------------------
 
-cmd_install()
+# verifyPayload
+# Confirm the payload archive actually contains every file the install needs,
+# so we never tear down a working installation only to discover the
+# replacement payload is missing or corrupt. Fails (leaving the existing
+# installation untouched) if the archive cannot be read or a required entry is
+# absent. The OpenSSL libraries are only present in x86_64 payloads, so they
+# are not required here -- this mirrors the post-extraction checks in
+# installFiles, which verify the same three core components.
+verifyPayload()
 {
-	PROTOCOL=1
-	echo "PROGRESS 5 Preparing installation"
-
-	#Make sure the zip file with the app bits is present
-	if [ ! -e "$ARCHIVEDIR/$ARCHIVE" ]; then
-		fail "The file \"$ARCHIVE\" that contains the application binaries is missing. Installation aborted."
+	listing=$(unzip -l "$ARCHIVEDIR/$ARCHIVE" 2>/dev/null)
+	if [ -z "$listing" ]; then
+		fail "The payload archive \"$ARCHIVE\" could not be read. It may be corrupt. $OPERATION aborted."
 	fi
 
-	#We must shut down afp_server before installing the new one.
+	for name in "afp_server" "MacFile" "Share with Macs (AppleShare)"; do
+		if ! printf '%s\n' "$listing" | grep -Fq "$name"; then
+			fail "The payload archive \"$ARCHIVE\" is missing \"$name\". $OPERATION aborted."
+		fi
+	done
+}
+
+# install_sequence <operation-word>
+# The shared install/upgrade sequence. <operation-word> ("Installation" or
+# "Upgrade") is used in the bookend progress labels. A fresh install and an
+# upgrade run the same steps: verify the payload, stop the server, remove the
+# installed program components (the user's configuration in ~/.settings/ is
+# never touched), install the components from the current payload, and restart
+# the server.
+install_sequence()
+{
+	OPERATION="$1"
+
+	#Make sure the zip file with the app bits is present and complete before
+	#we modify the existing installation.
+	if [ ! -e "$ARCHIVEDIR/$ARCHIVE" ]; then
+		fail "The file \"$ARCHIVE\" that contains the application binaries is missing. $OPERATION aborted."
+	fi
+	verifyPayload
+
+	#We must shut down afp_server before replacing the installed binaries.
 	emit_info "Shutting down the MacFile server..."
 	quit application/x-vnd.afp_server
 
-	#Remove any existing installation, then install the fresh one.
+	#Remove the installed program components, then install the components from
+	#the current payload. removeFiles only removes program files -- the user's
+	#configuration in ~/.settings/ is never touched, so an upgrade leaves the
+	#server configured exactly as it was.
 	removeFiles
 	installFiles
 
@@ -221,9 +256,23 @@ cmd_install()
 	fi
 	echo "INFO afp_server has been started"
 
-	echo "PROGRESS 100 Installation complete"
+	echo "PROGRESS 100 $OPERATION complete"
 	echo "DONE success"
 	exit 0
+}
+
+cmd_install()
+{
+	PROTOCOL=1
+	echo "PROGRESS 5 Preparing installation"
+	install_sequence "Installation"
+}
+
+cmd_upgrade()
+{
+	PROTOCOL=1
+	echo "PROGRESS 5 Preparing upgrade"
+	install_sequence "Upgrade"
 }
 
 cmd_uninstall()
@@ -263,6 +312,8 @@ MacFile for Haiku installer
 Usage:
 	install-macfile.sh              Interactive install/uninstall (GUI alerts).
 	install-macfile.sh install      Non-interactive install (machine-readable output).
+	install-macfile.sh upgrade      Non-interactive upgrade (replace an existing
+	                                install, preserving your configuration).
 	install-macfile.sh uninstall    Non-interactive uninstall (machine-readable output).
 	install-macfile.sh status       Report whether MacFile is currently installed.
 	install-macfile.sh help         Show this help.
@@ -280,6 +331,9 @@ EOF
 case "$1" in
 	install)
 		cmd_install
+		;;
+	upgrade)
+		cmd_upgrade
 		;;
 	uninstall)
 		cmd_uninstall
