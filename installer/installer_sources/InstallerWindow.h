@@ -24,12 +24,14 @@ private:
 
 	BString		fReleaseDir;
 	BButton*	fInstallButton;
+	BButton*	fUpgradeButton;
 	BButton*	fUninstallButton;
 	BStringView*	fProgressView;
 	BStringView*	fStatusView;
 	BTextView*	fLogView;
 	bool		fBusy;
 	bool		fInstalled;
+	BString		fOperation;
 };
 
 #endif //__InstallerWindow__

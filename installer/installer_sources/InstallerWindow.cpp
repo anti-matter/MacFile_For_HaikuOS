@@ -15,7 +15,7 @@
 #include "InstallWorker.h"
 
 #define TITLE_STRING	"MacFile for Haiku"
-#define DESC_STRING		"Install or uninstall the MacFile AFP file server."
+#define DESC_STRING		"Install, upgrade, or uninstall the MacFile AFP file server."
 #define SERVER_PATH		"/boot/home/config/non-packaged/apps/afp_server"
 
 const float font_size = 14.0f;
@@ -23,6 +23,7 @@ const float font_size = 14.0f;
 enum
 {
 	CMD_INSTALL		= 'inst',
+	CMD_UPGRADE		= 'upgr',
 	CMD_UNINSTALL	= 'unin',
 	CMD_QUIT		= 'quit'
 };
@@ -44,6 +45,7 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 		),
 	fReleaseDir(releaseDir),
 	fInstallButton(NULL),
+	fUpgradeButton(NULL),
 	fUninstallButton(NULL),
 	fProgressView(NULL),
 	fStatusView(NULL),
@@ -111,19 +113,25 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	//
 	//*****************Buttons
 	//
-	rect.Set(20, 126, 140, 148);
+	rect.Set(20, 126, 120, 148);
 	fInstallButton = new BButton(rect, "install", "Install",
 		new BMessage(CMD_INSTALL));
 	fInstallButton->SetFontSize(font_size);
 	mainView->AddChild(fInstallButton);
 
-	rect.Set(150, 126, 270, 148);
+	rect.Set(130, 126, 230, 148);
+	fUpgradeButton = new BButton(rect, "upgrade", "Upgrade",
+		new BMessage(CMD_UPGRADE));
+	fUpgradeButton->SetFontSize(font_size);
+	mainView->AddChild(fUpgradeButton);
+
+	rect.Set(240, 126, 340, 148);
 	fUninstallButton = new BButton(rect, "uninstall", "Uninstall",
 		new BMessage(CMD_UNINSTALL));
 	fUninstallButton->SetFontSize(font_size);
 	mainView->AddChild(fUninstallButton);
 
-	rect.Set(320, 126, 460, 148);
+	rect.Set(350, 126, 460, 148);
 	button = new BButton(rect, "quit", "Quit", new BMessage(CMD_QUIT));
 	button->SetFontSize(font_size);
 	mainView->AddChild(button);
@@ -227,7 +235,12 @@ bool InstallerWindow::QuitRequested()
 
 void InstallerWindow::RefreshState()
 {
+	//
+	//Install is for a fresh install (only when nothing is installed). Upgrade
+	//and Uninstall are only available once an installation is present.
+	//
 	fInstallButton->SetEnabled(!fBusy && !fInstalled);
+	fUpgradeButton->SetEnabled(!fBusy && fInstalled);
 	fUninstallButton->SetEnabled(!fBusy && fInstalled);
 
 	if (!fBusy)
@@ -253,7 +266,7 @@ void InstallerWindow::AppendLog(const char* line)
  * StartOperation()
  *
  * Description:
- *		Spawn the backend worker thread for install or uninstall.
+ *		Spawn the backend worker thread for install, upgrade, or uninstall.
  *
  * Returns:
  */
@@ -261,10 +274,18 @@ void InstallerWindow::AppendLog(const char* line)
 void InstallerWindow::StartOperation(const char* subcommand)
 {
 	fBusy = true;
+	fOperation = subcommand;
 	RefreshState();
 	fProgressView->SetText("");
-	fStatusView->SetText(strcmp(subcommand, "install") == 0
-		? "Starting install..." : "Starting uninstall...");
+
+	const char* statusText;
+	if (strcmp(subcommand, "install") == 0)
+		statusText = "Starting install...";
+	else if (strcmp(subcommand, "upgrade") == 0)
+		statusText = "Starting upgrade...";
+	else
+		statusText = "Starting uninstall...";
+	fStatusView->SetText(statusText);
 
 	BMessenger messenger(this);
 	InstallWorker::Spawn(fReleaseDir, subcommand, &messenger);
@@ -285,6 +306,11 @@ void InstallerWindow::MessageReceived(BMessage* message)
 		case CMD_INSTALL:
 			if (!fBusy)
 				StartOperation("install");
+			break;
+
+		case CMD_UPGRADE:
+			if (!fBusy)
+				StartOperation("upgrade");
 			break;
 
 		case CMD_UNINSTALL:
@@ -348,20 +374,47 @@ void InstallerWindow::MessageReceived(BMessage* message)
 				fBusy = false;
 
 				//
-				//The install/uninstall paths do not emit a STATUS line, so
-				//re-detect the real install state from disk before refreshing
+				//The install/upgrade/uninstall paths do not emit a STATUS line,
+				//so re-detect the real install state from disk before refreshing
 				//the buttons. This is what flips Uninstall off / Install on
-				//after an uninstall (and the reverse after an install).
+				//after an uninstall (and the reverse after an install/upgrade).
 				//
 				BEntry serverEntry(SERVER_PATH);
 				fInstalled = serverEntry.Exists() && serverEntry.IsFile();
 
+				//
+				//Refresh the buttons for the new install state. This also sets
+				//the status line, which we override below with the specific
+				//completion message.
+				//
 				RefreshState();
 
-				BAlert* alert = new BAlert("",
-					success ? "The operation completed successfully."
-					        : "The operation failed. See the log for details.",
-					"OK");
+				//
+				//Operation-specific completion message, shown in the status
+				//line and the completion alert.
+				//
+				const char* successText;
+				const char* failureText;
+				if (fOperation == "upgrade")
+				{
+					successText = "The AFP Server was upgraded successfully.";
+					failureText = "The AFP Server could not be upgraded. See the log for details.";
+				}
+				else if (fOperation == "uninstall")
+				{
+					successText = "The AFP Server was uninstalled successfully.";
+					failureText = "The AFP Server could not be uninstalled. See the log for details.";
+				}
+				else
+				{
+					successText = "The AFP Server was installed successfully.";
+					failureText = "The AFP Server could not be installed. See the log for details.";
+				}
+
+				const char* finalText = success ? successText : failureText;
+				fStatusView->SetText(finalText);
+
+				BAlert* alert = new BAlert("", finalText, "OK");
 				alert->Go();
 			}
 			break;
