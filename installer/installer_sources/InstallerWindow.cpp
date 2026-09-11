@@ -383,6 +383,13 @@ void InstallerWindow::MessageReceived(BMessage* message)
 				fInstalled = serverEntry.Exists() && serverEntry.IsFile();
 
 				//
+				//Refresh the buttons for the new install state. This also sets
+				//the status line, which we override below with the specific
+				//completion message.
+				//
+				RefreshState();
+
+				//
 				//Operation-specific completion message, shown in the status
 				//line and the completion alert.
 				//
