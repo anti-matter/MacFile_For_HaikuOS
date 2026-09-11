@@ -58,21 +58,31 @@ public:
 
         StrokeArc(arcRect, 35.0f, 285.0f);
 
-        /*
-		 * Arrowhead at the upper-right end of the arc. It points
-		 * downward, indicating clockwise rotation.
-		 */
-		BPoint tip(
-			arcRect.right + 1.0f,
-			arcRect.top + 4.0f);
+		/*
+		* Clockwise arrowhead at the upper-right end of the arc.
+		*
+		* A and B form the back edge attached to the arc.
+		* C is the downward-pointing tip.
+		*/
+		BPoint arrowBackLeft(
+			arcRect.right - 3.0f,
+			arcRect.top + 3.5f);		// A
+
+		BPoint arrowBackRight(
+			arcRect.right + 2.5f,
+			arcRect.top + 3.5f);		// B
+
+		BPoint arrowTip(
+			arcRect.right + 1.5f,
+			arcRect.top + 8.5f);		// C
 
 		BPoint arrow[] = {
-			tip,
-			BPoint(tip.x - 4.5f, tip.y - 1.0f),
-			BPoint(tip.x - 1.0f, tip.y + 4.5f)
+			arrowBackLeft,
+			arrowBackRight,
+			arrowTip
 		};
 
-        FillPolygon(arrow, 3);
+		FillPolygon(arrow, 3);
 
 		SetPenSize(1.0f);
 		SetDrawingMode(B_OP_COPY);
