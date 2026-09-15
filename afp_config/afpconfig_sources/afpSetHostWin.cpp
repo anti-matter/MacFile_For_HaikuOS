@@ -13,8 +13,11 @@ const float font_size = 14.0f;
  * afpSetHostWin()
  *
  * Description:
+ *		Constructor for the Set Server Name window. Centers the window
+ *		over its parent, then builds the server name text control and
+ *		the Save/Cancel/Default buttons.
  *
- * Returns:
+ * Returns: None
  */
 
 afpSetHostWin::afpSetHostWin(BWindow* parent) :
@@ -37,9 +40,7 @@ afpSetHostWin::afpSetHostWin(BWindow* parent) :
 		(rect.top  + (rect.Height()/2)) - (BWindow::Bounds().Height()/2)
 		);
 	
-	//
-	//Setup the background color for dialogs.
-	//
+	// Setup the background color for dialogs.
 	mainView = new BView(
 						BRect(0,0,BWindow::Bounds().right, BWindow::Bounds().bottom),
 						"MainView",
@@ -50,9 +51,7 @@ afpSetHostWin::afpSetHostWin(BWindow* parent) :
 	mainView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	AddChild(mainView);
 	
-	//
-	//Add the edit text box for entering the name
-	//
+	// Add the edit text box for entering the name
 	rect.Set(10,45,this->Bounds().right-10,70);
 	mNameTxt = new BTextControl(rect,"name","Server name:", "", NULL);
 	mNameTxt->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
@@ -62,9 +61,7 @@ afpSetHostWin::afpSetHostWin(BWindow* parent) :
 	SetTextViewFontSize(mNameTxt->TextView(), font_size);
 	mainView->AddChild(mNameTxt);
 	
-	//
-	//Get the current hostname and set the edit text.
-	//
+	// Get the current hostname and set the edit text.
 	if (AFPGetHostnameFromFile(hostname, sizeof(hostname)) != B_OK)
 	{
 	}
@@ -73,10 +70,8 @@ afpSetHostWin::afpSetHostWin(BWindow* parent) :
 		mNameTxt->SetText(hostname);
 	}
 	
-	//
-	//Build the send and cancel buttons. We adjust per the bottom right
-	//corner of the dialog, so resizing won't affect positioning.
-	//
+	// Build the send and cancel buttons. We adjust per the bottom right
+	// corner of the dialog, so resizing won't affect positioning.
 	button = new BButton(
 					BRect(
 						BWindow::Bounds().right-80,
@@ -110,9 +105,7 @@ afpSetHostWin::afpSetHostWin(BWindow* parent) :
 	button->SetFontSize(font_size);
 	mainView->AddChild(button);
 	
-	//
-	//Help message for what the user should enter in this dialog.
-	//
+	// Help message for what the user should enter in this dialog.
 	
 	rect.Set(5, 5, this->Bounds().right-5, this->Bounds().top+25);
 	bstrview = new BStringView(rect, "", HOST_HELP_MSG);
@@ -128,8 +121,9 @@ afpSetHostWin::afpSetHostWin(BWindow* parent) :
  * ~afpSetHostWin()
  *
  * Description:
+ *		Destructor for the Set Server Name window class.
  *
- * Returns:
+ * Returns: None
  */
 
 afpSetHostWin::~afpSetHostWin()
@@ -141,8 +135,13 @@ afpSetHostWin::~afpSetHostWin()
  * MessageReceived()
  *
  * Description:
+ *		Handles messages for the Set Server Name window. CMD_MSG_SET
+ *		saves the typed name (alerting on success or failure) and
+ *		closes the window; CMD_MSG_CANCEL closes the window without
+ *		saving; CMD_MSG_DEFAULT fills the text control with the
+ *		hostname from the system network settings.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpSetHostWin::MessageReceived(BMessage *Message)
@@ -176,9 +175,7 @@ void afpSetHostWin::MessageReceived(BMessage *Message)
 				break;
 			}
 			
-			//
-			//Let it fall through so the window closes
-			//	
+			// Let it fall through so the window closes
 		case CMD_MSG_CANCEL:
 			Quit();
 			break;
@@ -200,8 +197,7 @@ void afpSetHostWin::MessageReceived(BMessage *Message)
  * Description:
  *		Returns the hostname as stored in the Haiku/Be network config.
  *
- * Returns:
- *		Nothing
+ * Returns: None
  */
 
 void afpSetHostWin::FindHostNameFromNetSettings(char* hostname, int32 cbHostname)
@@ -218,9 +214,7 @@ void afpSetHostWin::FindHostNameFromNetSettings(char* hostname, int32 cbHostname
 	
 	memset(hostname, 0, cbHostname);
 	
-	//
-	//Copy the name we found into the supplied buffer.
-	//
+	// Copy the name we found into the supplied buffer.
 	
 	if (ptr != NULL)
 	{
@@ -235,9 +229,7 @@ void afpSetHostWin::FindHostNameFromNetSettings(char* hostname, int32 cbHostname
 	}
 	else
 	{
-		//
-		//Set some name in case the everything above fails.
-		//
+		// Set some name in case the everything above fails.
 		
 		strcpy(hostname, "HaikuServer");
 	}

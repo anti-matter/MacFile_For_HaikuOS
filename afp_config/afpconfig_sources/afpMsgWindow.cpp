@@ -14,8 +14,11 @@ const float font_size = 14.0f;
  * afpMsgWindow()
  *
  * Description:
+ *		Constructor for the Send Message window. Centers the window
+ *		over its parent, then builds the message text view and the
+ *		Send/Cancel buttons.
  *
- * Returns:
+ * Returns: None
  */
 
 afpMsgWindow::afpMsgWindow(BWindow* parent) :
@@ -37,17 +40,13 @@ afpMsgWindow::afpMsgWindow(BWindow* parent) :
 		(rect.top  + (rect.Height()/2)) - (BWindow::Bounds().Height()/2)
 		);
 	
-	//
-	//Setup the background color for dialogs.
-	//
+	// Setup the background color for dialogs.
 	mainView = new BView(BRect(0,0,BWindow::Bounds().right, BWindow::Bounds().bottom), "MainView", B_FOLLOW_ALL_SIDES, B_WILL_DRAW | B_FRAME_EVENTS);
 	mainView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	AddChild(mainView);
 	
-	//
-	//Build the send and cancel buttons. We adjust per the bottom right
-	//corner of the dialog, so resizing won't affect positioning.
-	//
+	// Build the send and cancel buttons. We adjust per the bottom right
+	// corner of the dialog, so resizing won't affect positioning.
 	button = new BButton(
 					BRect(
 						BWindow::Bounds().right-80,
@@ -70,9 +69,7 @@ afpMsgWindow::afpMsgWindow(BWindow* parent) :
 	button->SetFontSize(font_size);
 	mainView->AddChild(button);
 
-	//
-	//Build the editable text box and title for message entry.
-	//
+	// Build the editable text box and title for message entry.
 	rect.Set(10, 40, BWindow::Bounds().right-25, BWindow::Bounds().bottom-50);
 	mMsgText = new BTextView(
 							rect,
@@ -112,8 +109,9 @@ afpMsgWindow::afpMsgWindow(BWindow* parent) :
  * ~afpMsgWindow()
  *
  * Description:
+ *		Destructor for the Send Message window class.
  *
- * Returns:
+ * Returns: None
  */
 
 afpMsgWindow::~afpMsgWindow()
@@ -125,8 +123,12 @@ afpMsgWindow::~afpMsgWindow()
  * MessageReceived()
  *
  * Description:
+ *		Handles messages for the Send Message window. CMD_MSG_SEND
+ *		sends the typed message to the server (showing an alert on
+ *		success or failure) and closes the window; CMD_MSG_CANCEL
+ *		closes the window without sending.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpMsgWindow::MessageReceived(BMessage *Message)
@@ -157,9 +159,7 @@ void afpMsgWindow::MessageReceived(BMessage *Message)
 				break;
 			}
 			
-			//
-			//Let it fall through so the window closes
-			//	
+			// Let it fall through so the window closes
 		case CMD_MSG_CANCEL:
 			Quit();
 			break;

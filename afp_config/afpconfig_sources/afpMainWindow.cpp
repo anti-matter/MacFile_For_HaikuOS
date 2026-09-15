@@ -47,8 +47,11 @@ const float button_font_size = 14.0f;
  * afpMainWindow()
  *
  * Description:
+ *		Constructor for the main window. Initializes the throughput
+ *		tracking fields, builds the window contents, and creates the
+ *		directory chooser file panel.
  *
- * Returns:
+ * Returns: None
  */
 
 afpMainWindow::afpMainWindow(const char *uWindowTitle) :
@@ -82,17 +85,17 @@ afpMainWindow::afpMainWindow(const char *uWindowTitle) :
  * ~afpMainWindow()
  *
  * Description:
+ *		Destructor for the main window class. Releases the memory used
+ *		by the directory chooser BFilePanel.
  *
- * Returns:
+ * Returns: None
  */
 
 afpMainWindow::~afpMainWindow()
 {
 	if (mFilePanel != NULL)
 	{
-		//
-		//Release the memory used by our BFilePanel
-		//
+		// Release the memory used by our BFilePanel
 		delete mFilePanel;
 	}
 }
@@ -102,8 +105,11 @@ afpMainWindow::~afpMainWindow()
  * SetupMenus()
  *
  * Description:
+ *		Builds the menu bar: the MacFile menu (About, Close) and the
+ *		Utilities menu (Send Message, Set Server Name, Start MacFile
+ *		Server), then adds it to the window.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpMainWindow::SetupMenus()
@@ -113,9 +119,7 @@ void afpMainWindow::SetupMenus()
 
 	mMenuBar = new BMenuBar(BRect(0,0,0,0), "menubar");
 	
-	//
-	//Setup the file/about menu, just for about and quit.
-	//
+	// Setup the file/about menu, just for about and quit.
 	menu = new BMenu("MacFile");
 	menu->AddItem(
 			new BMenuItem("About MacFile...",
@@ -128,9 +132,7 @@ void afpMainWindow::SetupMenus()
 			);
 	mMenuBar->AddItem(menu);
 	
-	//
-	//Setup the utility menu
-	//
+	// Setup the utility menu
 	menu = new BMenu("Utilities");
 	item = new BMenuItem("Send Message...", new BMessage(CMD_MENU_SENDMSG));
 	item->SetTarget(this);
@@ -145,9 +147,7 @@ void afpMainWindow::SetupMenus()
 	
 	mMenuBar->AddItem(menu);
 	
-	//
-	//Add the menu bar to the main window.
-	//
+	// Add the menu bar to the main window.
 	AddChild(mMenuBar);
 }
 
@@ -156,13 +156,17 @@ void afpMainWindow::SetupMenus()
  * BuildWindow()
  *
  * Description:
+ *		Builds the contents of the main window: the menu bar, the
+ *		shared folders list with its New/Remove/Refresh controls, the
+ *		logon message editor, the server status line, the user list,
+ *		and the statistics box.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpMainWindow::BuildWindow(void)
 {
-	//BStringView*	bstrview;
+	// BStringView*	bstrview;
 	BView*			mainView;
 	BBox*			bbox;
 	BRect			rect;
@@ -182,7 +186,7 @@ void afpMainWindow::BuildWindow(void)
 	mainView->SetFontSize(general_font_size);
 	AddChild(mainView);
 
-	//===========Volumes
+	// ===========Volumes
 	rect.Set(10,10,305,220);
 	bbox = new BBox(rect);
 	bbox->SetLabel("Shared Folders");
@@ -218,12 +222,10 @@ void afpMainWindow::BuildWindow(void)
 	mRemoveButton->SetFontSize(button_font_size);
 	bbox->AddChild(mRemoveButton);
 
-	//
-	//Refresh button: re-query the server for the current shared folders.
-	//Needed when a share is added out-of-band (e.g. via the tracker add-on)
-	//while the configuration window is open. Placed below the list, flush
-	//with its right edge.
-	//
+	// Refresh button: re-query the server for the current shared folders.
+	// Needed when a share is added out-of-band (e.g. via the tracker add-on)
+	// while the configuration window is open. Placed below the list, flush
+	// with its right edge.
 	rect.Set(240, 135, 270, 155);
 	RefreshButton* mRefreshButton = new RefreshButton(
 		rect,
@@ -237,12 +239,10 @@ void afpMainWindow::BuildWindow(void)
 	mReadOnlyBox->SetFontSize(general_font_size);
 	bbox->AddChild(mReadOnlyBox);
 	
-	//
-	//Populate the volume list so the user sees what's currently shared.
-	//
+	// Populate the volume list so the user sees what's currently shared.
 	PopulateVolumeList();
 	
-	//===========Logon Message
+	// ===========Logon Message
 	rect.Set(10,225,305,225+178);
 	bbox = new BBox(rect);
 	bbox->SetLabel("Logon Message");
@@ -286,9 +286,7 @@ void afpMainWindow::BuildWindow(void)
 	
 	GetComment();
 	
-	//
-	//Add the server status string views
-	//
+	// Add the server status string views
 	BStringView* server_status_view = new BStringView(BRect(11,406,103,406+25), "", "Server status: ");
 	server_status_view->SetFontSize(14.0f);
 	mainView->AddChild(server_status_view);
@@ -296,7 +294,7 @@ void afpMainWindow::BuildWindow(void)
 	mServerStatus->SetFontSize(14.0f);
 	mainView->AddChild(mServerStatus);
 	
-	//===========Users
+	// ===========Users
 	rect.Set(315,10,590,220);
 	bbox = new BBox(rect);
 	bbox->SetFontSize(general_font_size);
@@ -333,7 +331,7 @@ void afpMainWindow::BuildWindow(void)
 	
 	PopulateUserList();
 	
-	//===========Logons allowed
+	// ===========Logons allowed
 	rect.Set(8, 180, 140, 180+15);
 	mGuestCB = new BCheckBox(rect, "g", "Allow Guests", new BMessage(CMD_APP_GUEST_CHECKBOX_HIT));
 	mGuestCB->SetViewColor(kGray);
@@ -344,7 +342,7 @@ void afpMainWindow::BuildWindow(void)
 		mGuestCB->SetValue(1);
 	}
 	
-	//===========Stats
+	// ===========Stats
 	rect.Set(315,225,590,225+178);
 	bbox = new BBox(rect);
 	bbox->SetLabel("Statistics");
@@ -393,8 +391,13 @@ void afpMainWindow::BuildWindow(void)
  * MessageReceived()
  *
  * Description:
+ *		Handles messages for the main window: adding, removing and
+ *		editing users; adding, removing and refreshing shared folders;
+ *		saving the logon message; toggling guest access; setting the
+ *		host name; starting the server; sending a message; and the
+ *		About dialog.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpMainWindow::MessageReceived(BMessage * Message)
@@ -438,9 +441,7 @@ void afpMainWindow::MessageReceived(BMessage * Message)
 			
 			sprintf(textmsg, "Are you sure you want to delete the user '%s'?\n\n", item->Text());
 
-			//
-			//Initialize our alert object and setup it's parameters.
-			//
+			// Initialize our alert object and setup it's parameters.
 			alert = new BAlert(
 							"",
 							textmsg,
@@ -525,11 +526,9 @@ void afpMainWindow::MessageReceived(BMessage * Message)
 		case CMD_APP_ADDVOLUME:
 			if (mFilePanel != NULL)
 			{
-				//
-				//The user wants to add a volume to the shared list. Show
-				//them the file add UI that will allow them to add a new
-				//folder to the volumes list.
-				//
+				// The user wants to add a volume to the shared list. Show
+				// them the file add UI that will allow them to add a new
+				// folder to the volumes list.
 				mFilePanel->Show();
 			}
 			break;
@@ -584,7 +583,7 @@ void afpMainWindow::MessageReceived(BMessage * Message)
  * Description:
  *	Populate the user list by asking the server for the users.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpMainWindow::PopulateUserList()
@@ -614,7 +613,7 @@ void afpMainWindow::PopulateUserList()
  * Description:
  *	Populate the volume list by asking the server for the shared volumes.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpMainWindow::PopulateVolumeList()
@@ -639,7 +638,7 @@ void afpMainWindow::PopulateVolumeList()
  * Description:
  *	Save the read only state for the selected volume to the pref file.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpMainWindow::SaveReadOnlyState()
@@ -680,7 +679,7 @@ void afpMainWindow::SaveReadOnlyState()
  *	Set the proper read only state by checking (or unchecking) the
  *	checkbox when a new volume is selected in the list box.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpMainWindow::SetControlsState()
@@ -688,9 +687,7 @@ void afpMainWindow::SetControlsState()
 	uint32		volFlags	= 0;
 	int32		index		= 0;
 	
-	//
-	//Setup the shared folders controls for proper display
-	//
+	// Setup the shared folders controls for proper display
 	index 	= mVolumeListView->CurrentSelection();
 	
 	if (index < 0) 
@@ -717,9 +714,7 @@ void afpMainWindow::SetControlsState()
 		}
 	}
 	
-	//
-	//Now the user controls
-	//
+	// Now the user controls
 	index = mUserListView->CurrentSelection();
 	
 	if (index < 0)
@@ -741,7 +736,7 @@ void afpMainWindow::SetControlsState()
  * Description:
  *	Stop sharing a directory from the list.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpMainWindow::RemoveShare()
@@ -760,9 +755,7 @@ void afpMainWindow::RemoveShare()
 	
 	if (AFPGetVolumePathFromIndex(index, &path) == B_OK)
 	{
-		//
-		//Initialize our alert object and setup it's parameters.
-		//
+		// Initialize our alert object and setup it's parameters.
 		BString		text;
 
 		text << "Are you sure you want to stop sharing this directory?\n\n " << path.String();
@@ -779,9 +772,7 @@ void afpMainWindow::RemoveShare()
 		
 		if (result == 1)
 		{
-			//
-			//Call the afp api that will do the dirty message work for us.
-			//
+			// Call the afp api that will do the dirty message work for us.
 			result = AFPRemoveShare(&path);
 			
 			switch(result)
@@ -817,8 +808,11 @@ void afpMainWindow::RemoveShare()
  * AddNewShare()
  *
  * Description:
+ *		Adds a new AFP share from the given entry_ref. On success the
+ *		new path is added to the volume list; if the directory is
+ *		already shared or the share fails, an alert is shown.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpMainWindow::AddNewShare(entry_ref newRef)
@@ -831,10 +825,8 @@ void afpMainWindow::AddNewShare(entry_ref newRef)
 	switch(result)
 	{
 		case B_OK:
-			//
-			//Update the volume list with the added share. We have to lock the
-			//window before adding to the list for the view.
-			//
+			// Update the volume list with the added share. We have to lock the
+			// window before adding to the list for the view.
 			(mVolumeListView->Window())->Lock();
 			mVolumeListView->AddItem(new BStringItem(path.Path()));
 			(mVolumeListView->Window())->Unlock();
@@ -859,8 +851,10 @@ void afpMainWindow::AddNewShare(entry_ref newRef)
  * SaveComment()
  *
  * Description:
+ *		Saves the logon message text to the server, showing an alert
+ *		if the save fails.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpMainWindow::SaveComment()
@@ -876,8 +870,10 @@ void afpMainWindow::SaveComment()
  * GetComment()
  *
  * Description:
+ *		Fetches the current logon message from the server and inserts
+ *		it into the logon message text view.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpMainWindow::GetComment()
@@ -895,8 +891,11 @@ void afpMainWindow::GetComment()
  * UpdateThroughput()
  *
  * Description:
+ *		Queries the server for traffic statistics and updates the
+ *		throughput status bar and the bytes sent/received, packet
+ *		count, and logged-in user fields.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpMainWindow::UpdateThroughput()
@@ -993,18 +992,14 @@ void afpMainWindow::UpdateThroughput()
 		status++;
 	}
 	
-	//
-	//Use this opportunity to update the server status (up or down)
-	//
+	// Use this opportunity to update the server status (up or down)
 	if (mServerStatus != NULL)
 	{
 		mServerStatus->LockLooper();
 		
 		if (status >= 1)
 		{
-			//
-			//If status >= 1, then we're able to talk to the server.
-			//
+			// If status >= 1, then we're able to talk to the server.
 			if (strcmp(TEXT_SERVER_RUNNING, mServerStatus->Text())) {
 				mServerStatus->SetText(TEXT_SERVER_RUNNING);
 			}
@@ -1025,8 +1020,10 @@ void afpMainWindow::UpdateThroughput()
  * QuitRequested()
  *
  * Description:
+ *		Called when the window is asked to close. Posts
+ *		B_QUIT_REQUESTED to the application so the whole app quits.
  *
- * Returns:
+ * Returns: true, which allows the window to close.
  */
 
 bool afpMainWindow::QuitRequested()

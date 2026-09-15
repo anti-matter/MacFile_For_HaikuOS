@@ -42,4 +42,4 @@ private:
 };
 
 
-#endif //__AFPSETHOSTWIN__
+#endif // __AFPSETHOSTWIN__

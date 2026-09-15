@@ -9,7 +9,7 @@
  * Description:
  *		Initialize the URL view class.
  *
- * Returns:
+ * Returns: None
  */
 
 SG_URLView::SG_URLView(BRect frame, const char* label, const char* url, URLType type) :
@@ -25,14 +25,10 @@ SG_URLView::SG_URLView(BRect frame, const char* label, const char* url, URLType 
 	mType		= type;
 	mHovering	= false;
 	
-	//
-	//If we're email, make sure the "mailto:" part is prepended.
-	//
+	// If we're email, make sure the "mailto:" part is prepended.
 	if (mType == MAIL_LINK && mURL.FindFirst("mailto:") == B_ERROR)
 	{
-		//
-		//Didn't find the text, so prepend it.
-		//
+		// Didn't find the text, so prepend it.
 		mURL.Prepend("mailto:");
 	}
 	
@@ -46,7 +42,7 @@ SG_URLView::SG_URLView(BRect frame, const char* label, const char* url, URLType 
  * Description:
  *		Destructor.
  *
- * Returns:
+ * Returns: None
  */
 
 SG_URLView::~SG_URLView()
@@ -61,7 +57,7 @@ SG_URLView::~SG_URLView()
  *		Handle a mouse down within our view. Do what we're supposed to do, either
  *		open a browser window with the http link or launch the mail app.
  *
- * Returns: none
+ * Returns: None
  */
 
 void SG_URLView::MouseDown(BPoint point)
@@ -95,7 +91,7 @@ void SG_URLView::MouseDown(BPoint point)
  *		When the user floats on top of the URL, we want to give an indication
  *		that we are a live link.
  *
- * Returns: none
+ * Returns: None
  */
 
 void SG_URLView::MouseMoved(BPoint point, uint32 transit, const BMessage *message)
@@ -130,7 +126,7 @@ void SG_URLView::MouseMoved(BPoint point, uint32 transit, const BMessage *messag
  *		Draw the link as appropriate taking into account whether or
  *		not the point is hovering over the link.
  *
- * Returns: none
+ * Returns: None
  */
 
 void SG_URLView::Draw(BRect updateRect)

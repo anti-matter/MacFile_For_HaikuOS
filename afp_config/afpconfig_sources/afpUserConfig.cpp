@@ -21,8 +21,11 @@ const float font_size = 12.0f;
  * afpUserConfig()
  *
  * Description:
+ *		Constructor for the User Properties window. Centers the window
+ *		over its parent, stores the user being edited (if any) and the
+ *		new-user flag, then builds the window.
  *
- * Returns:
+ * Returns: None
  */
 
 afpUserConfig::afpUserConfig(BWindow* parent, bool inNewUser, const char* userName) :
@@ -35,9 +38,7 @@ afpUserConfig::afpUserConfig(BWindow* parent, bool inNewUser, const char* userNa
 {
 	BRect rect;
 	
-	//
-	//Center window over the parent window.
-	//
+	// Center window over the parent window.
 	rect = parent->Frame();
 	MoveTo(
 		(rect.left + (rect.Width()/2))  - (BWindow::Bounds().Width()/2),
@@ -59,8 +60,9 @@ afpUserConfig::afpUserConfig(BWindow* parent, bool inNewUser, const char* userNa
  * ~afpUserConfig()
  *
  * Description:
+ *		Destructor for the User Properties window class.
  *
- * Returns:
+ * Returns: None
  */
 
 afpUserConfig::~afpUserConfig()
@@ -72,8 +74,13 @@ afpUserConfig::~afpUserConfig()
  * BuildWindow()
  *
  * Description:
+ *		Builds the contents of the User Properties window: the name
+ *		and password fields, the administrative/must-change/enabled/
+ *		can-change checkboxes, and the Save/Cancel buttons. For an
+ *		existing user the fields are pre-filled from the user's
+ *		current properties.
  *
- * Returns:
+ * Returns: None
  */
  
 void afpUserConfig::BuildWindow(void)
@@ -105,7 +112,7 @@ void afpUserConfig::BuildWindow(void)
 	(mPasswordField->TextView())->HideTyping(true);
 	mainView->AddChild(mPasswordField);
 	
-	//Checkboxes
+	// Checkboxes
 	
 	rect.Set(10,100,BWindow::Bounds().right-10,115);
 	mAdminBox = new BCheckBox(rect, "admin", "User has administrative privileges", new BMessage(CMD_USRCONFIG_ADMIN));
@@ -149,10 +156,8 @@ void afpUserConfig::BuildWindow(void)
 	button->SetFontSize(font_size);
 	mainView->AddChild(button);
 
-	//
-	//We set up differently based on whether or not we're adding a new user
-	//or editing an existing one.
-	//
+	// We set up differently based on whether or not we're adding a new user
+	// or editing an existing one.
 	if (!mIsNewUser)
 	{
 		BString		password;
@@ -199,8 +204,12 @@ void afpUserConfig::BuildWindow(void)
  * MessageReceived()
  *
  * Description:
+ *		Handles messages for the User Properties window.
+ *		CMD_USRCONFIG_SAVE adds a new user or updates an existing one
+ *		from the form and refreshes the user list; CMD_USRCONFIG_CANCEL
+ *		closes the window without saving.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpUserConfig::MessageReceived(BMessage * Message)
@@ -215,9 +224,7 @@ void afpUserConfig::MessageReceived(BMessage * Message)
 			char		text[256];
 			uint32		flags = 0;
 			
-			//
-			//Make sure we have data to save.
-			//
+			// Make sure we have data to save.
 			if (strlen(mUserNameField->Text()) == 0)
 			{
 				(new BAlert("", "User name must be supplied.", "OK"))->Go();

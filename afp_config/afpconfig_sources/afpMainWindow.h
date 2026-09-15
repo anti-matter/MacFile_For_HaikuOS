@@ -51,10 +51,8 @@ public:
                         mLastIndex			= -1;
                     }
 	
-	//
-	//This hook is so we can change the controls according
-	//to what item is selected in the list.
-	//
+	// This hook is so we can change the controls according
+	// to what item is selected in the list.
 	void SelectionChanged(void)
 	{
 		BMessenger	messenger(mWindow);
@@ -65,10 +63,8 @@ public:
 		BListView::SelectionChanged();
 	}
 	
-	//
-	//I have no idea why, but doublclicks don't seem to work when
-	//going through the parent class' MouseDown() function.
-	//
+	// I have no idea why, but doublclicks don't seem to work when
+	// going through the parent class' MouseDown() function.
 	void MouseDown(BPoint point)
 	{
 		BMessage 	*message 	= Looper()->CurrentMessage();
@@ -171,4 +167,4 @@ private:
 };
 
 
-#endif //__afpMainWindow__
+#endif // __afpMainWindow__

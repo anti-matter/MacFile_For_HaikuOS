@@ -24,10 +24,8 @@ int AFPLaunchServer(void)
 	
 	if (AFPServerIsRunning() == true)
 	{
-		//
-		//If the server is already, then there's nothing to do. Tell the
-		//user we're not going to do anything.
-		//
+		// If the server is already, then there's nothing to do. Tell the
+		// user we're not going to do anything.
 		BAlert*	alert	= NULL;
 		
 		alert = new BAlert(

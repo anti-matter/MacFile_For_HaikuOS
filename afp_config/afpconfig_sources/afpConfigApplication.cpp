@@ -14,8 +14,11 @@ extern int afpAppReturnValue;
  * afpConfigApplication()
  *
  * Description:
+ *		Constructor for the configuration application. Sets the pulse
+ *		rate, and if afp_server is not running, offers to start it (and
+ *		quits if it cannot be started) before showing the main window.
  *
- * Returns:
+ * Returns: None
  */
 
 afpConfigApplication::afpConfigApplication()
@@ -27,16 +30,12 @@ afpConfigApplication::afpConfigApplication()
 	
 	SetPulseRate(1000000);
 	
-	//
-	//Check to see if the server is running. If not, ask the user if
-	//they wish to start it.
-	//
+	// Check to see if the server is running. If not, ask the user if
+	// they wish to start it.
 	if (!AFPServerIsRunning())
 	{
-		//
-		//The server is not running, ask the user if they wish to
-		//start it.
-		//
+		// The server is not running, ask the user if they wish to
+		// start it.
 		
 		char textmsg[512];
 
@@ -54,17 +53,13 @@ afpConfigApplication::afpConfigApplication()
 		
 		if (result == 1)
 		{
-			//
-			//Call the utility function that will launch the server.
-			//
+			// Call the utility function that will launch the server.
 			
 			result = AFPLaunchServer();
 
-			//
-			//Give the server a moment to come up. Startup time varies, so
-			//poll for up to about 2 seconds instead of assuming a fixed
-			//delay is enough.
-			//
+			// Give the server a moment to come up. Startup time varies, so
+			// poll for up to about 2 seconds instead of assuming a fixed
+			// delay is enough.
 
 			int32	tries = 0;
 
@@ -76,10 +71,8 @@ afpConfigApplication::afpConfigApplication()
 
 			if ((result != B_OK) || (!AFPServerIsRunning()))
 			{
-				//
-				//If we fail to launch the server then it must not be installed
-				//properly. Bail out since there's nothing we can ever do.
-				//
+				// If we fail to launch the server then it must not be installed
+				// properly. Bail out since there's nothing we can ever do.
 				
 				BAlert* alert2 = new BAlert(
 								"",
@@ -119,22 +112,20 @@ afpConfigApplication::afpConfigApplication()
  * ~afpConfigApplication()
  *
  * Description:
+ *		Destructor for the configuration application class. Locks the
+ *		main window and calls Quit() on it.
  *
- * Returns:
+ * Returns: None
  */
 
 afpConfigApplication::~afpConfigApplication()
 {
 	if (iMainWindow != NULL)
 	{
-		//
-		//Must Lock() before calling Quit()
-		//
+		// Must Lock() before calling Quit()
 		if (iMainWindow->LockWithTimeout(30000000) == B_OK)
 		{
-			//
-			//Never delete a BWindow, call Quit() instead.
-			//
+			// Never delete a BWindow, call Quit() instead.
 			iMainWindow->Quit();
 		}
 	}
@@ -144,8 +135,10 @@ afpConfigApplication::~afpConfigApplication()
  * ReadyToRun()
  *
  * Description:
+ *		Called by the app server once the application is ready to
+ *		run. There is nothing to do here.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpConfigApplication::ReadyToRun()
@@ -156,8 +149,10 @@ void afpConfigApplication::ReadyToRun()
  * Pulse()
  *
  * Description:
+ *		Called on every application pulse (once per second) to update
+ *		the throughput statistics shown in the main window.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpConfigApplication::Pulse()
@@ -170,8 +165,11 @@ void afpConfigApplication::Pulse()
  * MessageReceived()
  *
  * Description:
+ *		Handles messages for the application. CMD_APP_REFRESHUSERLIST
+ *		re-populates the user list; anything else is passed on to
+ *		BApplication.
  *
- * Returns:
+ * Returns: None
  */
 
 void afpConfigApplication::MessageReceived(BMessage * Message)
@@ -188,6 +186,17 @@ void afpConfigApplication::MessageReceived(BMessage * Message)
 	}
 }
 
+/*
+ * RefsReceived()
+ *
+ * Description:
+ *		Called when entry refs are handed to the application. Each
+ *		directory ref is offered up to the main window as a new AFP
+ *		share.
+ *
+ * Returns: None
+ */
+
 void afpConfigApplication::RefsReceived(BMessage* message)
 {
 	entry_ref	dirRef;
@@ -195,10 +204,8 @@ void afpConfigApplication::RefsReceived(BMessage* message)
 	
 	if (message->what == B_REFS_RECEIVED)
 	{
-		//
-		//Cycle through each directory we've been handed and tell the AFP
-		//server to serve it up as a volume.
-		//
+		// Cycle through each directory we've been handed and tell the AFP
+		// server to serve it up as a volume.
 		for (	count = 0;
 				message->FindRef("refs", count, &dirRef) == B_NO_ERROR;
 				count++ )

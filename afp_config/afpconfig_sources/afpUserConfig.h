@@ -33,4 +33,4 @@ public:
 };
 
 
-#endif //__afpUserConfig__
+#endif // __afpUserConfig__

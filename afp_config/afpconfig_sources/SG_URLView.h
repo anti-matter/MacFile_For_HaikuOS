@@ -29,4 +29,4 @@ private:
 	URLType		mType;
 };
 
-#endif //__SG_URLView__
+#endif // __SG_URLView__

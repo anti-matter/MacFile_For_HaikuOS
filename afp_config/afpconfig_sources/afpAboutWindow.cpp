@@ -12,6 +12,17 @@
 
 const float font_size = 14.0f;
 
+/*
+ * afpAboutWindow()
+ *
+ * Description:
+ *		Constructor for the About window. Centers the window over its
+ *		parent, then builds the title/copyright/version strings, the
+ *		wiki link, and the OK button.
+ *
+ * Returns: None
+ */
+
 afpAboutWindow::afpAboutWindow(BWindow* parent) :
 	BWindow(
 		BRect(100, 100, 550, 290),
@@ -33,17 +44,13 @@ afpAboutWindow::afpAboutWindow(BWindow* parent) :
 		(rect.top  + (rect.Height()/2)) - (BWindow::Bounds().Height()/2)
 		);
 	
-	//
-	//Setup the background color for dialogs.
-	//
+	// Setup the background color for dialogs.
 	mainView = new BView(BRect(0,0,BWindow::Bounds().right, BWindow::Bounds().bottom), "MainView", B_FOLLOW_ALL_SIDES, B_WILL_DRAW | B_FRAME_EVENTS);
 	mainView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	mainView->SetFontSize(font_size);
 	AddChild(mainView);
 	
-	//
-	//*****************Add the title text
-	//
+	// *****************Add the title text
 	rect.Set(BWindow::Bounds().left,10,BWindow::Bounds().right,30);
 	bstrview = new BStringView(rect, "", TITLE_STRING);
 	bstrview->SetFontSize(18);
@@ -69,9 +76,7 @@ afpAboutWindow::afpAboutWindow(BWindow* parent) :
 	bstrview->SetAlignment(B_ALIGN_CENTER);
 	mainView->AddChild(bstrview);
 
-	//
-	//*****************Misc info.
-	//
+	// *****************Misc info.
 	SG_URLView* urlView;
 	
 	rect.Set(10, 85, BWindow::Bounds().right, 100);
@@ -85,10 +90,8 @@ afpAboutWindow::afpAboutWindow(BWindow* parent) :
 	urlView->SetFontSize(font_size);
 	mainView->AddChild(urlView);
 
-	//
-	//Build the OK button. We adjust per the bottom right
-	//corner of the dialog, so resizing won't affect positioning.
-	//
+	// Build the OK button. We adjust per the bottom right
+	// corner of the dialog, so resizing won't affect positioning.
 	button = new BButton(
 					BRect(
 						((BWindow::Bounds().right-BWindow::Bounds().left) / 2) - 40,
@@ -104,10 +107,29 @@ afpAboutWindow::afpAboutWindow(BWindow* parent) :
 	Show();
 }
 
+/*
+ * ~afpAboutWindow()
+ *
+ * Description:
+ *		Destructor for the About window class.
+ *
+ * Returns: None
+ */
+
 afpAboutWindow::~afpAboutWindow()
 {
 }
 
+
+/*
+ * MessageReceived()
+ *
+ * Description:
+ *		Handles messages for the About window. A CMD_MSG_EXIT message
+ *		closes the window.
+ *
+ * Returns: None
+ */
 
 void afpAboutWindow::MessageReceived(BMessage *Message)
 {

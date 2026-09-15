@@ -21,4 +21,4 @@ private:
 	afpMainWindow 	*iMainWindow;
 };
 	
-#endif //__afpServerApplication__
+#endif // __afpServerApplication__

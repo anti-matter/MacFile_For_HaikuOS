@@ -36,8 +36,9 @@
  *		this add-on from the Add-ons menu. Each selected directory is
  *		offered up as a new AFP volume.
  *
- * Returns:
+ * Returns: None
  */
+
 extern "C" void
 process_refs(entry_ref dir_ref, BMessage* msg, void*)
 {
@@ -53,17 +54,13 @@ process_refs(entry_ref dir_ref, BMessage* msg, void*)
 	msg->GetInfo("refs", &type, &count);
 
 	if (type != B_REF_TYPE) {
-		//
-		//We were not given a type of entry_ref, there's nothing
-		//for us to do here.
-		//
+		// We were not given a type of entry_ref, there's nothing
+		// for us to do here.
 		return;
 	}
 
-	//
-	//Cycle through each directory we've been handed and tell the AFP
-	//server to serve it up as a volume.
-	//
+	// Cycle through each directory we've been handed and tell the AFP
+	// server to serve it up as a volume.
 	for (	count = 0;
 			msg->FindRef("refs", count, &ref) == B_NO_ERROR;
 			count++ )
@@ -74,10 +71,8 @@ process_refs(entry_ref dir_ref, BMessage* msg, void*)
 			BDirectory	dir(&entry);
 			entry.GetPath(&path);
 
-			//
-			//AFP can only share directories, files and links will not be
-			//and cannot be shared.
-			//
+			// AFP can only share directories, files and links will not be
+			// and cannot be shared.
 			if (!entry.IsDirectory()) {
 				snprintf(textmsg, sizeof(textmsg),
 					"%s is not a directory and cannot be shared",
@@ -87,10 +82,8 @@ process_refs(entry_ref dir_ref, BMessage* msg, void*)
 				continue;
 			}
 
-			//
-			//We do not allow sharing of the root directory, this causes
-			//many, many problems.
-			//
+			// We do not allow sharing of the root directory, this causes
+			// many, many problems.
 			if (dir.IsRootDirectory()) {
 				snprintf(textmsg, sizeof(textmsg),
 					"Sorry, sharing of an entire volume is not permitted.");
@@ -103,9 +96,7 @@ process_refs(entry_ref dir_ref, BMessage* msg, void*)
 				"Are you sure you want to share this directory?\n\n %s",
 				path.Path());
 
-			//
-			//Initialize our alert object and setup it's parameters.
-			//
+			// Initialize our alert object and setup it's parameters.
 			alert = new BAlert(
 							"",
 							textmsg,
@@ -116,11 +107,9 @@ process_refs(entry_ref dir_ref, BMessage* msg, void*)
 			alert->SetShortcut(0, B_ESCAPE);
 			result = alert->Go();
 
-			//
-			//Deliberately NOT deleted: see the note at the top of this
-			//file. Deleting the BAlert here (on the non-looper add-on
-			//thread) double-frees and crashes the tracker.
-			//
+			// Deliberately NOT deleted: see the note at the top of this
+			// file. Deleting the BAlert here (on the non-looper add-on
+			// thread) double-frees and crashes the tracker.
 
 			if (result == 1) {
 				result = AFPAddShare(ref, &path);

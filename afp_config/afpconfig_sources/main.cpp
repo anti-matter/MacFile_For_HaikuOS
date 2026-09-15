@@ -16,8 +16,10 @@
  * main()
  *
  * Description:
+ *		Program entry point. Creates the configuration application and
+ *		runs its message loop, then cleans up on exit.
  *
- * Returns:
+ * Returns: 0
  */
 
 int main(int, char **)
@@ -40,7 +42,7 @@ int main(int, char **)
  *		This function is called by the tracker when a user selects
  *		this add-on.
  *
- * Returns:
+ * Returns: None
  */
 
 void process_refs(entry_ref dir_ref, BMessage* msg, void*)
