@@ -18,6 +18,7 @@ afp_buffer::afp_buffer(int8* afpBuffer)
 	mBuffer		= afpBuffer;
 	mCurrentPos	= afpBuffer;
 	mBufferSize	= 0x7FFFFFFF;
+	mMacPathName[0] = '\0';
 }
 
 
@@ -26,6 +27,58 @@ afp_buffer::afp_buffer(int8* afpBuffer, int32 cbbuffer)
 	mBuffer		= afpBuffer;
 	mCurrentPos	= afpBuffer;
 	mBufferSize	= cbbuffer;
+	mMacPathName[0] = '\0';
+}
+
+
+/*
+ * MapReservedMacName()
+ *
+ * Description:
+ *		Worker routine for GetString(). "." and ".." are self/parent
+ *		references on the filesystem and can never be created as literal
+ *		entry names. When the (Be style) path's final component consists
+ *		entirely of dots, every '.' in it is stored as the byte +128 so
+ *		the entry can be created and looked up. The un-mapped Mac name is
+ *		preserved by GetString() in mMacPathName; the create/rename handlers
+ *		persist it with the entry (see fp_objects::SetAFPName) so the real
+ *		name is returned to the client. This mirrors the reference server's
+ *		character-map behaviour.
+ *
+ * Returns: None
+ */
+
+static void
+MapReservedMacName(char* string, int16 stringLen)
+{
+	int16	leaf	= 0;
+	int16	i		= 0;
+
+	// Find the start of the final path component.
+	for (i = 0; i < stringLen; i++)
+	{
+		if (string[i] == '/') {
+			leaf = i + 1;
+		}
+	}
+
+	// An empty component cannot be a reserved name.
+	if (leaf >= stringLen) {
+		return;
+	}
+
+	// The component must consist entirely of dots to be "." or "..".
+	for (i = leaf; i < stringLen; i++)
+	{
+		if (string[i] != '.') {
+			return;
+		}
+	}
+
+	for (i = leaf; i < stringLen; i++)
+	{
+		string[i] = (char)((uint8)string[i] + 128);
+	}
 }
 
 
@@ -122,7 +175,7 @@ AFPERROR afp_buffer::GetString(
 		// If we're dealing with an AFP pathname, then we need to convert
 		// the path separators to Be style ones.
 		uint8	i;
-		
+
 		for (i = 0; i < stringLen; i++)
 		{
 			switch(string[i])
@@ -130,14 +183,22 @@ AFPERROR afp_buffer::GetString(
 				// If we have a slash the first time through, then this is
 				// an error and unallowed filename character.
 				case '/': string[i] = REPLACE_SLASH_CHAR; break;
-				
+
 				// Convert Mac specific path separator to Be specific.
 				case ':': string[i] = '/'; break;
-				
+
 				default:
 					break;
 			}
 		}
+
+		// Record the true Mac name (as the client sent it, with the path
+		// separators converted to Be style) before the reserved-name mapping
+		// below possibly rewrites it.
+		strlcpy(mMacPathName, string, sizeof(mMacPathName));
+
+		// Map "." / ".." style names to something the filesystem can store.
+		MapReservedMacName(string, stringLen);
 	}
 	
 	return( afpError );

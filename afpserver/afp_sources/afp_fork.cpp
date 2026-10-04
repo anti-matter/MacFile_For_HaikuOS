@@ -741,6 +741,11 @@ AFPERROR FPCreateFile(
 								true
 								);
 			}
+
+			// If the name was "." or ".." (which the filesystem can't store
+			// literally), afpPathname is the mapped name; persist the true
+			// Mac name with the new entry so it's returned to the client.
+			fp_objects::SetAFPName(&newEntry, afpRequest.GetMacPathName());
 		}
 		else
 		{

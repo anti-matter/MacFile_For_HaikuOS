@@ -38,8 +38,11 @@ extern int 	afpAppReturnValue;
 
 #endif
 
-#if DEBUG
-
+// Error-string lookup is used as a live argument inside warning/error DBGWRITE
+// calls, which stay active in release builds (they route to the release log
+// file), so unlike DPRINT it must exist in both build modes. (The release
+// branch previously misspelled the macro as GET_ERR_STR, which broke any
+// release compile of these sources.)
 extern char errString[24];
 
 #define GET_BERR_STR(e) GetBeErrorString(e)
@@ -81,12 +84,6 @@ inline char* GetBeErrorString(int32 error)
 	
 	return( errString );
 }
-
-#else
-
-#define GET_ERR_STR(e)
-
-#endif // DEBUG
 
 #define PUSH_CSTRING(s,p) {									\
 			*p = strlen(s);									\
