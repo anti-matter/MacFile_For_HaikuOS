@@ -12,9 +12,9 @@
 #include "fp_volume.h"
 #include "finder_info.h"
 
-#if DEBUG
+// Backs GetBeErrorString()/GET_BERR_STR, which release builds also use
+// (warning/error DBGWRITE calls stay active there — see afpGlobals.h).
 char errString[24];
-#endif
 
 
 /*
@@ -505,6 +505,101 @@ void fp_objects::CreateLongName(
 
 
 /*
+ * GetAFPName()
+ *
+ * Description:
+ *		Get the Mac name of an entry for returning to the client. Entries
+ *		whose Mac name is "." or ".." can't be stored literally on the
+ *		filesystem (self/parent references), so they're stored with each '.'
+ *		mapped to byte+128 and the true Mac name kept in the Afp_CharMap
+ *		attribute; for those entries we return the stored Mac name instead
+ *		of the on-disk name.
+ *
+ * Returns: error code.
+ */
+
+AFPERROR fp_objects::GetAFPName(
+	BEntry*	afpEntry,
+	char*	name,
+	size_t	nameSize
+	)
+{
+	BNode	node(afpEntry);
+	ssize_t	sizeRead = node.ReadAttr(
+							AFP_ATTR_CHARMAP,
+							B_STRING_TYPE,
+							0,
+							name,
+							nameSize - 1);
+
+	if (sizeRead > 0)
+	{
+		// We have to add the trailing null byte.
+		name[sizeRead] = 0;
+
+		return( AFP_OK );
+	}
+
+	if ((sizeRead < 0) && (sizeRead != B_ENTRY_NOT_FOUND))
+	{
+		DBGWRITE(dbg_level_error, "Reading %s attribute failed (%s)\n",
+			AFP_ATTR_CHARMAP, GET_BERR_STR(sizeRead));
+	}
+
+	return( (afpEntry->GetName(name) == B_OK) ? AFP_OK : afpObjectNotFound );
+}
+
+
+/*
+ * SetAFPName()
+ *
+ * Description:
+ *		Persist the true Mac name of a created or renamed entry. When the
+ *		Mac name is "." or ".." (which the filesystem can't store literally
+ *		— see GetAFPName), GetString() has already mapped the dots to
+ *		byte+128 for storage, so we save the real Mac name in the entry's
+ *		Afp_CharMap attribute. If the entry's name isn't a mapped one we
+ *		make sure no stale mapping lingers on the entry.
+ *
+ * Returns: None
+ */
+
+void fp_objects::SetAFPName(
+	BEntry*		afpEntry,
+	const char*	macPathname
+	)
+{
+	char	diskName[B_FILE_NAME_LENGTH];
+
+	if (afpEntry->GetName(diskName) != B_OK)
+	{
+		DBGWRITE(dbg_level_error, "SetAFPName() failed getting the entry's name\n");
+		return;
+	}
+
+	// The Mac path can have multiple components; the entry's name is the
+	// leaf (the Mac separator ':' became '/' in GetString).
+	const char*	macLeaf	= strrchr(macPathname, '/');
+	macLeaf = (macLeaf == NULL) ? macPathname : (macLeaf + 1);
+
+	BNode	node(afpEntry);
+
+	if (strcmp(macLeaf, diskName) != 0)
+	{
+		if (node.WriteAttr(AFP_ATTR_CHARMAP, B_STRING_TYPE, 0, macLeaf, strlen(macLeaf)) < 0)
+		{
+			DBGWRITE(dbg_level_error, "Failed writing %s attribute\n", AFP_ATTR_CHARMAP);
+		}
+	}
+	else
+	{
+		// Not a mapped name; clear any stale mapping from a previous name.
+		node.RemoveAttr(AFP_ATTR_CHARMAP);
+	}
+}
+
+
+/*
  * fp_GetDirParms()
  *
  * Description:
@@ -752,7 +847,7 @@ AFPERROR fp_objects::fp_GetDirParms(
 
 	if (afpDirBitmap & kFPDirLongName)
 	{
-		if (afpEntry->GetName(name) == B_OK)
+		if (AFP_SUCCESS(GetAFPName(afpEntry, name, sizeof(name))))
 		{
 			// Longnames can only be up to 32 characters long. Truncate
 			// the string if necessary.
@@ -768,7 +863,7 @@ AFPERROR fp_objects::fp_GetDirParms(
 	
 	if (afpDirBitmap & kFPUnicodeName)
 	{
-		if (afpEntry->GetName(name) == B_OK)
+		if (AFP_SUCCESS(GetAFPName(afpEntry, name, sizeof(name))))
 		{
 			*uniNameOffset = htons(afpReply->GetCurrentPosPtr() - parmsStart);
 			afpReply->AddUniString(name, true);
@@ -1045,7 +1140,7 @@ AFPERROR fp_objects::fp_GetFileParms(
 	
 	if (afpFileBitmap & kFPLongName)
 	{	
-		if (afpEntry->GetName(name) == B_OK)
+		if (AFP_SUCCESS(GetAFPName(afpEntry, name, sizeof(name))))
 		{
 			// Longnames can only be up to 32 characters long. Truncate
 			// the string if necessary.
@@ -1061,7 +1156,7 @@ AFPERROR fp_objects::fp_GetFileParms(
 	
 	if (afpFileBitmap & kFPUnicodeName)
 	{
-		if (afpEntry->GetName(name) == B_OK)
+		if (AFP_SUCCESS(GetAFPName(afpEntry, name, sizeof(name))))
 		{
 			*uniNameOffset = htons(afpReply->GetCurrentPosPtr() - parmsStart);
 			afpReply->AddUniString(name, true);

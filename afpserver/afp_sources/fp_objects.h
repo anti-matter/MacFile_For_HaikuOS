@@ -13,6 +13,12 @@
 #define AFP_RSRC_ATTRIBUTE	"Afp_Resource"
 #define AFP_ATTR_ATTRIBUTE	"Afp_Attributes"
 #define AFP_ATTR_LONGNAME	"Afp_Longname"
+// Stores the true Mac name of an entry whose Mac name is "." or ".." (which
+// no filesystem can store literally, being self/parent references). The
+// on-disk name holds each '.' mapped to byte+128; this attribute carries the
+// real Mac name so it can be returned to the client verbatim. See
+// GetAFPName/SetAFPName and afp_buffer::GetString.
+#define AFP_ATTR_CHARMAP	"Afp_CharMap"
 
 // These macros make working with posix perms easier. For our purposes, we
 // treat the posix perms as follows:
@@ -69,7 +75,15 @@ public:
 									
 	static AFPERROR		GetEntryByLongName(BDirectory& dir, const char* afpPathname, BEntry& afpEntry);
 	static void			CreateLongName(char* afpPathname, BEntry* afpEntry, bool afpHardCreate=false);
-		
+
+	// Get the Mac name of an entry for return to the client (the mapped
+	// on-disk name, or the true Mac name when the entry's name is "."/"..").
+	static AFPERROR		GetAFPName(BEntry* afpEntry, char* name, size_t nameSize);
+
+	// Persist the true Mac name of a created/renamed entry when its name had
+	// to be mapped for the filesystem (see AFP_ATTR_CHARMAP).
+	static void			SetAFPName(BEntry* afpEntry, const char* macPathname);
+
 	static AFPERROR		fp_GetDirParms(
 									afp_session*	afpSession,
 									fp_volume*		afpVolume,

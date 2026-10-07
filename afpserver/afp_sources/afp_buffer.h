@@ -61,6 +61,15 @@ public:
 	int32 GetBufferSize()		{ return( mBufferSize ); }
 	void  Rewind()				{ mCurrentPos = mBuffer; }
 
+	// The true Mac name of the last path string pulled from the buffer (see
+	// GetString). AFP allows items named "." and ".." which a filesystem
+	// cannot store literally (they are self/parent references), so GetString
+	// maps such names before returning them as the on-disk name; this is the
+	// un-mapped Mac name the client actually sent. Create/rename handlers
+	// persist it with fp_objects::SetAFPName so the real name is handed back
+	// to the client when the entry is enumerated.
+	const char* GetMacPathName()	{ return( mMacPathName ); }
+
 private:
 
 	AFPERROR GetPascalString(char* string, uint16 cbstring, int16* sLen);
@@ -69,6 +78,7 @@ private:
 	int8* mBuffer;
 	int8* mCurrentPos;
 	int32 mBufferSize;
+	char  mMacPathName[MAX_AFP_PATH];
 };
 
 inline void ConvertIllegalCharsBackToMac(unsigned char* string, int16 cbstring)

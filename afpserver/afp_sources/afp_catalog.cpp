@@ -727,6 +727,9 @@ AFPERROR FPCreateDir(
 		return( afpParmErr );
 	}
 
+	DBGWRITE(dbg_level_info, "FPCreateDir volID=%d dirID=%lu pathType=%d pathname=%s\n",
+				afpVolumeID, afpDirID, afpPathType, afpPathname);
+
 	// Set the entry object that will point to this afp object.
 	afpError = fp_objects::SetAFPEntry(
 								afpVolume,
@@ -769,7 +772,7 @@ AFPERROR FPCreateDir(
 		}
 		else
 		{
-			DBGWRITE(dbg_level_error, "Failed to create directory! (%s)\n", GET_BERR_STR(status));
+			DBGWRITE(dbg_level_error, "Failed to create directory '%s', (%s)\n", afpPathname, GET_BERR_STR(status));
 
 			switch(status)
 			{
@@ -799,6 +802,11 @@ AFPERROR FPCreateDir(
 								true
 								);
 			}
+
+			// If the name was "." or ".." (which the filesystem can't store
+			// literally), afpPathname is the mapped name; persist the true
+			// Mac name with the new entry so it's returned to the client.
+			fp_objects::SetAFPName(&newEntry, afpRequest.GetMacPathName());
 
 			// In Haiku, every new directory is currently being set denying
 			// write permissions to users and guests. We'll set everything to
@@ -1186,6 +1194,11 @@ AFPERROR FPMoveAndRename(
 				if ((status == B_FILE_EXISTS) || (status == B_OK)) {
 
 					afpError = AFP_OK;
+
+					// If the new name was "." or ".." (mapped for the
+					// filesystem), make sure the true Mac name travels with
+					// the renamed entry.
+					fp_objects::SetAFPName(&afpSrcEntry, afpRequest.GetMacPathName());
 				}
 				else {
 
@@ -1318,6 +1331,12 @@ AFPERROR FPRename(
 	if (strlen(afpPathname) != 0)
 	{
 		afpError = (afpEntry.Rename(afpPathname) == B_OK) ? AFP_OK : afpObjectLocked;
+
+		// If the new name was "." or ".." (mapped for the filesystem), make
+		// sure the true Mac name travels with the renamed entry.
+		if (AFP_SUCCESS(afpError)) {
+			fp_objects::SetAFPName(&afpEntry, afpRequest.GetMacPathName());
+		}
 	}
 	else
 	{
@@ -1488,7 +1507,10 @@ AFPERROR FPCopyFile(
 	BFile	destFile;
 	BFile	srcFile;
 
-	if (strlen(afpNewName) == 0)
+	// If the client didn't supply a new name, the copy keeps the source's.
+	bool	clientNamed	= (strlen(afpNewName) != 0);
+
+	if (!clientNamed)
 	{
 		if (afpSrcEntry.GetName(afpNewName) != B_OK)
 		{
@@ -1514,6 +1536,30 @@ AFPERROR FPCopyFile(
 	{
 		DBGWRITE(dbg_level_error, "CreateFile() failed!\n");
 		return( afpParmErr );
+	}
+
+	// If the name (source's or the client's new one) is a reserved filesystem
+	// name ("." / "..") that had to be mapped for storage, carry the true
+	// Mac name over to the copy so the client keeps seeing the real name.
+	char	macNewName[MAX_AFP_NAME];
+	macNewName[0] = '\0';
+
+	if (clientNamed)
+	{
+		strlcpy(macNewName, afpRequest.GetMacPathName(), sizeof(macNewName));
+	}
+	else
+	{
+		fp_objects::GetAFPName(&afpSrcEntry, macNewName, sizeof(macNewName));
+	}
+
+	if (macNewName[0] != '\0')
+	{
+		// afpNewName is the (possibly mapped) on-disk leaf name of the
+		// copy we just created, so we can re-derive the new entry from it.
+		BEntry		destEntry(&destDir, afpNewName);
+
+		fp_objects::SetAFPName(&destEntry, macNewName);
 	}
 
 	srcFile.SetTo(&afpSrcEntry, B_READ_ONLY);
