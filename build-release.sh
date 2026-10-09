@@ -2,8 +2,10 @@
 #
 # build-release.sh — single-command release build for MacFile.
 #
-# Builds the AFP server, the MacFile configuration app, the CreateAfpShare
-# tracker add-on, and the MacFileInstaller GUI app, then assembles:
+# Bumps the release version first (third digit; see bump-version.sh —
+# afpserver/Resource.rdef is the source of truth), then builds the AFP
+# server, the MacFile configuration app, the CreateAfpShare tracker add-on,
+# and the MacFileInstaller GUI app, and assembles:
 #
 #	distribution/install.zip            (payload: afp_server, MacFile,
 #	                                       CreateAfpShare, OpenSSL libs)
@@ -34,6 +36,16 @@ fail() {
 if [ -z "${BUILDHOME:-}" ]; then
 	fail "BUILDHOME is not set. Export it (e.g. export BUILDHOME=/boot/system/develop) and re-run."
 fi
+
+#
+# 0. Version bump. afpserver/Resource.rdef is the source of truth; this
+# increments its third digit and syncs afp_config/Resource.rdef,
+# installer/Resource.rdef, and the AFP_SERVER_VERSION macro in commands.h.
+# The version is the script's only stdout output; its notes go to stderr.
+# Commit the four version files afterwards.
+#
+VERSION="$(./bump-version.sh --bump)"
+echo "Version: $VERSION"
 
 #
 # 1. Clean and build all components.
@@ -115,5 +127,8 @@ rm -f "$RELEASE_ARCHIVE"
 [ -f "$RELEASE_ARCHIVE" ] || fail "failed to create $RELEASE_ARCHIVE"
 
 echo "----------------------------------------------------------------"
-echo "Done! Release archive: $RELEASE_ARCHIVE"
+echo "Done! MacFile version $VERSION"
+echo "Release archive: $RELEASE_ARCHIVE"
+echo "Don't forget to commit the version bump (4 files: both Resource.rdef,"
+echo "installer/Resource.rdef, and afpserver/afp_sources/commands.h)."
 echo "----------------------------------------------------------------"
