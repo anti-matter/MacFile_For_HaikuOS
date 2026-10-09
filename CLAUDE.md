@@ -100,6 +100,28 @@ to `distribution/MacFile_<arch>_Release.zip`.
 > `afp_config` (not the installer) and does not produce the release archive; use
 > `build-release.sh` for a full release.
 
+### Automatic version bump
+
+`afpserver/Resource.rdef` is the **single source of truth** for the version
+(`major` / `middle` / `minor` fields). Before building, `build-release.sh` runs
+`./bump-version.sh --bump`, which:
+
+1. Increments the third digit (`minor`) in `afpserver/Resource.rdef` — the only
+   digit ever changed automatically.
+2. Propagates all three digits to:
+   - `afp_config/Resource.rdef` (`app_version` resource)
+   - `installer/Resource.rdef` (`app_version` resource)
+   - `AFP_SERVER_VERSION` in `afpserver/afp_sources/commands.h` (packed hex
+     `0xMMmmrr00`, plus its `// version x.y.z` comment)
+3. Refuses to proceed if any component exceeds 255 (the macro packs each
+   component into one byte).
+
+To ship a major or middle update, edit `afpserver/Resource.rdef` by hand and run
+`./bump-version.sh` with no argument to sync the other files (no bump happens
+without `--bump`). Nothing is committed automatically — commit the four version
+files when the result is what you want. If a release build fails after the bump,
+`git checkout --` those four files before retrying (a retry bumps again).
+
 ### Remote build server (HaikuOS)
 
 The project is compiled on a real Haiku machine (there is no cross-compiler for Linux). A build server is available over SSH and should be used to verify that changes build.
