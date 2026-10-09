@@ -130,7 +130,7 @@ The project is compiled on a real Haiku machine (there is no cross-compiler for 
 - **Server OS**: Haiku R1 beta6, x86_64.
 - **Repo on server**: `~/dev/MacFile_For_HaikuOS` (same GitHub `origin` as this clone).
 
-**Gotcha — `BUILDHOME`:** it is *not* set in a non-interactive SSH session, but every makefile does `include $(BUILDHOME)/etc/makefile-engine`. Without it, the include resolves to `/etc/makefile-engine` and the build fails immediately with `No rule to make target '/etc/makefile-engine'`. Always export `BUILDHOME=/boot/system/develop` when building over SSH.
+**Gotcha — `BUILDHOME`:** it is *not* set in a non-interactive SSH session, but every makefile does `include $(BUILDHOME)/etc/makefile-engine`. Without it, the include resolves to `/etc/makefile-engine` and the build fails immediately with `No rule to make target '/etc/makefile-engine'`. `build-release.sh` handles this itself: when `BUILDHOME` is unset it defaults to `/boot/system/develop` (and fails with a clear message if that location has no `etc/makefile-engine`). Raw `make` / `dbgbuild.sh` invocations still need the explicit `export BUILDHOME=/boot/system/develop` when building over SSH.
 
 **Build workflow** (from this repo):
 

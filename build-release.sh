@@ -31,11 +31,22 @@ fail() {
 #
 # The makefiles include $(BUILDHOME)/etc/makefile-engine. In a non-interactive
 # shell (e.g. over SSH) BUILDHOME is not set, which makes that resolve to
-# /etc/makefile-engine and fail obscurely. Fail early with a clear message.
+# /etc/makefile-engine and fail obscurely. Default to the standard Haiku
+# location when unset, and verify it actually holds the makefile-engine so a
+# wrong BUILDHOME fails here with a clear message instead of obscurely later.
 #
 if [ -z "${BUILDHOME:-}" ]; then
-	fail "BUILDHOME is not set. Export it (e.g. export BUILDHOME=/boot/system/develop) and re-run."
+	if [ -d "/boot/system/develop" ]; then
+		BUILDHOME=/boot/system/develop
+		echo "BUILDHOME not set, defaulting to $BUILDHOME"
+	else
+		fail "BUILDHOME is not set and /boot/system/develop does not exist. Export BUILDHOME (e.g. export BUILDHOME=/boot/system/develop) and re-run."
+	fi
 fi
+export BUILDHOME
+
+[ -f "$BUILDHOME/etc/makefile-engine" ] \
+	|| fail "BUILDHOME=$BUILDHOME has no etc/makefile-engine. Export the correct BUILDHOME and re-run."
 
 #
 # 0. Version bump. afpserver/Resource.rdef is the source of truth; this
