@@ -2,14 +2,19 @@
 #include <string.h>
 
 #include <Alert.h>
+#include <AppFileInfo.h>
 #include <Application.h>
 #include <Button.h>
 #include <Entry.h>
+#include <File.h>
 #include <Messenger.h>
+#include <Path.h>
 #include <Screen.h>
 #include <ScrollView.h>
 #include <StringView.h>
 #include <TextView.h>
+
+#include <private/app/AppMisc.h>
 
 #include "InstallerWindow.h"
 #include "InstallWorker.h"
@@ -29,16 +34,55 @@ enum
 };
 
 /*
+ * read_app_version()
+ *
+ * Description:
+ *		Reads the app_version resource of the application image at
+ *		path and formats it as "major.middle.minor".
+ *
+ * Returns:
+ *		true on success, false if the file or its version info could
+ *		not be read.
+ */
+
+static bool
+read_app_version(const char* path, BString& version)
+{
+	BFile file(path, B_READ_ONLY);
+	if (file.InitCheck() != B_OK)
+		return false;
+
+	BAppFileInfo info(&file);
+	if (info.InitCheck() != B_OK)
+		return false;
+
+	version_info versionData;
+	if (info.GetVersionInfo(&versionData, B_APP_VERSION_KIND) != B_OK)
+		return false;
+
+	char text[48];
+	snprintf(text, sizeof(text), "%lu.%lu.%lu",
+		(unsigned long)versionData.major,
+		(unsigned long)versionData.middle,
+		(unsigned long)versionData.minor);
+	version = text;
+	return true;
+}
+
+/*
  * InstallerWindow()
  *
  * Description:
+ *		Builds the installer window: title, description, a version line
+ *		(installed version vs. version this installer carries), status
+ *		and progress lines, the action buttons, and the log.
  *
  * Returns:
  */
 
 InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	BWindow(
-		BRect(0, 0, 480, 355),
+		BRect(0, 0, 480, 387),
 		"MacFile Installer",
 		B_TITLED_WINDOW,
 		B_NOT_RESIZABLE | B_NOT_ZOOMABLE
@@ -47,6 +91,7 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	fInstallButton(NULL),
 	fUpgradeButton(NULL),
 	fUninstallButton(NULL),
+	fVersionView(NULL),
 	fProgressView(NULL),
 	fStatusView(NULL),
 	fLogView(NULL),
@@ -91,9 +136,23 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	mainView->AddChild(bstrview);
 
 	//
-	//*****************Status and progress
+	//*****************Versions
+	//
+	//Persistent line showing the installed server version (if any) and
+	//the version this installer will install. Unlike the status line it is
+	//not overwritten while an operation is in flight.
 	//
 	rect.Set(10, 70, 470, 88);
+	fVersionView = new BStringView(rect, "versions", "");
+	fVersionView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
+	fVersionView->SetFontSize(font_size);
+	fVersionView->SetAlignment(B_ALIGN_CENTER);
+	mainView->AddChild(fVersionView);
+
+	//
+	//*****************Status and progress
+	//
+	rect.Set(10, 102, 470, 120);
 	fStatusView = new BStringView(rect, "status", "");
 	fStatusView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	fStatusView->SetFontSize(font_size);
@@ -104,7 +163,7 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	//This Haiku build has no BProgressBar, so progress is shown as a
 	//percentage in a centered string view.
 	//
-	fProgressView = new BStringView(BRect(20, 96, 460, 114), "progress", "");
+	fProgressView = new BStringView(BRect(20, 128, 460, 146), "progress", "");
 	fProgressView->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
 	fProgressView->SetFontSize(font_size);
 	fProgressView->SetAlignment(B_ALIGN_CENTER);
@@ -113,25 +172,25 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	//
 	//*****************Buttons
 	//
-	rect.Set(20, 126, 120, 148);
+	rect.Set(20, 158, 120, 180);
 	fInstallButton = new BButton(rect, "install", "Install",
 		new BMessage(CMD_INSTALL));
 	fInstallButton->SetFontSize(font_size);
 	mainView->AddChild(fInstallButton);
 
-	rect.Set(130, 126, 230, 148);
+	rect.Set(130, 158, 230, 180);
 	fUpgradeButton = new BButton(rect, "upgrade", "Upgrade",
 		new BMessage(CMD_UPGRADE));
 	fUpgradeButton->SetFontSize(font_size);
 	mainView->AddChild(fUpgradeButton);
 
-	rect.Set(240, 126, 340, 148);
+	rect.Set(240, 158, 340, 180);
 	fUninstallButton = new BButton(rect, "uninstall", "Uninstall",
 		new BMessage(CMD_UNINSTALL));
 	fUninstallButton->SetFontSize(font_size);
 	mainView->AddChild(fUninstallButton);
 
-	rect.Set(350, 126, 460, 148);
+	rect.Set(350, 158, 460, 180);
 	button = new BButton(rect, "quit", "Quit", new BMessage(CMD_QUIT));
 	button->SetFontSize(font_size);
 	mainView->AddChild(button);
@@ -151,12 +210,13 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	//
 	//
 	//The log area is deliberately SHORT (half of the previous height):
-	//Height = 345 - 160 = 185px = half of the old 370px. The width (446px)
-	//is unchanged. The window height was reduced to match (540 -> 355 = the
-	//log's bottom at y=345 plus the standard 10px buffer), so there is no
-	//empty space left below the log.
+	//Height = 377 - 192 = 185px = half of the old 370px. The width (446px)
+	//is unchanged. The window was grown from 355 to 387 px to make room
+	//for the version line (everything below the description shifted down
+	//32px), so the log's bottom at y=377 plus the standard 10px buffer
+	//leaves no empty space below the log.
 	//
-	BRect logRect(10, 160, 470 - 14, 345);
+	BRect logRect(10, 192, 470 - 14, 377);
 	//
 	//BTextView wraps text to the width of its content rect (the 3rd
 	//constructor argument), NOT its frame. _UpdateInsets() computes the
@@ -188,6 +248,7 @@ InstallerWindow::InstallerWindow(const BString& releaseDir) :
 	BEntry serverEntry(SERVER_PATH);
 	fInstalled = serverEntry.Exists() && serverEntry.IsFile();
 
+	UpdateVersionView();
 	RefreshState();
 }
 
@@ -245,6 +306,52 @@ void InstallerWindow::RefreshState()
 
 	if (!fBusy)
 		fStatusView->SetText(fInstalled ? "MacFile is installed." : "MacFile is not installed.");
+}
+
+/*
+ * UpdateVersionView()
+ *
+ * Description:
+ *		Refresh the version line: the version of the installed
+ *		afp_server (if any) and the version this installer will
+ *		install.
+ *
+ *		The "version to install" is this installer's own app_version.
+ *		bump-version.sh keeps the installer's rdef, the server's rdef,
+ *		and the AFP_SERVER_VERSION macro in lockstep at release time,
+ *		and install.zip is packaged from the same build, so the
+ *		installer's version is the payload's version.
+ *
+ * Returns:
+ */
+
+void InstallerWindow::UpdateVersionView()
+{
+	//
+	//The version this installer will install: read the app_version
+	//resource out of our own binary.
+	//
+	BString installerVersion("unknown");
+
+	char appPath[B_PATH_NAME_LENGTH];
+	if (BPrivate::get_app_path(appPath) == B_OK)
+		read_app_version(appPath, installerVersion);
+
+	//
+	//The version currently on the system. "none" when nothing is
+	//installed; "unknown" when a server binary is present but carries no
+	//readable version (e.g. a pre-2.x build).
+	//
+	BString installedVersion;
+	if (!fInstalled)
+		installedVersion = "none";
+	else if (!read_app_version(SERVER_PATH, installedVersion))
+		installedVersion = "unknown";
+
+	char text[128];
+	snprintf(text, sizeof(text), "Installed version: %s    Version to install: %s",
+		installedVersion.String(), installerVersion.String());
+	fVersionView->SetText(text);
 }
 
 /*
@@ -348,6 +455,7 @@ void InstallerWindow::MessageReceived(BMessage* message)
 		{
 			const char* state = message->FindString("state");
 			fInstalled = (state != NULL) && (strcmp(state, "installed") == 0);
+			UpdateVersionView();
 			RefreshState();
 			break;
 		}
@@ -381,6 +489,12 @@ void InstallerWindow::MessageReceived(BMessage* message)
 				//
 				BEntry serverEntry(SERVER_PATH);
 				fInstalled = serverEntry.Exists() && serverEntry.IsFile();
+
+				//
+				//The version line must follow the new state (install and
+				//upgrade change the installed version, uninstall removes it).
+				//
+				UpdateVersionView();
 
 				//
 				//Refresh the buttons for the new install state. This also sets

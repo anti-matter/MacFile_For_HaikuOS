@@ -19,6 +19,7 @@ public:
 
 private:
 	void RefreshState();
+	void UpdateVersionView();
 	void AppendLog(const char* line);
 	void StartOperation(const char* subcommand);
 
@@ -26,6 +27,7 @@ private:
 	BButton*	fInstallButton;
 	BButton*	fUpgradeButton;
 	BButton*	fUninstallButton;
+	BStringView*	fVersionView;
 	BStringView*	fProgressView;
 	BStringView*	fStatusView;
 	BTextView*	fLogView;

@@ -222,7 +222,7 @@ MacFileInstaller (BApplication)
             └── reads the script's stdout line-by-line, posts BMessages to the window
 ```
 
-- **`InstallerWindow.{cpp,h}`** — the UI: Install / Uninstall / Quit buttons, a status line, a percentage progress line (no `BProgressBar` in this Haiku build), and a read-only log in a `BScrollView`. Detects installed state from `/boot/home/config/non-packaged/apps/afp_server`.
+- **`InstallerWindow.{cpp,h}`** — the UI: Install / Uninstall / Quit buttons, a version line (installed server version vs. version this installer will install, read from the binaries' `app_version` resources), a status line, a percentage progress line (no `BProgressBar` in this Haiku build), and a read-only log in a `BScrollView`. Detects installed state from `/boot/home/config/non-packaged/apps/afp_server`.
 - **`InstallWorker.{cpp,h}`** — spawns the script in a worker thread over a pipe and parses its output, posting `INSTALL_M_PROGRESS` / `INSTALL_M_STATUS` / `INSTALL_M_LOG` / `INSTALL_M_DONE` messages back to the window.
 - **Line protocol** (emitted by `install-macfile.sh`, parsed by the worker): `PROGRESS <0-100> <label>`, `INFO <msg>`, `ERROR <msg>`, `STATUS installed|not_installed`, `DONE success|failure`. Exit status 0 = success. The `install`/`uninstall` paths do not emit a `STATUS` line (only `status` does), so the window re-detects installed state from disk on `DONE`.
 - **Subcommands** (run by the worker, dispatched in `install-macfile.sh`): `install`, `uninstall`, `status`, `help`; no argument = interactive mode.
