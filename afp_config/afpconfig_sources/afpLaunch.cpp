@@ -55,7 +55,7 @@ int AFPLaunchServer(void)
 	{
 		BEntry entry(sServerPaths[i]);
 
-		if (entry.Init() == B_OK && entry.Exists())
+		if (entry.InitCheck() == B_OK && entry.Exists())
 		{
 			serverPath = sServerPaths[i];
 			break;
