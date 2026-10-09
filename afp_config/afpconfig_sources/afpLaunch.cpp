@@ -1,4 +1,5 @@
 #include <Alert.h>
+#include <Entry.h>
 
 #include "afpLaunch.h"
 #include "afpConfigUtils.h"
@@ -9,8 +10,10 @@ extern char **environ;
  * AFPLaunchServer()
  *
  * Description:
- *		Launches the afp server if it is not already running. Note
- *		that the afp_server image file must reside in /boot/home/config/bin.
+ *		Launches the afp server if it is not already running. The server
+ *		image is looked for where the installer puts it
+ *		(/boot/home/config/non-packaged/apps), falling back to the legacy
+ *		BeOS-era location (/boot/home/config/bin).
  *
  * Returns:
  *		Error on failure, B_OK otherwise.
@@ -18,49 +21,62 @@ extern char **environ;
 
 int AFPLaunchServer(void)
 {
-	char**		arg_v;
-	int32		arg_c;
 	thread_id	exec_thread;
-	
+
 	if (AFPServerIsRunning() == true)
 	{
-		// If the server is already, then there's nothing to do. Tell the
-		// user we're not going to do anything.
+		// If the server is already running, then there's nothing to do. Tell
+		// the user we're not going to do anything.
 		BAlert*	alert	= NULL;
-		
+
 		alert = new BAlert(
 						"",
 						"The MacFile server is already running.",
 						"OK"
 						);
-		
+
 		alert->SetShortcut(0, B_ESCAPE);
 		alert->Go();
-		
+
 		return( B_OK );
 	}
-	
-	arg_c	= 1;
-	arg_v	= (char **)malloc(sizeof(char *) * (arg_c + 1));
-	
-	if (arg_v != NULL)
+
+	// Find the server image. Try the location the installer uses first,
+	// then fall back to the legacy path for older installations.
+	static const char* const sServerPaths[] =
 	{
-		arg_v[0]	= strdup(PATH_AFPSERVER_IMAGE_FILE);
-		arg_v[1]	= NULL;
-		
-		exec_thread = load_image(arg_c, (const char**)arg_v, (const char**)environ);
-		
-		while(--arg_c >= 0)
-			free(arg_v[arg_c]);
-		
-		free(arg_v);
-		
-		if (exec_thread != B_ERROR)
+		PATH_AFPSERVER_IMAGE_FILE,
+		PATH_AFPSERVER_IMAGE_FILE_LEGACY,
+	};
+
+	const char*	serverPath = NULL;
+
+	for (uint32 i = 0; i < sizeof(sServerPaths) / sizeof(sServerPaths[0]); i++)
+	{
+		BEntry entry(sServerPaths[i]);
+
+		if (entry.InitCheck() == B_OK && entry.Exists())
 		{
-			resume_thread(exec_thread);
-			return( B_OK );
+			serverPath = sServerPaths[i];
+			break;
 		}
 	}
-	
-	return( B_ERROR );
+
+	if (serverPath == NULL)
+		return( B_ENTRY_NOT_FOUND );
+
+	const char*	arg_v[]	= { serverPath, NULL };
+
+	exec_thread = load_image(1, arg_v, (const char**)environ);
+
+	// load_image() returns a thread id on success, or a negative error
+	// code (not necessarily B_ERROR) on failure. Only resume and report
+	// success when we actually got a thread id back.
+	if (exec_thread >= B_OK)
+	{
+		resume_thread(exec_thread);
+		return( B_OK );
+	}
+
+	return( (int)exec_thread );
 }
